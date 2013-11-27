@@ -1,14 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.thema</groupId>
-  <artifactId>fracgis</artifactId>
-  <version>0.4.2</version>
-  <packaging>jar</packaging>
+    <groupId>org.thema</groupId>
+    <artifactId>fracgis</artifactId>
+    <version>0.4.2</version>
+    <packaging>jar</packaging>
 
-  <name>fracgis</name>
-  <url>http://maven.apache.org</url>
+    <name>fracgis</name>
+    <url>http://maven.apache.org</url>
     <build>
         <plugins>
             <plugin>
@@ -57,47 +57,54 @@
         </plugins>
     </build>
     <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>common</artifactId>
-      <version>1.0.17</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>drawshape</artifactId>
-      <version>1.0.20</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-math3</artifactId>
-      <version>3.2</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>graph</artifactId>
-      <version>1.0.10</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>msca</artifactId>
-      <version>1.0.8</version>
-    </dependency>
-  </dependencies>
-  <repositories>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0.17</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>drawshape</artifactId>
+            <version>1.0.20</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>graph</artifactId>
+            <version>1.0.10</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>msca</artifactId>
+            <version>1.0.8</version>
+        </dependency>
+    </dependencies>
+    <repositories>
         <repository>
             <id>thema</id>
             <name>Local ThéMA Repository</name>
             <url>http://vm2-ubuntu.umrthema.univ-fcomte.fr/repository/</url>
         </repository>
     </repositories>
+    
+    <distributionManagement>
+    <site>
+      <id>local-thema</id>
+      <url>file:///var/www/projects/fracgis/</url>
+    </site>
+  </distributionManagement>
 </project>

@@ -1,0 +1,12 @@
+<project name="FracGIS">
+    <bannerLeft>
+        <name>FracGIS</name>
+    </bannerLeft>
+    <body>
+        <menu name="Sample Project">
+            <item name="Download" href="index.html"/>
+	    <item name="Changelog" href="changelog"/>
+        </menu>
+        <menu ref="reports"/>
+    </body>
+</project>
