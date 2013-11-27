@@ -1,0 +1,49 @@
+version 0.4.2 (27/11/2013)
+- passage du projet à maven
+version 0.4.1 (22/11/2013)
+- a normalisé pour estimation non linéaire décroissante
+- Radial multiple : no data -1 -> -99
+version 0.4 (05/10/2013)
+- Il n'y a plus de paramètre avec une unité en pixel tout est dans l'unité de la couche
+- Correlation : le paramètre dmax est maintenant en unité de la couche
+- Radial multiple : le paramètre maxsize est maintenant en unité de la couche
+- Radial multiple : ajout des sortie R2 et interval de confiance
+- Sélection raster et vectorielle dans le menu tools
+- Affichage des échelles d'analyse sur la carte
+- restructuration des packages
+version 0.3.3 (12/08/2013)
+- Radial raster disponible en GUI
+- Radial multiple (estimation de l'exposant de holder)
+- Boxcounting raster disponible en CLI
+- Estimation : comportement scalant est lissé par convolution gaussienne
+- Estimation : affichage ligne ou point de la courbe de comptage
+version 0.3.2 (05/08/2013)
+- Batch vectoriel
+- Estimation : problème de non convergence dans l'estimation directe avec courbe décroissante (correction : a = y0)
+- Ajout dilatation raster
+- Dilatation (vecteur) : option pour visualiser les formes dilatées
+- Boxcounting (vecteur) : option pour visualiser les boites à chaque étape
+- Restructuration des menus
+- Correlation : paramètre dMax modifié en : dMax*2+1
+version 0.3.1 (31/07/2013)
+- ajout ligne de commande
+- Ajout analyse radiale vectorielle
+- Interface : passage des barres de progression dans la fenêtre principale
+- Box counting vectoriel : ajout option gliding grid
+- Dilatation : ajout cluster curve
+- Estimation : ajout intervalle de confiance par bootstrap
+version 0.3 (05/02/2013)
+- Ajout de la dilatation vectorielle
+- Box counting vectoriel : optimisation de l'exécution
+- Estimation : choix entre l'estimation directe ou log linéaire quelque soit la méthode d'analyse
+- Estimation : ajout du comportement scalant dans l'export texte
+version 0.2.5
+- Ajout du test de significativité pour l'estimation log linéaire
+version 0.2.4 (01/06/2012)
+- Batch correlation : bug with fixed option
+version 0.2.3 (22/08/2011)
+- ajout Box counting raster
+- batch en ligne de commande
+- bug rasterisation linéaire
+version 0.2.2 (28/01/2011)
+- réécriture de la rasterisation pour optimisation
