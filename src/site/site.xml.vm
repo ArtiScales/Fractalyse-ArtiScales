@@ -1,6 +1,7 @@
-<project name="FracGIS">
+<?xml version="1.0"?>
+<project name="${project.name}">
     <bannerLeft>
-        <name>FracGIS</name>
+        <name>${project.name}</name>
     </bannerLeft>
     <body>
         <menu name="Project">

@@ -333,13 +333,14 @@ public class DirectEstimation extends AbstractEstimation {
             return function.getInit().length *  Math.log(n) + n *  Math.log(err / n);
     }
     
+    @Override
     public double[] getBootStrapConfidenceInterval() {
 //        long t1 = System.currentTimeMillis();
         ArrayList<Map.Entry<Double, Double>> init = new ArrayList(getRangeCurve().entrySet());
         DescriptiveStatistics stat = new DescriptiveStatistics();
         CurveFitter fitter = new CurveFitter(new LevenbergMarquardtOptimizer());
 
-        double [] coefs = function.getInit();
+        double [] coefs = getCoef();//function.getInit();
 //        double [] x = new double[init.size()],
 //                y = new double[init.size()];
         for(int i = 0; i < 2000; i++) {
@@ -350,8 +351,8 @@ public class DirectEstimation extends AbstractEstimation {
             }
         
             try {
-                coefs = fitter.fit(function, coefs);
-                stat.addValue(method.getDimSign() * coefs[0]);  
+                double [] c = fitter.fit(function, coefs);
+                stat.addValue(method.getDimSign() * c[0]);  
             } catch (Exception ex) {
                Logger.getLogger(DirectEstimation.class.getName()).log(Level.SEVERE, null, ex);
             }        

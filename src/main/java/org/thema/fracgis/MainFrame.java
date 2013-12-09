@@ -86,7 +86,7 @@ import org.thema.process.Rasterizer;
  */
 public class MainFrame extends javax.swing.JFrame {
 
-    public static final String VERSION = "0.4.2";
+    public static final String VERSION = "0.4.3";
 
     DefaultGroupLayer groupLayer;
 
@@ -433,7 +433,8 @@ public class MainFrame extends javax.swing.JFrame {
             try {
                 GridCoverage2D grid = IOImage.loadTiff(f);
                 fl = new RasterLayer(f.getName(), new CoverageShape(grid, new RasterStyle()));
-            } catch(FileNotFoundException ex) {
+            } catch(IOException ex) {
+                Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "Impossible to load GeoTiff. Try simple TIFF", ex);
                 BufferedImage img = ImageIO.read(f);
                 fl = new RasterLayer(f.getName(), new RasterShape(img, img.getRaster().getBounds()));
             }
