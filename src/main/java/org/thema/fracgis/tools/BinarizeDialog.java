@@ -172,8 +172,8 @@ public class BinarizeDialog extends javax.swing.JDialog {
         binarize(r, res, min, max);
 
         BinRasterLayer l = new BinRasterLayer(layer.getName() + "-bin",
-                        new RasterShape(img, layer.getImageShape().getBounds()));
-                ((DefaultGroupLayer)viewer.getLayers()).addLayerFirst(l);
+                        new RasterShape(img, layer.getImageShape().getBounds()), layer.getCRS());
+        ((DefaultGroupLayer)viewer.getLayers()).addLayerFirst(l);
     }//GEN-LAST:event_okButtonActionPerformed
 
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed

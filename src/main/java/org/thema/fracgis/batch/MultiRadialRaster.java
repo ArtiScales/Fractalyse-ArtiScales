@@ -78,12 +78,12 @@ public class MultiRadialRaster {
                             }
                         }
                     } else {
-                        rasterDim.setSample(x, y, 0, -99);
-                        rasterR2.setSample(x, y, 0, -99);
+                        rasterDim.setSample(x, y, 0, Float.NaN);
+                        rasterR2.setSample(x, y, 0, Float.NaN);
                         if(confidenceInterval) {
-                            rasterDinter.setSample(x, y, 0, -99);
-                            rasterDmin.setSample(x, y, 0, -99);
-                            rasterDmax.setSample(x, y, 0, -99);
+                            rasterDinter.setSample(x, y, 0, Float.NaN);
+                            rasterDmin.setSample(x, y, 0, Float.NaN);
+                            rasterDmax.setSample(x, y, 0, Float.NaN);
                         }
                     }
                 r.done();

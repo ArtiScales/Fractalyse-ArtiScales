@@ -5,32 +5,22 @@
 package org.thema.fracgis.tools;
 
 import java.awt.Color;
-import java.awt.Graphics2D;
+import java.awt.HeadlessException;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.Raster;
-import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import org.thema.drawshape.ModifiableShape;
 import org.thema.drawshape.RectModShape;
-import org.thema.drawshape.anchor.Anchor;
-import org.thema.drawshape.event.SelectionListener;
-import org.thema.drawshape.event.ShapeListener;
-import org.thema.drawshape.feature.Feature;
 import org.thema.drawshape.image.ImageShape;
 import org.thema.drawshape.image.RasterShape;
 import org.thema.drawshape.layer.DefaultGroupLayer;
 import org.thema.drawshape.layer.DefaultLayer;
-import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.drawshape.layer.Layer;
 import org.thema.drawshape.style.LineStyle;
 import org.thema.drawshape.style.RasterStyle;
-import org.thema.drawshape.style.Style;
 import org.thema.drawshape.ui.MapViewer;
 import org.thema.fracgis.BinRasterLayer;
 import org.thema.fracgis.LayerModel;
@@ -45,7 +35,9 @@ public class RasterSelectionDialog extends javax.swing.JDialog {
     DefaultLayer selLayer;
     RectModShape selShape;
     /**
-     * Creates new form VectorSelectionDialog
+     * Creates new dialog RasterSelectionDialog
+     * @param parent
+     * @param mapViewer
      */
     public RasterSelectionDialog(java.awt.Frame parent, MapViewer mapViewer) {
         super(parent, false);
@@ -172,11 +164,11 @@ public class RasterSelectionDialog extends javax.swing.JDialog {
             Rectangle r = selShape.getJavaShape(t).getBounds();
             Raster selRaster = img.getImage().getData(r).createTranslatedChild(0, 0);
             BinRasterLayer l = new BinRasterLayer(layerNameTextField.getText(), new RasterShape(selRaster, 
-                    img.getGrid2World().createTransformedShape(r).getBounds2D(), new RasterStyle(), true));
+                    img.getGrid2World().createTransformedShape(r).getBounds2D(), new RasterStyle(), true), layer.getCRS());
             l.setRemovable(true);
             ((DefaultGroupLayer)mapViewer.getLayers()).addLayerFirst(l);
             mapViewer.getMap().clearSelection();
-        } catch (Exception ex) {
+        } catch (NoninvertibleTransformException ex) {
             Logger.getLogger(RasterSelectionDialog.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_createButtonActionPerformed

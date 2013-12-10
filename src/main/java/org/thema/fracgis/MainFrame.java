@@ -39,7 +39,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -51,6 +50,7 @@ import javax.media.jai.iterator.RandomIterFactory;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import org.geotools.coverage.grid.GridCoverage2D;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.thema.GlobalDataStore;
 import org.thema.common.Config;
 import org.thema.common.JTS;
@@ -86,7 +86,7 @@ import org.thema.process.Rasterizer;
  */
 public class MainFrame extends javax.swing.JFrame {
 
-    public static final String VERSION = "0.4.3";
+    public static final String VERSION = "0.4.4";
 
     DefaultGroupLayer groupLayer;
 
@@ -348,11 +348,12 @@ public class MainFrame extends javax.swing.JFrame {
          try {
             String layer = f.getName().substring(0, f.getName().length()-4);
             List<DefaultFeature> features = GlobalDataStore.getFeatures(f, null, Config.getProgressBar());
+            CoordinateReferenceSystem crs = GlobalDataStore.getCRS(f);
             Geometry g = features.get(0).getGeometry();
             boolean isLinear = g instanceof Lineal;
             if(isLinear) {
                 DefaultGroupLayer gl = new DefaultGroupLayer(layer + "-Network");
-                FeatureLayer fl = new FeatureLayer(layer, features);
+                FeatureLayer fl = new FeatureLayer(layer, features, null, crs);
                 gl.addLayerFirst(fl);
                 SpatialGraph network = new SpatialGraph(features, new GeometryPrecisionReducer(new PrecisionModel(1000)));
                 SpatialGraphLayer graphlayer = new SpatialGraphLayer(layer + "-Graph", network);
@@ -361,7 +362,7 @@ public class MainFrame extends javax.swing.JFrame {
                 groupLayer.addLayerFirst(gl);
                 gl.setRemovable(true);
             } else {
-                FeatureLayer fl = new FeatureLayer(layer, features);
+                FeatureLayer fl = new FeatureLayer(layer, features, null, crs);
                 fl.setRemovable(true);
                 groupLayer.addLayerFirst(fl);
             }
@@ -432,7 +433,8 @@ public class MainFrame extends javax.swing.JFrame {
         try {
             try {
                 GridCoverage2D grid = IOImage.loadTiff(f);
-                fl = new RasterLayer(f.getName(), new CoverageShape(grid, new RasterStyle()));
+                fl = new RasterLayer(f.getName(), new CoverageShape(grid, new RasterStyle()),
+                        grid.getCoordinateReferenceSystem2D());
             } catch(IOException ex) {
                 Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "Impossible to load GeoTiff. Try simple TIFF", ex);
                 BufferedImage img = ImageIO.read(f);
@@ -444,8 +446,9 @@ public class MainFrame extends javax.swing.JFrame {
             return;
         }
 
-        if(isBinary(fl.getImageShape().getImage()))
-            fl = new BinRasterLayer(f.getName(), fl.getImageShape());
+        if(isBinary(fl.getImageShape().getImage())) {
+            fl = new BinRasterLayer(f.getName(), fl.getImageShape(),fl.getCRS());
+        }
         fl.setRemovable(true);
         groupLayer.addLayerFirst(fl);
 
@@ -472,13 +475,12 @@ public class MainFrame extends javax.swing.JFrame {
                     if(raster == null)
                         return;
                     BinRasterLayer l = new BinRasterLayer(dlg.layer.getName() + "-raster_" + dlg.resolution, 
-                            new RasterShape(new RasterImage(raster), rasterizer.getEnvelope()));
+                            new RasterShape(new RasterImage(raster), rasterizer.getEnvelope()), dlg.layer.getCRS());
                     ((DefaultGroupLayer) mapViewer.getLayers()).addLayerFirst(l);
                 } catch (Throwable ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(null, "An error occured :\n"+ex.getLocalizedMessage());
                 }
-
             }
         }).start();
     }//GEN-LAST:event_rasterizeMenuItemActionPerformed
@@ -624,31 +626,28 @@ public class MainFrame extends javax.swing.JFrame {
                 radMethod.execute(monitor);
                 
                 RasterStyle dimStyle = new RasterStyle(ColorRamp.RAMP_TEMP, 0, 2);
-                dimStyle.setNoDataValue(-99);
                 DefaultGroupLayer gl = new DefaultGroupLayer(dlg.layer.getName() + "_MultiRadial_maxsize" + dlg.maxSize, true);
                 gl.setRemovable(true);
                 RasterLayer l = new RasterLayer("Dimension#", 
-                        new RasterShape(radMethod.getRasterDim(), dlg.layer.getBounds(), dimStyle, true));
+                        new RasterShape(radMethod.getRasterDim(), dlg.layer.getBounds(), dimStyle, true), dlg.layer.getCRS());
                 gl.addLayerLast(l);
                 RasterStyle r2Style = new RasterStyle(ColorRamp.RAMP_GREEN, 0, 1);
-                r2Style.setNoDataValue(-99);
                 l = new RasterLayer("R2#", 
-                        new RasterShape(radMethod.getRasterR2(), dlg.layer.getBounds(), r2Style, true));
+                        new RasterShape(radMethod.getRasterR2(), dlg.layer.getBounds(), r2Style, true), dlg.layer.getCRS());
                 l.setVisible(false);
                 gl.addLayerLast(l);
                 if(dlg.confidenceInterval) {
                     RasterStyle interStyle = new RasterStyle(ColorRamp.RAMP_RED);
-                    interStyle.setNoDataValue(-99);
                     l = new RasterLayer("Confidence interval#", 
-                            new RasterShape(radMethod.getRasterDinter(), dlg.layer.getBounds(), interStyle, true));
+                            new RasterShape(radMethod.getRasterDinter(), dlg.layer.getBounds(), interStyle, true), dlg.layer.getCRS());
                     l.setVisible(false);
                     gl.addLayerLast(l);
                     l = new RasterLayer("Confidence interval min#", 
-                            new RasterShape(radMethod.getRasterDmin(), dlg.layer.getBounds(), dimStyle, true));
+                            new RasterShape(radMethod.getRasterDmin(), dlg.layer.getBounds(), dimStyle, true), dlg.layer.getCRS());
                     l.setVisible(false);
                     gl.addLayerLast(l);
                     l = new RasterLayer("Confidence interval max#", 
-                            new RasterShape(radMethod.getRasterDmax(), dlg.layer.getBounds(), dimStyle, true));
+                            new RasterShape(radMethod.getRasterDmax(), dlg.layer.getBounds(), dimStyle, true), dlg.layer.getCRS());
                     l.setVisible(false);
                     gl.addLayerLast(l);
                 }
