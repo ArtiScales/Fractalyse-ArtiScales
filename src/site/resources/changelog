@@ -1,3 +1,8 @@
+version 0.4.4
+- meilleure gestion des CRS (projection) à l'export des couches
+- MultiRadial : suppression du code -99 car pose problème avec ArcGIS
+version 0.4.3
+- mise à jour GeoTools 2.6.3 -> 2.7.5
 version 0.4.2 (27/11/2013)
 - passage du projet à maven
 version 0.4.1 (22/11/2013)
