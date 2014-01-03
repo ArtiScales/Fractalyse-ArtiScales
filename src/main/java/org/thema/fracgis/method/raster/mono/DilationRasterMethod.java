@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.thema.fracgis.method.raster;
+package org.thema.fracgis.method.raster.mono;
 
 import com.vividsolutions.jts.geom.Envelope;
 import java.awt.image.DataBuffer;
@@ -13,14 +13,18 @@ import java.util.TreeMap;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import org.thema.common.parallel.ProgressBar;
+import org.thema.fracgis.method.MonoMethod;
+import org.thema.fracgis.method.raster.RasterMethod;
 
 /**
  *
  * @author gvuidel
  */
-public class DilationRasterMethod extends RasterMethod {
+public class DilationRasterMethod extends RasterMethod implements MonoMethod {
 
-    int nStep;
+    private int nStep;
+    
+    private TreeMap<Double, Double> curve;
 
     public DilationRasterMethod(String inputName, RenderedImage img, Envelope env, int nStep) {
         super(inputName, img, env);
@@ -69,6 +73,11 @@ public class DilationRasterMethod extends RasterMethod {
         
     }
 
+    @Override
+    public TreeMap<Double, Double> getCurve() {
+        return curve;
+    }
+    
     @Override
     public int getDimSign() {
         return -1;

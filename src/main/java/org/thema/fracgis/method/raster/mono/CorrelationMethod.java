@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package org.thema.fracgis.method.raster;
+package org.thema.fracgis.method.raster.mono;
 
 import com.vividsolutions.jts.geom.Envelope;
 import java.awt.image.DataBuffer;
@@ -19,6 +19,8 @@ import java.util.concurrent.CancellationException;
 import org.thema.common.parallel.AbstractParallelFTask;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.ProgressBar;
+import org.thema.fracgis.method.MonoMethod;
+import org.thema.fracgis.method.raster.RasterMethod;
 
 /**
  *
@@ -26,7 +28,7 @@ import org.thema.common.parallel.ProgressBar;
  */
 
 
-public class CorrelationMethod extends RasterMethod {
+public class CorrelationMethod extends RasterMethod implements MonoMethod {
 
     public static class CorrelationTask extends AbstractParallelFTask<TreeMap<Double, Double>, double[]>
             implements Serializable {
@@ -159,7 +161,9 @@ public class CorrelationMethod extends RasterMethod {
 
     }
 
-    double maxSize;
+    private double maxSize;
+    
+    private TreeMap<Double, Double> curve;
 
     public CorrelationMethod(String inputName, RenderedImage img, Envelope env) {
         this(inputName, img, env, getDefaultMax(env));
@@ -190,6 +194,11 @@ public class CorrelationMethod extends RasterMethod {
         curve = task.getResult();
     }
 
+    @Override
+    public TreeMap<Double, Double> getCurve() {
+        return curve;
+    }
+    
     @Override
     public int getDimSign() {
         return 1;

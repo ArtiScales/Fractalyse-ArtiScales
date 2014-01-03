@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package org.thema.fracgis.method.raster;
+package org.thema.fracgis.method.raster.mono;
 
 import com.vividsolutions.jts.geom.Envelope;
 import java.awt.image.DataBuffer;
@@ -17,15 +17,19 @@ import java.util.TreeMap;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import org.thema.common.parallel.ProgressBar;
+import org.thema.fracgis.method.MonoMethod;
+import org.thema.fracgis.method.raster.RasterMethod;
 
 /**
  *
  * @author gvuidel
  */
-public class BoxCountingRasterMethod extends RasterMethod {
+public class BoxCountingRasterMethod extends RasterMethod implements MonoMethod {
     
-    double coef;
-    double maxSize;
+    private final double coef;
+    private final double maxSize;
+    
+    private TreeMap<Double, Double> curve;
 
     public BoxCountingRasterMethod(String inputName, RenderedImage img, Envelope env, double coef, double maxSize) {
         super(inputName, img, env);
@@ -73,6 +77,11 @@ public class BoxCountingRasterMethod extends RasterMethod {
         }
     }
 
+    @Override
+    public TreeMap<Double, Double> getCurve() {
+        return curve;
+    }
+    
     @Override
     public int getDimSign() {
         return -1;

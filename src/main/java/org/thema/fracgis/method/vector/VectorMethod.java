@@ -5,16 +5,17 @@
 package org.thema.fracgis.method.vector;
 
 import com.vividsolutions.jts.geom.Envelope;
+import java.util.TreeMap;
 import org.thema.common.param.XMLParams;
 import org.thema.drawshape.feature.Feature;
 import org.thema.drawshape.feature.FeatureCoverage;
-import org.thema.fracgis.method.Method;
+import org.thema.fracgis.method.AbstractMethod;
 
 /**
  *
  * @author gvuidel
  */
-public abstract class VectorMethod extends Method {
+public abstract class VectorMethod extends AbstractMethod {
     @XMLParams.NoParam
     protected FeatureCoverage<Feature> coverage;
     
@@ -26,7 +27,7 @@ public abstract class VectorMethod extends Method {
         super(inputName);
         this.coverage = coverage;
     }
-
+    
     @Override
     public Envelope getDataEnvelope() {
         return coverage.getEnvelope();

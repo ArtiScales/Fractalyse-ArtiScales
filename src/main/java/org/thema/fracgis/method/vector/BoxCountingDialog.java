@@ -19,6 +19,7 @@ import org.thema.drawshape.feature.DefaultFeatureCoverage;
 import org.thema.drawshape.feature.Feature;
 import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.fracgis.LayerModel;
+import org.thema.fracgis.method.vector.mono.BoxCountingMethod;
 
 /**
  *

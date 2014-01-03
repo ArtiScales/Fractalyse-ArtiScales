@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.thema.fracgis.method.vector;
+package org.thema.fracgis.method.vector.mono;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -13,23 +13,24 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TreeMap;
 import java.util.concurrent.CancellationException;
-import org.thema.common.parallel.BufferTask;
+import org.thema.common.parallel.BufferForkJoinTask;
 import org.thema.common.parallel.ProgressBar;
 import org.thema.common.param.XMLParams;
 import org.thema.drawshape.feature.Feature;
 import org.thema.drawshape.feature.FeatureCoverage;
 import org.thema.drawshape.layer.GeometryLayer;
 import org.thema.drawshape.style.SimpleStyle;
+import org.thema.fracgis.method.MonoMethod;
 
 /**
  *
  * @author gvuidel
  */
-public class DilationMethod extends VectorMethod {
+public class DilationMethod extends SimpleVectorMethod {
 
-    double minSize = 0;
-    double maxSize = 0;
-    double coef = 1.5;
+    private double minSize = 0;
+    private double maxSize = 0;
+    private double coef = 1.5;
     
     @XMLParams.NoParam
     TreeMap<Double, Double> clusters;
@@ -79,9 +80,9 @@ public class DilationMethod extends VectorMethod {
                 throw new CancellationException();
             monitor.setNote("Distance : " + (radius*2));
             if(threaded)
-                bufGeom = BufferTask.threadedBuffer(geom, radius);
+                bufGeom = BufferForkJoinTask.threadedBuffer(geom, radius);
             else
-                bufGeom = BufferTask.buffer(geom, radius, BufferParameters.DEFAULT_QUADRANT_SEGMENTS);
+                bufGeom = BufferForkJoinTask.buffer(geom, radius, BufferParameters.DEFAULT_QUADRANT_SEGMENTS);
             double refArea = Math.PI*Math.pow(radius, 2);
             curve.put(2*radius, bufGeom.getArea() / refArea);
             clusters.put(2*radius, (double)bufGeom.getNumGeometries());

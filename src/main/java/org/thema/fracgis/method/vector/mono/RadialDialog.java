@@ -9,7 +9,7 @@
  * Created on 2 févr. 2010, 10:57:31
  */
 
-package org.thema.fracgis.method.vector;
+package org.thema.fracgis.method.vector.mono;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import java.awt.Color;

@@ -17,7 +17,8 @@ import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.xy.XYSeries;
-import org.thema.fracgis.method.Method;
+import org.thema.fracgis.method.AbstractMethod;
+import org.thema.fracgis.method.MonoMethod;
 
 /**
  *
@@ -27,7 +28,7 @@ public class LogEstimation extends AbstractEstimation{
 
     transient SimpleRegression regression;
 
-    public LogEstimation(Method method) {
+    public LogEstimation(MonoMethod method) {
         super(method);
         estimate();
     }
@@ -105,7 +106,7 @@ public class LogEstimation extends AbstractEstimation{
         return String.format(Locale.US, "b%g", regression.getIntercept());
     }
 
-    public void estimate() {
+    public final void estimate() {
         regression = new SimpleRegression();
         for(Double x : getRangeCurve().keySet())
             regression.addData(Math.log(x), Math.log(curve.get(x)));

@@ -2,10 +2,12 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.thema.fracgis.method.vector;
+package org.thema.fracgis.method.vector.mono;
 
 import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.operation.buffer.BufferParameters;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -17,21 +19,24 @@ import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.param.XMLParams;
 import org.thema.drawshape.feature.Feature;
 import org.thema.drawshape.feature.FeatureCoverage;
+import org.thema.fracgis.estimation.RectangularRangeShape;
+import org.thema.fracgis.method.MethodLayers;
+import org.thema.fracgis.method.MonoMethod;
 
 /**
  *
  * @author gvuidel
  */
-public class RadialMethod extends VectorMethod {
+public class RadialMethod extends SimpleVectorMethod {
 
     @XMLParams.NoParam
-    Coordinate centre = null;
+    private Coordinate centre = null;
     
-    double minSize;
-    double maxSize = 0;
-    double stepSize = 1;
-    int shape = BufferParameters.CAP_ROUND;
-    
+    private double minSize;
+    private double maxSize = 0;
+    private double stepSize = 1;
+    private int shape = BufferParameters.CAP_ROUND;    
+        
     /**
      * For parameter management only
      */
@@ -68,9 +73,9 @@ public class RadialMethod extends VectorMethod {
 
     @Override
     public void execute(ProgressBar monitor, boolean threaded) {
-        curve = new TreeMap<Double, Double>();
+        curve = new TreeMap<>();
         final Point p = new GeometryFactory().createPoint(centre);
-        List<Double> radius = new ArrayList<Double>();
+        List<Double> radius = new ArrayList<>();
         for(double d = minSize/2; d <= maxSize/2; d+=stepSize/2)
             radius.add(d);
         SimpleParallelTask<Double> task = new SimpleParallelTask<Double>(radius, monitor) {
@@ -95,7 +100,7 @@ public class RadialMethod extends VectorMethod {
         if(task.isCanceled())
             throw new CancellationException();
     }
-
+    
     @Override
     public int getDimSign() {
         return 1;
@@ -111,6 +116,15 @@ public class RadialMethod extends VectorMethod {
         return "Radial";
     }
     
+    @Override
+    public MethodLayers getGroupLayer() {
+        MethodLayers groupLayer = super.getGroupLayer(); 
+        RectangularRangeShape rangeShape = new RectangularRangeShape(new Point2D.Double(centre.x, centre.y), 0, maxSize);
+        rangeShape.setShape(new Ellipse2D.Double());
+        groupLayer.setScaleRangeShape(rangeShape);
+        return groupLayer;
+    }
+    
     public static Coordinate getDefaultCentre(Envelope env) {
         return env.centre();
     }
@@ -119,5 +133,4 @@ public class RadialMethod extends VectorMethod {
         return 2*Math.min(Math.min(env.getMaxX() - centre.x, env.getMaxY() - centre.y), Math.min(centre.x - env.getMinX(), centre.y - env.getMinY())); 
     }
 
-    
 }

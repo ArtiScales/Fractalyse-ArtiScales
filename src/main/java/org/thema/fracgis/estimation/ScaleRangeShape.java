@@ -7,7 +7,6 @@ package org.thema.fracgis.estimation;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
-import java.awt.geom.Path2D.Double;
 import java.awt.geom.Point2D;
 import org.thema.drawshape.AbstractDrawableJavaShape;
 
@@ -17,7 +16,7 @@ import org.thema.drawshape.AbstractDrawableJavaShape;
  */
 public class ScaleRangeShape extends AbstractDrawableJavaShape {
 
-    private Point2D centre;
+    private final Point2D centre;
     private double rangeMin, rangeMax;
 
     public ScaleRangeShape(Point2D centre, double rangeMin, double rangeMax) {
@@ -75,7 +74,9 @@ public class ScaleRangeShape extends AbstractDrawableJavaShape {
         this.rangeMin = rangeMin;
         fireShapeChanged();
     }
-    
-    
+
+    public Point2D getCentre() {
+        return centre;
+    }
     
 }

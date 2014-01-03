@@ -17,9 +17,10 @@ import org.thema.drawshape.feature.DefaultFeatureCoverage;
 import org.thema.drawshape.feature.Feature;
 import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.fracgis.LayerModel;
-import org.thema.fracgis.method.vector.BoxCountingMethod;
-import org.thema.fracgis.method.vector.DilationMethod;
-import org.thema.fracgis.method.vector.RadialMethod;
+import org.thema.fracgis.method.vector.mono.BoxCountingMethod;
+import org.thema.fracgis.method.vector.mono.DilationMethod;
+import org.thema.fracgis.method.vector.mono.RadialMethod;
+import org.thema.fracgis.method.vector.mono.SimpleVectorMethod;
 import org.thema.fracgis.method.vector.VectorMethod;
 
 /**
@@ -31,7 +32,7 @@ public class BatchVectorDialog extends javax.swing.JDialog {
     public boolean isOk = false;
     
     public FeatureLayer layer;
-    public VectorMethod method;
+    public SimpleVectorMethod method;
     public boolean grid;
     public double resolution;
     public FeatureLayer zoneLayer;
@@ -302,7 +303,7 @@ public class BatchVectorDialog extends javax.swing.JDialog {
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
         layer = (FeatureLayer) layerComboBox.getSelectedItem();
-        method = (VectorMethod) methodComboBox.getSelectedItem();
+        method = (SimpleVectorMethod) methodComboBox.getSelectedItem();
         
         grid = gridRadioButton.isSelected();
         if(grid)

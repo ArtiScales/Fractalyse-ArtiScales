@@ -9,7 +9,7 @@
  * Created on 26 févr. 2010, 16:57:09
  */
 
-package org.thema.fracgis.method.raster;
+package org.thema.fracgis.method.raster.mono;
 
 import javax.swing.JOptionPane;
 import org.thema.common.JTS;

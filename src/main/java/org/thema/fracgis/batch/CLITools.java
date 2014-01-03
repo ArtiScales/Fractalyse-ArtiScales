@@ -5,11 +5,11 @@
 
 package org.thema.fracgis.batch;
 
-import org.thema.fracgis.method.vector.DilationMethod;
-import org.thema.fracgis.method.vector.BoxCountingMethod;
-import org.thema.fracgis.method.raster.DilationRasterMethod;
-import org.thema.fracgis.method.raster.BoxCountingRasterMethod;
-import org.thema.fracgis.method.raster.CorrelationMethod;
+import org.thema.fracgis.method.vector.mono.DilationMethod;
+import org.thema.fracgis.method.vector.mono.BoxCountingMethod;
+import org.thema.fracgis.method.raster.mono.DilationRasterMethod;
+import org.thema.fracgis.method.raster.mono.BoxCountingRasterMethod;
+import org.thema.fracgis.method.raster.mono.CorrelationMethod;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;

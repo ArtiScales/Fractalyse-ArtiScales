@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package org.thema.fracgis.method.vector;
+package org.thema.fracgis.method.vector.mono;
 
 import com.vividsolutions.jts.geom.*;
 import java.awt.Color;
@@ -17,6 +17,7 @@ import org.thema.drawshape.feature.Feature;
 import org.thema.drawshape.feature.FeatureCoverage;
 import org.thema.drawshape.layer.GeometryLayer;
 import org.thema.drawshape.style.SimpleStyle;
+import org.thema.fracgis.method.MonoMethod;
 import org.thema.msca.Cell;
 import org.thema.msca.MSCell;
 import org.thema.msca.SquareGrid;
@@ -149,18 +150,18 @@ class BoxCountingTask2 extends AbstractDistributeTask<Integer, Collection<Intege
     }
 }
 
-public class BoxCountingMethod extends VectorMethod {
+public class BoxCountingMethod extends SimpleVectorMethod {
 
-    double minSize = 0;
-    double maxSize = 0;
-    double coef = 2;
+    private double minSize = 0;
+    private double maxSize = 0;
+    private double coef = 2;
     @XMLParams.Name("gliding")
-    int d = 1;
+    private int d = 1;
     
     @XMLParams.NoParam
-    TreeSet<Double> sizes;
+    private TreeSet<Double> sizes;
     @XMLParams.NoParam
-    boolean keepCells = false;
+    private boolean keepCells = false;
 
     /**
      * For parameter management only
@@ -295,7 +296,7 @@ public class BoxCountingMethod extends VectorMethod {
     }
 
     public double getMax() {
-        return maxSize;
+        return sizes.last();
     }
 
     public double getMin() {
@@ -309,7 +310,7 @@ public class BoxCountingMethod extends VectorMethod {
     
     @Override
     public String getParamsName() {
-        return String.format(Locale.US, "coef%g_min%g_max%g_glid%d", coef, minSize, maxSize, d);
+        return String.format(Locale.US, "coef%g_min%g_max%g_glid%d", coef, getMin(), getMax(), d);
     }
     
     public static double getDefaultMin(FeatureCoverage<Feature> cov) {

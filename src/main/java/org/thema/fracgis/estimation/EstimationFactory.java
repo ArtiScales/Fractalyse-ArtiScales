@@ -4,8 +4,7 @@
  */
 package org.thema.fracgis.estimation;
 
-import java.util.TreeMap;
-import org.thema.fracgis.method.Method;
+import org.thema.fracgis.method.MonoMethod;
 
 /**
  *
@@ -14,10 +13,10 @@ import org.thema.fracgis.method.Method;
 public class EstimationFactory {
     public enum Type {DIRECT, LOG}
     
-    private Method method;
-    private Type defaultEstim;
+    private final MonoMethod method;
+    private final Type defaultEstim;
 
-    public EstimationFactory(Method method) {
+    public EstimationFactory(MonoMethod method) {
         this.method = method;
         this.defaultEstim = method.getDimSign() == 1 ? Type.DIRECT : Type.LOG;
     }

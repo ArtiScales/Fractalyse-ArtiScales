@@ -2,25 +2,32 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.thema.fracgis.method.raster;
+package org.thema.fracgis.method.raster.mono;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
+import java.awt.geom.Point2D;
 import java.awt.image.RenderedImage;
 import java.util.Locale;
 import java.util.TreeMap;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import org.thema.common.parallel.ProgressBar;
+import org.thema.fracgis.estimation.RectangularRangeShape;
+import org.thema.fracgis.method.MethodLayers;
+import org.thema.fracgis.method.MonoMethod;
+import org.thema.fracgis.method.raster.RasterMethod;
 
 /**
  *
  * @author gvuidel
  */
-public class RadialRasterMethod extends RasterMethod {
+public class RadialRasterMethod extends RasterMethod implements MonoMethod {
     
-    Coordinate centre = null;
-    double maxSize;
+    private Coordinate centre = null;
+    private double maxSize;
+    
+    private TreeMap<Double, Double> curve;
     
     /**
      * Constructor for pixel unit centre and maxSize (no envelope supplied)
@@ -78,11 +85,15 @@ public class RadialRasterMethod extends RasterMethod {
             count[i] += count[i-1];
         
         double res = getResolution();
-        curve = new TreeMap<Double, Double>();
+        curve = new TreeMap<>();
         for(int i = 0; i < count.length; i++)
             curve.put((2*i+1) * res, count[i] * res*res);
     }
 
+    @Override
+    public TreeMap<Double, Double> getCurve() {
+        return curve;
+    }
     
     @Override
     public int getDimSign() {
@@ -97,6 +108,13 @@ public class RadialRasterMethod extends RasterMethod {
     @Override
     public String getParamsName() {
         return String.format(Locale.US, "cx%g_cy%g_max%g", centre!=null?centre.x:0.0, centre!=null?centre.y:0.0, maxSize);
+    }
+
+    @Override
+    public MethodLayers getGroupLayer() {
+        MethodLayers groupLayer = super.getGroupLayer(); 
+        groupLayer.setScaleRangeShape(new RectangularRangeShape(new Point2D.Double(centre.x, centre.y), 0, maxSize));
+        return groupLayer;
     }
     
     public static Coordinate getDefaultCentre(Envelope env) {

@@ -7,13 +7,13 @@ package org.thema.fracgis.method.raster;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 import java.awt.image.RenderedImage;
-import org.thema.fracgis.method.Method;
+import org.thema.fracgis.method.AbstractMethod;
 
 /**
  *
  * @author gvuidel
  */
-public abstract class RasterMethod extends Method {
+public abstract class RasterMethod extends AbstractMethod {
    
     protected RenderedImage img;
     protected Envelope envelope;
@@ -23,11 +23,12 @@ public abstract class RasterMethod extends Method {
         this.img = img;
         this.envelope = envelope;
     }
-
+        
     public RenderedImage getImg() {
         return img;
     }
 
+    @Override
     public Envelope getDataEnvelope() {
         return envelope;
     }

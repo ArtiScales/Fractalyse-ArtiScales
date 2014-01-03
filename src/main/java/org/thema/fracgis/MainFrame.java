@@ -13,20 +13,20 @@ package org.thema.fracgis;
 
 import org.thema.fracgis.method.network.LocalNetworkDialog;
 import org.thema.fracgis.method.network.DesserteDialog;
-import org.thema.fracgis.method.vector.DilationMethod;
-import org.thema.fracgis.method.vector.RadialMethod;
-import org.thema.fracgis.method.vector.DilationDialog;
-import org.thema.fracgis.method.vector.BoxCountingMethod;
+import org.thema.fracgis.method.vector.mono.DilationMethod;
+import org.thema.fracgis.method.vector.mono.RadialMethod;
+import org.thema.fracgis.method.vector.mono.DilationDialog;
+import org.thema.fracgis.method.vector.mono.BoxCountingMethod;
 import org.thema.fracgis.method.vector.BoxCountingDialog;
-import org.thema.fracgis.method.vector.RadialDialog;
-import org.thema.fracgis.method.raster.CorrelationDialog;
-import org.thema.fracgis.method.raster.DilationRasterMethod;
-import org.thema.fracgis.method.raster.DilationRasterDialog;
-import org.thema.fracgis.method.raster.RadialRasterDialog;
-import org.thema.fracgis.method.raster.BoxCountingRasterMethod;
+import org.thema.fracgis.method.vector.mono.RadialDialog;
+import org.thema.fracgis.method.raster.mono.CorrelationDialog;
+import org.thema.fracgis.method.raster.mono.DilationRasterMethod;
+import org.thema.fracgis.method.raster.mono.DilationRasterDialog;
+import org.thema.fracgis.method.raster.mono.RadialRasterDialog;
+import org.thema.fracgis.method.raster.mono.BoxCountingRasterMethod;
 import org.thema.fracgis.method.raster.BoxCountingRasterDialog;
-import org.thema.fracgis.method.raster.CorrelationMethod;
-import org.thema.fracgis.method.raster.RadialRasterMethod;
+import org.thema.fracgis.method.raster.mono.CorrelationMethod;
+import org.thema.fracgis.method.raster.mono.RadialRasterMethod;
 import org.thema.fracgis.tools.RasterizeDialog;
 import org.thema.fracgis.tools.BinarizeDialog;
 import org.thema.fracgis.batch.BatchVectorDialog;
@@ -75,6 +75,9 @@ import org.thema.fracgis.batch.*;
 import org.thema.fracgis.estimation.EstimationFactory;
 import org.thema.fracgis.estimation.EstimationFrame;
 import org.thema.fracgis.method.*;
+import org.thema.fracgis.method.raster.multi.MultiFracBoxCountingRasterMethod;
+import org.thema.fracgis.method.vector.multi.MultiFracBoxCountingVectorMethod;
+import org.thema.fracgis.estimation.MultiFracEstimationFrame;
 import org.thema.fracgis.tools.RasterSelectionDialog;
 import org.thema.fracgis.tools.VectorSelectionDialog;
 import org.thema.graph.SpatialGraph;
@@ -86,7 +89,7 @@ import org.thema.process.Rasterizer;
  */
 public class MainFrame extends javax.swing.JFrame {
 
-    public static final String VERSION = "0.4.4";
+    public static final String VERSION = "0.5";
 
     DefaultGroupLayer groupLayer;
 
@@ -124,12 +127,14 @@ public class MainFrame extends javax.swing.JFrame {
         radialMenuItem = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         batchVectorMenuItem = new javax.swing.JMenuItem();
+        multiFracVectorMenuItem1 = new javax.swing.JMenuItem();
         rasterMenu = new javax.swing.JMenu();
         boxCountingRasterMenuItem = new javax.swing.JMenuItem();
         dilRasterMenuItem = new javax.swing.JMenuItem();
         correlationMenuItem = new javax.swing.JMenuItem();
         radialRasterMenuItem = new javax.swing.JMenuItem();
         multiRadialRasterMenuItem = new javax.swing.JMenuItem();
+        multiFracRasterMenuItem = new javax.swing.JMenuItem();
         networkMenu = new javax.swing.JMenu();
         backBoneMenuItem = new javax.swing.JMenuItem();
         desserteMenuItem = new javax.swing.JMenuItem();
@@ -208,6 +213,14 @@ public class MainFrame extends javax.swing.JFrame {
         });
         vectorMenu.add(batchVectorMenuItem);
 
+        multiFracVectorMenuItem1.setText("Multifractal...");
+        multiFracVectorMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                multiFracVectorMenuItem1ActionPerformed(evt);
+            }
+        });
+        vectorMenu.add(multiFracVectorMenuItem1);
+
         jMenuBar1.add(vectorMenu);
 
         rasterMenu.setText("Raster");
@@ -251,6 +264,14 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         rasterMenu.add(multiRadialRasterMenuItem);
+
+        multiFracRasterMenuItem.setText("Multifractal...");
+        multiFracRasterMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                multiFracRasterMenuItemActionPerformed(evt);
+            }
+        });
+        rasterMenu.add(multiFracRasterMenuItem);
 
         jMenuBar1.add(rasterMenu);
 
@@ -622,7 +643,7 @@ public class MainFrame extends javax.swing.JFrame {
             public void run() {
                 ProgressBar monitor = Config.getProgressBar("Multi radial...");
                 MultiRadialRaster radMethod = new MultiRadialRaster(dlg.layer.getImageShape().getImage(), 
-                        dlg.layer.getBounds(), dlg.maxSize, dlg.confidenceInterval);
+                        dlg.layer.getBounds(), dlg.maxSize, dlg.autoThreshold, dlg.confidenceInterval);
                 radMethod.execute(monitor);
                 
                 RasterStyle dimStyle = new RasterStyle(ColorRamp.RAMP_TEMP, 0, 2);
@@ -636,6 +657,18 @@ public class MainFrame extends javax.swing.JFrame {
                         new RasterShape(radMethod.getRasterR2(), dlg.layer.getBounds(), r2Style, true), dlg.layer.getCRS());
                 l.setVisible(false);
                 gl.addLayerLast(l);
+                if(dlg.autoThreshold) {
+                    RasterStyle distStyle = new RasterStyle(ColorRamp.reverse(ColorRamp.RAMP_BROWN));
+                    l = new RasterLayer("DistMax#", 
+                            new RasterShape(radMethod.getRasterDistMax(), dlg.layer.getBounds(), distStyle, true), dlg.layer.getCRS());
+                    l.setVisible(false);
+                    RasterStyle aStyle = new RasterStyle(ColorRamp.RAMP_RED);
+                    gl.addLayerLast(l);
+                    l = new RasterLayer("a#", 
+                            new RasterShape(radMethod.getRasterA(), dlg.layer.getBounds(), aStyle, true), dlg.layer.getCRS());
+                    l.setVisible(false);
+                    gl.addLayerLast(l);
+                }
                 if(dlg.confidenceInterval) {
                     RasterStyle interStyle = new RasterStyle(ColorRamp.RAMP_RED);
                     l = new RasterLayer("Confidence interval#", 
@@ -668,6 +701,37 @@ public class MainFrame extends javax.swing.JFrame {
         dlg.setVisible(true);
     }//GEN-LAST:event_selRasterMenuItemActionPerformed
 
+    private void multiFracRasterMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_multiFracRasterMenuItemActionPerformed
+        final BoxCountingRasterDialog dlg = new BoxCountingRasterDialog(this, new LayerModel(mapViewer.getLayers(), RasterLayer.class));
+        dlg.setVisible(true);
+        if(!dlg.isOk)
+            return;
+
+        new Thread(new Runnable() {
+            public void run() {
+                
+                MultiFracBoxCountingRasterMethod method = new MultiFracBoxCountingRasterMethod(dlg.layer.getName(),  
+                        dlg.layer.getImageShape().getImage(), JTS.rectToEnv(dlg.layer.getBounds()), dlg.coef, 0);
+                launchMethod(method);
+            }
+        }).start();
+    }//GEN-LAST:event_multiFracRasterMenuItemActionPerformed
+
+    private void multiFracVectorMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_multiFracVectorMenuItem1ActionPerformed
+        final BoxCountingDialog dlg = new BoxCountingDialog(this, new LayerModel(mapViewer.getLayers(), FeatureLayer.class));
+        dlg.setVisible(true);
+        if(!dlg.isOk)
+            return;
+
+        new Thread(new Runnable() {
+            public void run() {
+                MultiFracBoxCountingVectorMethod method = new MultiFracBoxCountingVectorMethod(dlg.layer.getName(),  
+                        new DefaultFeatureCoverage(dlg.layer.getFeatures()), dlg.minSize, dlg.maxSize, dlg.coef);
+                launchMethod(method);
+            }
+        }).start();
+    }//GEN-LAST:event_multiFracVectorMenuItem1ActionPerformed
+
     private boolean isBinary(RenderedImage img) {
         RandomIter iter = RandomIterFactory.create(img, null);
         
@@ -679,13 +743,24 @@ public class MainFrame extends javax.swing.JFrame {
     }
 
 
-    private void launchMethod(Method method) {
+    private void launchMethod(MonoMethod method) {
         ProgressBar monitor = Config.getProgressBar(method.getName() + "...");
         method.execute(monitor, true);
         ((DefaultGroupLayer)mapViewer.getLayers()).addLayerFirst(method.getGroupLayer());
         monitor.setIndeterminate(true);
         monitor.setNote("Estimation...");
         EstimationFrame frm = new EstimationFrame(MainFrame.this, new EstimationFactory(method));
+        frm.setVisible(true);
+        monitor.close();
+    }
+    
+    private void launchMethod(MultiFracMethod method) {
+        ProgressBar monitor = Config.getProgressBar(method.getName() + "...");
+        method.execute(monitor, true);
+        ((DefaultGroupLayer)mapViewer.getLayers()).addLayerFirst(method.getGroupLayer());
+        monitor.setIndeterminate(true);
+        monitor.setNote("Estimation...");
+        MultiFracEstimationFrame frm = new MultiFracEstimationFrame(MainFrame.this, method);
         frm.setVisible(true);
         monitor.close();
     }
@@ -749,6 +824,8 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem loadVectorMenuItem;
     private javax.swing.JMenuItem localNetMenuItem;
     private org.thema.drawshape.ui.MapViewer mapViewer;
+    private javax.swing.JMenuItem multiFracRasterMenuItem;
+    private javax.swing.JMenuItem multiFracVectorMenuItem1;
     private javax.swing.JMenuItem multiRadialRasterMenuItem;
     private javax.swing.JMenu networkMenu;
     private javax.swing.JMenuItem prefMenuItem;

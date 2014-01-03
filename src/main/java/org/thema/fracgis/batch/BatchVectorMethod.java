@@ -20,7 +20,8 @@ import org.thema.drawshape.feature.FeatureCoverage;
 import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.fracgis.estimation.Estimation;
 import org.thema.fracgis.estimation.EstimationFactory;
-import org.thema.fracgis.method.Method;
+import org.thema.fracgis.method.AbstractMethod;
+import org.thema.fracgis.method.vector.mono.SimpleVectorMethod;
 import org.thema.fracgis.method.vector.VectorMethod;
 import org.thema.msca.GridFeatureCoverage;
 import org.thema.msca.SquareGrid;
@@ -31,8 +32,8 @@ import org.thema.msca.SquareGrid;
  */
 public class BatchVectorMethod {
     
-    private FeatureLayer layer;
-    private VectorMethod method;
+    private final FeatureLayer layer;
+    private final SimpleVectorMethod method;
     
     private double resolution;
     
@@ -44,13 +45,13 @@ public class BatchVectorMethod {
 
     private List<Feature> results;
     
-    public BatchVectorMethod(FeatureLayer layer, VectorMethod method, double resolution) {
+    public BatchVectorMethod(FeatureLayer layer, SimpleVectorMethod method, double resolution) {
         this.layer = layer;
         this.method = method;
         this.resolution = resolution;
     }
 
-    public BatchVectorMethod(FeatureLayer layer, VectorMethod method, FeatureLayer zoneLayer, String idZone) {
+    public BatchVectorMethod(FeatureLayer layer, SimpleVectorMethod method, FeatureLayer zoneLayer, String idZone) {
         this.layer = layer;
         this.method = method;
         this.zoneLayer = zoneLayer;
@@ -79,17 +80,17 @@ public class BatchVectorMethod {
                 for(Feature f : featuresIn)
                     featuresClip.add(new DefaultFeature(f.getId(), zone.getGeometry().intersection(f.getGeometry())));
                 try {
-                    VectorMethod m = XMLParams.dupplicate(method);
+                    SimpleVectorMethod m = XMLParams.dupplicate(method);
                     m.setInputData(zoneId.toString(), new DefaultFeatureCoverage(featuresClip));
                     m.execute(new TaskMonitor.EmptyMonitor(), false);
                     Estimation estim = new EstimationFactory(m).getDefaultEstimation();
                     double[] ci = estim.getBootStrapConfidenceInterval();
                     ArrayList values = new ArrayList(Arrays.asList(estim.getDimension(), estim.getR2(), ci[0], ci[1], ci[1]-ci[0]));
                     values.addAll(m.getParams().values());
-                    values.addAll(Method.paramsFromString(estim.getParamInfo()).values());
+                    values.addAll(AbstractMethod.paramsFromString(estim.getParamInfo()).values());
                     synchronized(BatchVectorMethod.this) {
                         if(attrNames.size() < values.size())
-                            attrNames.addAll(Method.paramsFromString(estim.getParamInfo()).keySet());
+                            attrNames.addAll(AbstractMethod.paramsFromString(estim.getParamInfo()).keySet());
                     }
                     results.add(new DefaultFeature(zoneId, zone.getGeometry(), attrNames, values));
                 } catch (Exception ex) {

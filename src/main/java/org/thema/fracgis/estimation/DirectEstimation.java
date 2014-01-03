@@ -15,7 +15,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.jfree.data.xy.XYSeries;
 import org.thema.fracgis.estimation.EstimationFactory.Type;
-import org.thema.fracgis.method.Method;
+import org.thema.fracgis.method.MonoMethod;
 
 /**
  *
@@ -238,11 +238,11 @@ public class DirectEstimation extends AbstractEstimation {
     private transient Function function;
     private double [] coef;
 
-    public DirectEstimation(Method method) {
+    public DirectEstimation(MonoMethod method) {
         this(method, 0);
     }
     
-    public DirectEstimation(Method method, int indModel) {
+    public DirectEstimation(MonoMethod method, int indModel) {
         super(method);
         if(method.getDimSign() == 1)
             functions = Arrays.asList(new ADCFunction(), new ADFunction(), new DCFunction(), new DFunction());

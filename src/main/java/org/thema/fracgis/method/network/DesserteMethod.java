@@ -21,7 +21,9 @@ import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.drawshape.layer.GeometryLayer;
 import org.thema.drawshape.style.FeatureStyle;
 import org.thema.drawshape.style.PointStyle;
-import org.thema.fracgis.method.Method;
+import org.thema.fracgis.method.AbstractMethod;
+import org.thema.fracgis.method.MethodLayers;
+import org.thema.fracgis.method.MonoMethod;
 import org.thema.graph.SpatialGraph;
 import org.thema.graph.pathfinder.DijkstraPathFinder;
 
@@ -29,7 +31,7 @@ import org.thema.graph.pathfinder.DijkstraPathFinder;
  *
  * @author gvuidel
  */
-public class DesserteMethod extends Method {
+public class DesserteMethod extends AbstractMethod implements MonoMethod {
 
     SpatialGraph network;
     Point point;
@@ -40,6 +42,8 @@ public class DesserteMethod extends Method {
     GeometryLayer centreLayer;
 
     private LocalNetworkMethod localNetworkMethod;
+    
+    private TreeMap<Double, Double> curve;
 
     public DesserteMethod(String inputName, SpatialGraph network, Point startPoint, List<Feature> features)  {
         super(inputName);
@@ -97,6 +101,11 @@ public class DesserteMethod extends Method {
         });
     }
 
+    @Override
+    public TreeMap<Double, Double> getCurve() {
+        return curve;
+    }
+    
     @Override
     public int getDimSign() {
         return 1;

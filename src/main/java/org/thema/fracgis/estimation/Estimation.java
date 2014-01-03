@@ -5,7 +5,6 @@
 
 package org.thema.fracgis.estimation;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
@@ -14,7 +13,7 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.Range;
 import org.jfree.data.xy.XYSeries;
 import org.thema.fracgis.estimation.EstimationFactory.Type;
-import org.thema.fracgis.method.Method;
+import org.thema.fracgis.method.MonoMethod;
 
 /**
  *
@@ -31,6 +30,8 @@ public interface Estimation {
     public void setRange(double xmin, double xmax);
     public Range getRange();
     public XYSeries getScalingBehaviour();
+    public double[][] getSmoothedScalingBehaviour(double bandwidth);
+    public List<Integer> getInflexPointIndices(double bandwidth);
     public String getResultInfo();
     public String getParamInfo();
     public double[] getCoef();
@@ -39,7 +40,7 @@ public interface Estimation {
     public List getModels();
     public Object getModel();
     public void setModel(int indModel);
-    public Method getMethod();
+    public MonoMethod getMethod();
     
     public void saveToText(Writer w) throws IOException;
 }

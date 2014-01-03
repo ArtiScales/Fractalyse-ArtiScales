@@ -12,7 +12,8 @@ import java.util.TreeMap;
 import org.geotools.graph.structure.Edge;
 import org.thema.common.JTS;
 import org.thema.common.parallel.ProgressBar;
-import org.thema.fracgis.method.Method;
+import org.thema.fracgis.method.AbstractMethod;
+import org.thema.fracgis.method.MonoMethod;
 import org.thema.graph.SpatialGraph;
 import org.thema.graph.pathfinder.DijkstraPathFinder;
 
@@ -21,12 +22,14 @@ import org.thema.graph.pathfinder.DijkstraPathFinder;
  *
  * @author gvuidel
  */
-public class LocalNetworkMethod extends Method {
+public class LocalNetworkMethod extends AbstractMethod implements MonoMethod {
 
-    SpatialGraph network;
-    Point point;
-    double resolution;
+    private final SpatialGraph network;
+    private final Point point;
+    private final double resolution;
 
+    private TreeMap<Double, Double> curve;
+    
     public LocalNetworkMethod(String inputName, SpatialGraph network, Point point, double resolution) {
         super(inputName);
         this.network = network;
@@ -34,8 +37,9 @@ public class LocalNetworkMethod extends Method {
         this.resolution = resolution;
     }
 
+    @Override
     public void execute(ProgressBar monitor, boolean threaded) {
-        curve = new TreeMap<Double, Double>();
+        curve = new TreeMap<>();
 
         network.setSnapToEdge(true);
         monitor.setNote("Calc shortest paths...");
@@ -74,6 +78,11 @@ public class LocalNetworkMethod extends Method {
                 curve.put(x, val);
     }
 
+    @Override
+    public TreeMap<Double, Double> getCurve() {
+        return curve;
+    }
+    
     @Override
     public int getDimSign() {
         return 1;

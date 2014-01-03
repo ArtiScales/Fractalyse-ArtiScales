@@ -9,7 +9,7 @@
  * Created on 2 févr. 2010, 10:57:31
  */
 
-package org.thema.fracgis.method.vector;
+package org.thema.fracgis.method.vector.mono;
 
 import javax.swing.JOptionPane;
 import org.thema.drawshape.layer.FeatureLayer;

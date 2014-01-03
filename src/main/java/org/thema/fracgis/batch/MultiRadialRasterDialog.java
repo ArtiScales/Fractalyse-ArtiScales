@@ -25,6 +25,7 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
     public BinRasterLayer layer;
     public double maxSize;
     public boolean confidenceInterval;
+    public boolean autoThreshold;
 
     /** Creates new form CorrelationDialog */
     public MultiRadialRasterDialog(java.awt.Frame parent, LayerModel model) {
@@ -56,6 +57,7 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
         jLabel2 = new javax.swing.JLabel();
         dMaxSpinner = new javax.swing.JSpinner();
         confidenceIntervalCheckBox = new javax.swing.JCheckBox();
+        autoMaxCheckBox = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -81,6 +83,8 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
 
         confidenceIntervalCheckBox.setText("Compute confidence interval");
 
+        autoMaxCheckBox.setText("Auto threshold");
+
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -98,10 +102,15 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
                                 .add(okButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 67, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(cancelButton))))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                        .add(0, 28, Short.MAX_VALUE)
+                        .add(confidenceIntervalCheckBox))
                     .add(layout.createSequentialGroup()
                         .add(28, 28, 28)
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(confidenceIntervalCheckBox)
+                            .add(layout.createSequentialGroup()
+                                .add(12, 12, 12)
+                                .add(autoMaxCheckBox))
                             .add(layout.createSequentialGroup()
                                 .add(jLabel2)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -123,9 +132,11 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel2)
                     .add(dMaxSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(autoMaxCheckBox)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 14, Short.MAX_VALUE)
                 .add(confidenceIntervalCheckBox)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 16, Short.MAX_VALUE)
+                .add(18, 18, 18)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(cancelButton)
                     .add(okButton))
@@ -139,6 +150,7 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
         layer = (BinRasterLayer) layerComboBox.getSelectedItem();
         maxSize = (Double)dMaxSpinner.getValue();
         confidenceInterval = confidenceIntervalCheckBox.isSelected();
+        autoThreshold = autoMaxCheckBox.isSelected();
         isOk = true;
         setVisible(false);
         dispose();
@@ -151,6 +163,7 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JCheckBox autoMaxCheckBox;
     private javax.swing.JButton cancelButton;
     private javax.swing.JCheckBox confidenceIntervalCheckBox;
     private javax.swing.JSpinner dMaxSpinner;

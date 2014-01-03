@@ -7,6 +7,9 @@ package org.thema.fracgis.batch;
 import com.vividsolutions.jts.geom.Coordinate;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.media.jai.iterator.RandomIter;
@@ -15,9 +18,10 @@ import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.ProgressBar;
 import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.parallel.TaskMonitor;
+import org.thema.fracgis.estimation.DirectEstimation;
 import org.thema.fracgis.estimation.Estimation;
 import org.thema.fracgis.estimation.EstimationFactory;
-import org.thema.fracgis.method.raster.RadialRasterMethod;
+import org.thema.fracgis.method.raster.mono.RadialRasterMethod;
 
 /**
  *
@@ -27,15 +31,17 @@ public class MultiRadialRaster {
     RenderedImage img;
     Rectangle2D envelope;
     double maxSize;
+    boolean autoThreshold;
     boolean confidenceInterval;
 
     // results rasters
-    WritableRaster rasterDim, rasterR2, rasterDmin, rasterDmax, rasterDinter;
+    WritableRaster rasterDim, rasterR2, rasterDistMax, rasterA, rasterDmin, rasterDmax, rasterDinter;
     
-    public MultiRadialRaster(RenderedImage img, Rectangle2D envelope, double maxSize, boolean confidenceInterval) {
+    public MultiRadialRaster(RenderedImage img, Rectangle2D envelope, double maxSize, boolean autoThreshold, boolean confidenceInterval) {
         this.img = img;
         this.envelope = envelope;
         this.maxSize = maxSize;
+        this.autoThreshold = autoThreshold;
         this.confidenceInterval = confidenceInterval;
     }
     
@@ -47,6 +53,10 @@ public class MultiRadialRaster {
             rasterDmin = Raster.createWritableRaster(new ComponentSampleModel(DataBuffer.TYPE_FLOAT, img.getWidth(), img.getHeight(), 1, img.getWidth(), new int[1]), null);
             rasterDmax = Raster.createWritableRaster(new ComponentSampleModel(DataBuffer.TYPE_FLOAT, img.getWidth(), img.getHeight(), 1, img.getWidth(), new int[1]), null);
         }
+        if(autoThreshold) {
+            rasterDistMax = Raster.createWritableRaster(new ComponentSampleModel(DataBuffer.TYPE_FLOAT, img.getWidth(), img.getHeight(), 1, img.getWidth(), new int[1]), null);
+            rasterA = Raster.createWritableRaster(new ComponentSampleModel(DataBuffer.TYPE_FLOAT, img.getWidth(), img.getHeight(), 1, img.getWidth(), new int[1]), null);
+        }
         
         SimpleParallelTask task = new SimpleParallelTask.IterParallelTask(img.getHeight(), progress) {
             @Override
@@ -55,10 +65,17 @@ public class MultiRadialRaster {
                 for(int x = 0; x < img.getWidth(); x++)
                     if(r.getSample(x, y, 0) == 1) {
                         Coordinate c = new Coordinate(x, y);
-                        RadialRasterMethod method = new RadialRasterMethod("", img, c, maxSize*img.getWidth()/envelope.getWidth());
+                        RadialRasterMethod method = new RadialRasterMethod("", img, c, maxSize/getResolution());
                         method.execute(new TaskMonitor.EmptyMonitor(), false);
                         try {
-                            Estimation estim = new EstimationFactory(method).getEstimation(EstimationFactory.Type.DIRECT, 3);
+                            DirectEstimation estim = (DirectEstimation) new EstimationFactory(method).getEstimation(EstimationFactory.Type.DIRECT);
+                            if(autoThreshold) {
+                                double max = getThreshold(estim);
+                                estim.setRange(0, max);
+                                rasterDistMax.setSample(x, y, 0, max*getResolution());
+                                rasterA.setSample(x, y, 0, estim.getModel().getA(estim.getCoef()));
+                            } else
+                                estim.setModel(3); // model x^d+c
                             rasterDim.setSample(x, y, 0, estim.getDimension());
                             rasterR2.setSample(x, y, 0, estim.getR2());
                             if(confidenceInterval) {
@@ -76,6 +93,10 @@ public class MultiRadialRaster {
                                 rasterDmin.setSample(x, y, 0, Float.NaN);
                                 rasterDmax.setSample(x, y, 0, Float.NaN);
                             }
+                            if(autoThreshold) {
+                                rasterDistMax.setSample(x, y, 0, Float.NaN);
+                                rasterA.setSample(x, y, 0, Float.NaN);
+                            }
                         }
                     } else {
                         rasterDim.setSample(x, y, 0, Float.NaN);
@@ -85,6 +106,10 @@ public class MultiRadialRaster {
                             rasterDmin.setSample(x, y, 0, Float.NaN);
                             rasterDmax.setSample(x, y, 0, Float.NaN);
                         }
+                        if(autoThreshold) {
+                            rasterDistMax.setSample(x, y, 0, Float.NaN);
+                            rasterA.setSample(x, y, 0, Float.NaN);
+                        }
                     }
                 r.done();
             }
@@ -92,6 +117,10 @@ public class MultiRadialRaster {
         
         new ParallelFExecutor(task).executeAndWait();
         
+    }
+    
+    public double getResolution() {
+        return envelope.getWidth() / img.getWidth();
     }
 
     public WritableRaster getRasterDim() {
@@ -113,6 +142,35 @@ public class MultiRadialRaster {
     public WritableRaster getRasterDinter() {
         return rasterDinter;
     }
+
+    public WritableRaster getRasterDistMax() {
+        return rasterDistMax;
+    }
+
+    public WritableRaster getRasterA() {
+        return rasterA;
+    }
     
-    
+    private double getThreshold(Estimation estim) {
+        double bandwitdh = 0.05;
+        final double inc = 0.05;
+        List<Integer> precPtInflex = null, ptInflex = estim.getInflexPointIndices(bandwitdh);
+        while(ptInflex.size() > 1 && bandwitdh < 1) {
+            bandwitdh += inc;
+            precPtInflex = ptInflex;
+            ptInflex = estim.getInflexPointIndices(bandwitdh);
+        }
+        
+        if(ptInflex.isEmpty()) {
+            if(precPtInflex != null)
+                return estim.getScalingBehaviour().getX(precPtInflex.get(0)).doubleValue();
+            else
+                return estim.getScalingBehaviour().getMaxX();
+        } else {
+            if(ptInflex.size() == 1)
+                return estim.getScalingBehaviour().getX(ptInflex.get(0)).doubleValue();
+            else
+                return Double.NaN;
+        }
+    }
 }
