@@ -643,7 +643,7 @@ public class MainFrame extends javax.swing.JFrame {
             public void run() {
                 ProgressBar monitor = Config.getProgressBar("Multi radial...");
                 MultiRadialRaster radMethod = new MultiRadialRaster(dlg.layer.getImageShape().getImage(), 
-                        dlg.layer.getBounds(), dlg.maxSize, dlg.autoThreshold, dlg.confidenceInterval);
+                        dlg.layer.getBounds(), dlg.maxSize, dlg.autoThreshold, dlg.minThreshold, dlg.indModel, dlg.confidenceInterval);
                 radMethod.execute(monitor);
                 
                 RasterStyle dimStyle = new RasterStyle(ColorRamp.RAMP_TEMP, 0, 2);
@@ -657,15 +657,15 @@ public class MainFrame extends javax.swing.JFrame {
                         new RasterShape(radMethod.getRasterR2(), dlg.layer.getBounds(), r2Style, true), dlg.layer.getCRS());
                 l.setVisible(false);
                 gl.addLayerLast(l);
+                RasterStyle aStyle = new RasterStyle(ColorRamp.RAMP_RED);
+                l = new RasterLayer("a#", 
+                        new RasterShape(radMethod.getRasterA(), dlg.layer.getBounds(), aStyle, true), dlg.layer.getCRS());
+                l.setVisible(false);
+                gl.addLayerLast(l);
                 if(dlg.autoThreshold) {
                     RasterStyle distStyle = new RasterStyle(ColorRamp.reverse(ColorRamp.RAMP_BROWN));
                     l = new RasterLayer("DistMax#", 
                             new RasterShape(radMethod.getRasterDistMax(), dlg.layer.getBounds(), distStyle, true), dlg.layer.getCRS());
-                    l.setVisible(false);
-                    RasterStyle aStyle = new RasterStyle(ColorRamp.RAMP_RED);
-                    gl.addLayerLast(l);
-                    l = new RasterLayer("a#", 
-                            new RasterShape(radMethod.getRasterA(), dlg.layer.getBounds(), aStyle, true), dlg.layer.getCRS());
                     l.setVisible(false);
                     gl.addLayerLast(l);
                 }

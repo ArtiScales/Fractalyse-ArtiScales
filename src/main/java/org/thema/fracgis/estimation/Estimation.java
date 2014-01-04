@@ -31,7 +31,7 @@ public interface Estimation {
     public Range getRange();
     public XYSeries getScalingBehaviour();
     public double[][] getSmoothedScalingBehaviour(double bandwidth);
-    public List<Integer> getInflexPointIndices(double bandwidth);
+    public List<Integer> getInflexPointIndices(double bandwidth, int minInd);
     public String getResultInfo();
     public String getParamInfo();
     public double[] getCoef();

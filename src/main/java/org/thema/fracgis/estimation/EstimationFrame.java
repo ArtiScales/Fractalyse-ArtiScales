@@ -85,6 +85,7 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
     public void setEstimation(Estimation estim) {
         this.estim = estim;
         regPlot = estim.getPlot();
+        lineCheckBoxActionPerformed(null);
         CombinedDomainXYPlot plot = new CombinedDomainXYPlot(regPlot.getDomainAxis());
         plot.add(regPlot);
         chart = new JFreeChart(plot);
@@ -156,6 +157,7 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
 
     private void updatePlot() {
         regPlot = estim.getPlot();
+        lineCheckBoxActionPerformed(null);
         CombinedDomainXYPlot plot = new CombinedDomainXYPlot(regPlot.getDomainAxis());
         plot.add(regPlot);
         if(scalingCheckBox.isSelected())
@@ -525,7 +527,7 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
         if(bandwidth > 0)
             try {
                 curve = estim.getSmoothedScalingBehaviour(bandwidth);
-                pointInflex = estim.getInflexPointIndices(bandwidth);
+                pointInflex = estim.getInflexPointIndices(bandwidth, 0);
             } catch (Exception ex) {
                 Logger.getLogger(EstimationFrame.class.getName()).log(Level.SEVERE, null, ex);
             }

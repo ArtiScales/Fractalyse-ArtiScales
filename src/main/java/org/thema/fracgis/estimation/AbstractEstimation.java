@@ -80,8 +80,8 @@ public abstract class AbstractEstimation implements Estimation {
     }
 
     @Override
-    public List<Integer> getInflexPointIndices(double bandwidth) {
-        return getPointInflex(getScalingBehaviour().toArray(), bandwidth, getType() == EstimationFactory.Type.LOG);
+    public List<Integer> getInflexPointIndices(double bandwidth, int minInd) {
+        return getPointInflex(getScalingBehaviour().toArray(), bandwidth, minInd, getType() == EstimationFactory.Type.LOG);
     }
     
     @Override
@@ -166,7 +166,7 @@ public abstract class AbstractEstimation implements Estimation {
         return smooth;
     }
     
-    private List<Integer> getPointInflex(double [][] curve, double bandwidth, boolean log) {
+    private List<Integer> getPointInflex(double [][] curve, double bandwidth, int minInd, boolean log) {
         int n = curve[0].length;
         double min = curve[0][0];
         double max = curve[0][n-1];
@@ -192,7 +192,7 @@ public abstract class AbstractEstimation implements Estimation {
         }
         
         List<Integer> ptInflex = new ArrayList<>();
-        for(int i = 0; i < n-1; i++) {
+        for(int i = minInd; i < n-1; i++) {
             if(smooth[1][i]*smooth[1][i+1] <= 0 && (smooth[1][i] != 0 || smooth[1][i+1] != 0))
                 ptInflex.add(i);
         }

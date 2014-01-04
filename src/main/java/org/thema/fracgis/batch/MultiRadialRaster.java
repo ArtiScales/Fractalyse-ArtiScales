@@ -7,13 +7,12 @@ package org.thema.fracgis.batch;
 import com.vividsolutions.jts.geom.Coordinate;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.*;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
+import org.jfree.data.xy.XYSeries;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.ProgressBar;
 import org.thema.common.parallel.SimpleParallelTask;
@@ -32,22 +31,28 @@ public class MultiRadialRaster {
     Rectangle2D envelope;
     double maxSize;
     boolean autoThreshold;
+    double minThreshold;
+    int indModel;
     boolean confidenceInterval;
 
     // results rasters
     WritableRaster rasterDim, rasterR2, rasterDistMax, rasterA, rasterDmin, rasterDmax, rasterDinter;
     
-    public MultiRadialRaster(RenderedImage img, Rectangle2D envelope, double maxSize, boolean autoThreshold, boolean confidenceInterval) {
+    public MultiRadialRaster(RenderedImage img, Rectangle2D envelope, double maxSize, boolean autoThreshold, 
+            double minThreshold, int indModel, boolean confidenceInterval) {
         this.img = img;
         this.envelope = envelope;
         this.maxSize = maxSize;
         this.autoThreshold = autoThreshold;
+        this.minThreshold = minThreshold;
+        this.indModel = indModel;
         this.confidenceInterval = confidenceInterval;
     }
     
     public void execute(ProgressBar progress) {
         rasterDim = Raster.createWritableRaster(new ComponentSampleModel(DataBuffer.TYPE_FLOAT, img.getWidth(), img.getHeight(), 1, img.getWidth(), new int[1]), null);
         rasterR2 = Raster.createWritableRaster(new ComponentSampleModel(DataBuffer.TYPE_FLOAT, img.getWidth(), img.getHeight(), 1, img.getWidth(), new int[1]), null);
+        rasterA = Raster.createWritableRaster(new ComponentSampleModel(DataBuffer.TYPE_FLOAT, img.getWidth(), img.getHeight(), 1, img.getWidth(), new int[1]), null);
         if(confidenceInterval) {
             rasterDinter = Raster.createWritableRaster(new ComponentSampleModel(DataBuffer.TYPE_FLOAT, img.getWidth(), img.getHeight(), 1, img.getWidth(), new int[1]), null);
             rasterDmin = Raster.createWritableRaster(new ComponentSampleModel(DataBuffer.TYPE_FLOAT, img.getWidth(), img.getHeight(), 1, img.getWidth(), new int[1]), null);
@@ -55,9 +60,7 @@ public class MultiRadialRaster {
         }
         if(autoThreshold) {
             rasterDistMax = Raster.createWritableRaster(new ComponentSampleModel(DataBuffer.TYPE_FLOAT, img.getWidth(), img.getHeight(), 1, img.getWidth(), new int[1]), null);
-            rasterA = Raster.createWritableRaster(new ComponentSampleModel(DataBuffer.TYPE_FLOAT, img.getWidth(), img.getHeight(), 1, img.getWidth(), new int[1]), null);
         }
-        
         SimpleParallelTask task = new SimpleParallelTask.IterParallelTask(img.getHeight(), progress) {
             @Override
             protected void executeOne(Integer y) {
@@ -68,14 +71,15 @@ public class MultiRadialRaster {
                         RadialRasterMethod method = new RadialRasterMethod("", img, c, maxSize/getResolution());
                         method.execute(new TaskMonitor.EmptyMonitor(), false);
                         try {
-                            DirectEstimation estim = (DirectEstimation) new EstimationFactory(method).getEstimation(EstimationFactory.Type.DIRECT);
+                            DirectEstimation estim = (DirectEstimation) new EstimationFactory(method).getEstimation(EstimationFactory.Type.DIRECT, indModel);
                             if(autoThreshold) {
                                 double max = getThreshold(estim);
                                 estim.setRange(0, max);
                                 rasterDistMax.setSample(x, y, 0, max*getResolution());
+                            }
+                            if(estim.getModel().hasParamA()) {
                                 rasterA.setSample(x, y, 0, estim.getModel().getA(estim.getCoef()));
-                            } else
-                                estim.setModel(3); // model x^d+c
+                            }
                             rasterDim.setSample(x, y, 0, estim.getDimension());
                             rasterR2.setSample(x, y, 0, estim.getR2());
                             if(confidenceInterval) {
@@ -154,11 +158,16 @@ public class MultiRadialRaster {
     private double getThreshold(Estimation estim) {
         double bandwitdh = 0.05;
         final double inc = 0.05;
-        List<Integer> precPtInflex = null, ptInflex = estim.getInflexPointIndices(bandwitdh);
+        int indMin = 0;
+        XYSeries serie = estim.getScalingBehaviour();
+        while(indMin < serie.getItemCount() && serie.getX(indMin).doubleValue() < (minThreshold / getResolution()))
+            indMin++;
+        
+        List<Integer> precPtInflex = null, ptInflex = estim.getInflexPointIndices(bandwitdh, indMin);
         while(ptInflex.size() > 1 && bandwitdh < 1) {
             bandwitdh += inc;
             precPtInflex = ptInflex;
-            ptInflex = estim.getInflexPointIndices(bandwitdh);
+            ptInflex = estim.getInflexPointIndices(bandwitdh, indMin);
         }
         
         if(ptInflex.isEmpty()) {

@@ -11,9 +11,11 @@
 
 package org.thema.fracgis.batch;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 import org.thema.fracgis.BinRasterLayer;
 import org.thema.fracgis.LayerModel;
+import org.thema.fracgis.estimation.DirectEstimation;
 
 /**
  *
@@ -26,6 +28,8 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
     public double maxSize;
     public boolean confidenceInterval;
     public boolean autoThreshold;
+    public double minThreshold;
+    public int indModel;
 
     /** Creates new form CorrelationDialog */
     public MultiRadialRasterDialog(java.awt.Frame parent, LayerModel model) {
@@ -39,6 +43,8 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
             throw new IllegalArgumentException("No binary raster layer.");
         }
         layerComboBox.setModel(model);
+        
+        modelComboBox.setModel(new DefaultComboBoxModel(DirectEstimation.getModels(1).toArray()));
     }
 
     /** This method is called from within the constructor to
@@ -49,6 +55,7 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+        bindingGroup = new org.jdesktop.beansbinding.BindingGroup();
 
         okButton = new javax.swing.JButton();
         cancelButton = new javax.swing.JButton();
@@ -58,6 +65,9 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
         dMaxSpinner = new javax.swing.JSpinner();
         confidenceIntervalCheckBox = new javax.swing.JCheckBox();
         autoMaxCheckBox = new javax.swing.JCheckBox();
+        minSpinner = new javax.swing.JSpinner();
+        jLabel3 = new javax.swing.JLabel();
+        modelComboBox = new javax.swing.JComboBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -83,7 +93,14 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
 
         confidenceIntervalCheckBox.setText("Compute confidence interval");
 
-        autoMaxCheckBox.setText("Auto threshold");
+        autoMaxCheckBox.setText("Auto threshold - min :");
+
+        minSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(0.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+
+        org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, autoMaxCheckBox, org.jdesktop.beansbinding.ELProperty.create("${selected}"), minSpinner, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        bindingGroup.addBinding(binding);
+
+        jLabel3.setText("Model");
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -102,19 +119,27 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
                                 .add(okButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 67, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(cancelButton))))
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                        .add(0, 28, Short.MAX_VALUE)
-                        .add(confidenceIntervalCheckBox))
                     .add(layout.createSequentialGroup()
                         .add(28, 28, 28)
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(layout.createSequentialGroup()
-                                .add(12, 12, 12)
-                                .add(autoMaxCheckBox))
-                            .add(layout.createSequentialGroup()
                                 .add(jLabel2)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(dMaxSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 89, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                                .add(dMaxSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 89, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .add(0, 0, Short.MAX_VALUE))
+                            .add(layout.createSequentialGroup()
+                                .add(12, 12, 12)
+                                .add(autoMaxCheckBox)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(minSpinner, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 74, Short.MAX_VALUE))))
+                    .add(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(confidenceIntervalCheckBox)
+                            .add(layout.createSequentialGroup()
+                                .add(jLabel3)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(modelComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 129, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                         .add(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -133,15 +158,23 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
                     .add(jLabel2)
                     .add(dMaxSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(autoMaxCheckBox)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 14, Short.MAX_VALUE)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(autoMaxCheckBox)
+                    .add(minSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel3)
+                    .add(modelComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(confidenceIntervalCheckBox)
-                .add(18, 18, 18)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 14, Short.MAX_VALUE)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(cancelButton)
                     .add(okButton))
                 .addContainerGap())
         );
+
+        bindingGroup.bind();
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -151,6 +184,8 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
         maxSize = (Double)dMaxSpinner.getValue();
         confidenceInterval = confidenceIntervalCheckBox.isSelected();
         autoThreshold = autoMaxCheckBox.isSelected();
+        minThreshold = (Double)minSpinner.getValue();
+        indModel = modelComboBox.getSelectedIndex();
         isOk = true;
         setVisible(false);
         dispose();
@@ -169,8 +204,12 @@ public class MultiRadialRasterDialog extends javax.swing.JDialog {
     private javax.swing.JSpinner dMaxSpinner;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JComboBox layerComboBox;
+    private javax.swing.JSpinner minSpinner;
+    private javax.swing.JComboBox modelComboBox;
     private javax.swing.JButton okButton;
+    private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables
 
 }

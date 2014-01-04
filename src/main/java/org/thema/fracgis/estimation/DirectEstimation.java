@@ -405,4 +405,10 @@ public class DirectEstimation extends AbstractEstimation {
         return Type.DIRECT;
     }
 
+    public static List<String> getModels(int dimSign) {
+        if(dimSign == 1)
+            return Arrays.asList("a*x^d+c", "a*x^d", "x^d+c", "x^d");
+        else
+            return Arrays.asList("a*x^d+c", "a*x^d");
+    }
 }

@@ -1,6 +1,7 @@
-version 0.5
+version 0.5 (04/01/2014)
 - ajout analyse multifractale boxcounting raster
 - multiradial option "Auto threshold" : coupure automatique de la courbe par détection du point d'inflexion du comportement scalant
+- multiradial : choix du modèle d'estimation
 - affichage des échelles sur la carte sous forme carrée ou circulaire pour l'analyse radiale
 - affiche les points d'inflexions sur le comportement scalant quand il est lissé
 - restructuration des package dans org.thema.fracgis.method
