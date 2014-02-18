@@ -89,7 +89,7 @@ import org.thema.process.Rasterizer;
  */
 public class MainFrame extends javax.swing.JFrame {
 
-    public static final String VERSION = "0.5";
+    public static final String VERSION = "0.5.1";
 
     DefaultGroupLayer groupLayer;
 

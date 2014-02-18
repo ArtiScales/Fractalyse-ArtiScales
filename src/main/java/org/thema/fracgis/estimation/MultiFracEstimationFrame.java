@@ -106,9 +106,9 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
             LogEstimation estim = new LogEstimation(method.getSimpleMethod(q));
             estim.setRange((Double)leftSpinner.getValue(), (Double)rightSpinner.getValue());
             estims.put(q, estim);
-            Tq.put(q, -estim.getDimension());
+            Tq.put(q, estim.getDimension());
             if(Math.abs(q-1) > 0.00001)
-                Dq.put(q, -estim.getDimension() / (1-q));
+                Dq.put(q, estim.getDimension() / (1-q));
             if(qSet.first() != q) {
                 double q1 = qSet.lower(q);
                 alpha.put(q, -(Tq.get(q)-Tq.get(q1))/(q-q1));
