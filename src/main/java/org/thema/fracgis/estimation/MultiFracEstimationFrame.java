@@ -13,7 +13,6 @@ package org.thema.fracgis.estimation;
 
 
 import org.thema.fracgis.method.MultiFracMethod;
-import org.thema.fracgis.estimation.*;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.geom.Point2D;

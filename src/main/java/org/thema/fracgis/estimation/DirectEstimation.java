@@ -269,38 +269,39 @@ public class DirectEstimation extends AbstractEstimation {
         return coef;
     }
     protected void estimate() {
-//        long t1 = System.currentTimeMillis();
-//        double [] x = new double[curve.size()], 
-//                  y = new double[curve.size()];
-//        int i = 0;
-//        for(Double d : getRangeCurve().keySet()) {
-//            x[i] = d;
-//            y[i] = curve.get(d);
-//            i++;
-//        }
-//        double [] coef2 = new NonLinearFitter(function, x, y).fit();
-//        long t2 = System.currentTimeMillis();
-        
-        CurveFitter fitter = new CurveFitter(new LevenbergMarquardtOptimizer());
+        long t1 = System.currentTimeMillis();
+        double [] x = new double[getRangeCurve().size()], 
+                  y = new double[getRangeCurve().size()];
+        int i = 0;
         for(Double d : getRangeCurve().keySet()) {
-            if(d.isNaN() || d.isInfinite() || curve.get(d).isNaN() || curve.get(d).isInfinite())
-                throw new IllegalArgumentException("Curve contains NaN or infinite value");
-            fitter.addObservedPoint(d, curve.get(d));
+            x[i] = d;
+            y[i] = curve.get(d);
+            i++;
         }
-        
-        coef = new double[function.getInit().length];
-        Arrays.fill(coef, Double.NaN);
-        
-        try {
-            coef = fitter.fit(function, function.getInit());
-        } catch (Exception ex) {
-//            Logger.getLogger(DirectEstimation.class.getName()).log(Level.SEVERE, null, ex);
-            throw new RuntimeException("Estimation impossible.", ex);
-        }
+        coef = new NonLinearFitter(function, x, y).fit();
+//        long t2 = System.currentTimeMillis();
+//        
+//        CurveFitter fitter = new CurveFitter(new LevenbergMarquardtOptimizer());
+//        for(Double d : getRangeCurve().keySet()) {
+//            if(d.isNaN() || d.isInfinite() || curve.get(d).isNaN() || curve.get(d).isInfinite())
+//                throw new IllegalArgumentException("Curve contains NaN or infinite value");
+//            fitter.addObservedPoint(d, curve.get(d));
+//        }
+//        
+//        double [] coef2 = new double[function.getInit().length];
+//        Arrays.fill(coef2, Double.NaN);
+//        
+//        try {
+//            coef2 = fitter.fit(function, function.getInit());
+//        } catch (Exception ex) {
+//            throw new RuntimeException("Estimation impossible.", ex);
+//        }
 //        long t3 = System.currentTimeMillis();
 //        System.out.println("Dicho : " +(t2-t1) + " - Levenberg : " + (t3-t2));
-//        if(Math.abs(coef[0] - coef2[0]) / coef[0] > 0.001)
-//            throw new RuntimeException("Ecart d'estimation : " + coef[0] + " - " + coef2[0]);
+//        if(Math.abs(coef[0] - coef2[0]) / coef[0] > 0.001) {
+//            System.out.println("Ecart d'estimation : " + coef[0] + " - " + coef2[0]);
+////            throw new RuntimeException("Ecart d'estimation : " + coef[0] + " - " + coef2[0]);
+//        }
     }
 
     public double getDimension() {
@@ -341,29 +342,29 @@ public class DirectEstimation extends AbstractEstimation {
         CurveFitter fitter = new CurveFitter(new LevenbergMarquardtOptimizer());
 
         double [] coefs = getCoef();//function.getInit();
-//        double [] x = new double[init.size()],
-//                y = new double[init.size()];
+        double [] x = new double[init.size()],
+                y = new double[init.size()];
         for(int i = 0; i < 2000; i++) {
-            fitter.clearObservations();
-            for(int j = 0; j < init.size(); j++) {
-                Map.Entry<Double, Double> sample = init.get((int)(Math.random()*init.size()));
-                fitter.addObservedPoint(sample.getKey(), sample.getValue());
-            }
-        
-            try {
-                double [] c = fitter.fit(function, coefs);
-                stat.addValue(method.getDimSign() * c[0]);  
-            } catch (Exception ex) {
-               Logger.getLogger(DirectEstimation.class.getName()).log(Level.SEVERE, null, ex);
-            }        
-            
+//            fitter.clearObservations();
 //            for(int j = 0; j < init.size(); j++) {
 //                Map.Entry<Double, Double> sample = init.get((int)(Math.random()*init.size()));
-//                x[j] = sample.getKey();
-//                y[j] = sample.getValue();
+//                fitter.addObservedPoint(sample.getKey(), sample.getValue());
 //            }
-//            double[] fit = new NonLinearFitter(function, x, y).fit();
-//            stat.addValue(fit[0]);
+//        
+//            try {
+//                double [] c = fitter.fit(function, coefs);
+//                stat.addValue(method.getDimSign() * c[0]);  
+//            } catch (Exception ex) {
+//               Logger.getLogger(DirectEstimation.class.getName()).log(Level.SEVERE, null, ex);
+//            }        
+            
+            for(int j = 0; j < init.size(); j++) {
+                Map.Entry<Double, Double> sample = init.get((int)(Math.random()*init.size()));
+                x[j] = sample.getKey();
+                y[j] = sample.getValue();
+            }
+            double[] fit = new NonLinearFitter(function, x, y).fit();
+            stat.addValue(fit[0]);
         }
 //        System.out.println("Bootstrap : " +(System.currentTimeMillis()-t1));
         return new double[] {stat.getPercentile(2.5), stat.getPercentile(97.5)};

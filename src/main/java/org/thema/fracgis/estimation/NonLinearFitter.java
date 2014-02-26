@@ -23,11 +23,8 @@ public class NonLinearFitter {
     
     public double [] fit() {
         double d = function.getInit()[0];
-        double pas = Math.signum(d) * 1;
-//comp = feval(fonc, x, y, d-pas) > feval(fonc, x, y, d+pas);
-//if comp(1)
-//    pas = -pas;
-//end
+        double pas = Math.signum(d) * 0.6;
+
         double res = function.getOLSDerivative(x, y, d);
         for(int i = 0; i < 10 && res != 0; i++) {       
             if(res < 0)

@@ -1,3 +1,8 @@
+version 0.5.2 (26/02/2014)
+- EstimationFrame export : ajout de la courbe du comportement scalant lissée
+- DirectEstimation : changement algo estimation par dichotomie et dérivée partielle (Levenberg était très lent dans certains cas)
+version 0.5.1 (18/02/2014)
+- Multi fractal : changement du signe de Tq et Dq
 version 0.5 (04/01/2014)
 - ajout analyse multifractale boxcounting raster
 - multiradial option "Auto threshold" : coupure automatique de la courbe par détection du point d'inflexion du comportement scalant

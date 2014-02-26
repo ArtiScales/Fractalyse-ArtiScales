@@ -89,15 +89,13 @@ import org.thema.process.Rasterizer;
  */
 public class MainFrame extends javax.swing.JFrame {
 
-    public static final String VERSION = "0.5.1";
-
     DefaultGroupLayer groupLayer;
 
     /** Creates new form MainFrame */
     public MainFrame() {
         initComponents();
         setLocationRelativeTo(null);
-        setTitle("FracGIS - " + VERSION);
+        setTitle("FracGIS - " + getVersion());
         groupLayer = new DefaultGroupLayer("Layers", true);
         mapViewer.setRootLayer(groupLayer);
         mapViewer.disableInfoPanel();
@@ -763,6 +761,14 @@ public class MainFrame extends javax.swing.JFrame {
         MultiFracEstimationFrame frm = new MultiFracEstimationFrame(MainFrame.this, method);
         frm.setVisible(true);
         monitor.close();
+    }
+    
+    public static String getVersion() {
+        String version = MainFrame.class.getPackage().getImplementationVersion();
+        if(version == null)
+            return "unpackage version";
+        else
+            return version;
     }
     
     /**

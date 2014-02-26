@@ -17,7 +17,6 @@ import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
@@ -29,8 +28,6 @@ import javax.swing.JFrame;
 import javax.swing.SpinnerListModel;
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
-import org.apache.commons.math3.analysis.differentiation.DerivativeStructure;
-import org.apache.commons.math3.analysis.function.Gaussian;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
@@ -65,7 +62,11 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
     XYPlot otherPlot;
     HashMap<String, TreeMap<Double, Double>> otherCurves = new HashMap<>();
     
-    /** Creates new form EstimationFrame */
+    /** 
+     * Creates new form EstimationFrame
+     * @param frm
+     * @param estimFac 
+     */
     public EstimationFrame(JFrame frm, EstimationFactory estimFac) {
         initComponents();
         setLocationRelativeTo(frm);
@@ -77,7 +78,6 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
         typeComboBox.setModel(model);
         
         setTitle(estim.getMethod().getDetailName());
-//        smoothSpinner.setEnabled(estim.getCurve().size() > 20);
         
         setEstimation(estim);
     }
@@ -113,6 +113,7 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
         curveComboBox.addItem(name);
     }
     
+    @Override
     public void chartMouseClicked(ChartMouseEvent event) {
         if(!rightToggleButton.isSelected() && !leftToggleButton.isSelected())
             return;
@@ -132,6 +133,7 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
         }
     }
 
+    @Override
     public void chartMouseMoved(ChartMouseEvent event) {
         if(!rightToggleButton.isSelected() && !leftToggleButton.isSelected())
             return;
@@ -465,16 +467,22 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
         if(fileChooser.getFileFilter() == filter) { //TXT
             if (!filename.endsWith(".txt"))
                 filename = filename + ".txt";
-            try {
-                BufferedWriter w = new BufferedWriter(new FileWriter(new File(filename)));
+            try (BufferedWriter w = new BufferedWriter(new FileWriter(new File(filename)))) {
                 estim.saveToText(w);
+                double smooth = (Double)smoothSpinner.getValue();
+                if(smooth > 0.0) {
+                    w.write("\nX\tSmoothed SB " + smooth + "\n");
+                    double[][] sb = estim.getSmoothedScalingBehaviour(smooth);
+                    for(int i = 0; i < sb[0].length; i++) {
+                        w.write(sb[0][i] + "\t" + sb[1][i] + "\n");
+                    }
+                }
                 for(String key : otherCurves.keySet()) {
                     TreeMap<Double, Double> curve = otherCurves.get(key);
                     w.write("\nX\t" + key + "\n");
                     for(Double x : curve.keySet())
                         w.write(x + "\t" + curve.get(x) + "\n");
                 }
-                w.close();
             } catch (IOException ex) {
                 Logger.getLogger(EstimationFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -494,12 +502,9 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
             chart.draw(svgGenerator, new Rectangle2D.Float(0, 0, 600, 400));
 
             // Write svg file
-            try {
-                OutputStream outputStream = new FileOutputStream(filename);
+            try (OutputStream outputStream = new FileOutputStream(filename)) {
                 Writer out = new OutputStreamWriter(outputStream, "UTF-8");
                 svgGenerator.stream(out, true /* use css */);
-                outputStream.flush();
-                outputStream.close();
             } catch (IOException ex) {
                 Logger.getLogger(RasterLayer.class.getName()).log(Level.SEVERE, null, ex);
             }
