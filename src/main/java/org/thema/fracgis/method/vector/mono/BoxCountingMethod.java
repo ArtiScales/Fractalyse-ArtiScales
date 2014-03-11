@@ -17,18 +17,10 @@ import org.thema.drawshape.feature.Feature;
 import org.thema.drawshape.feature.FeatureCoverage;
 import org.thema.drawshape.layer.GeometryLayer;
 import org.thema.drawshape.style.SimpleStyle;
-import org.thema.fracgis.method.MonoMethod;
 import org.thema.msca.Cell;
 import org.thema.msca.MSCell;
 import org.thema.msca.SquareGrid;
 
-
-
-// Beaucoup plus rapide que la version précédente pour les petites résolutions (qui sont les plus lents)
-// La méthode est un peu plus lente que la version précédente pour les résolutions importantes (peu de cellules)
-// mais comme ça reste très rapide dans les 2 cas on peut utiliser cette version dans tous les cas.
-// Le seul problème de la méthode c'est qu'elle peut demander beaucoup de mémoire alors que la précédente ne demande rien 
-// de plus que le coverage
 
 /**
  *
@@ -197,13 +189,14 @@ public class BoxCountingMethod extends SimpleVectorMethod {
         }
     }
 
+    @Override
     public void execute(ProgressBar monitor, boolean threaded) {
-        HashMap<Double, List<SquareGrid>> grids = new HashMap<Double, List<SquareGrid>>();
-        curve = new TreeMap<Double, Double>();
+        HashMap<Double, List<SquareGrid>> grids = new HashMap<>();
+        curve = new TreeMap<>();
         Envelope env = new Envelope(coverage.getEnvelope());
         env.init(env.getMinX()-sizes.last()*1.01, env.getMaxX(), env.getMinY()-sizes.last()*1.01, env.getMaxY());
         for(double size : sizes) {
-            List<SquareGrid> gridSize = new ArrayList<SquareGrid>();
+            List<SquareGrid> gridSize = new ArrayList<>();
             int nx = (int)Math.ceil(Math.ceil(env.getWidth() / (double)size) / 40000.0);
             int ny = (int)Math.ceil(Math.ceil(env.getHeight() / (double)size) / 40000.0);
             int w = (int)Math.ceil((env.getWidth() / (double)nx) / size);
@@ -226,12 +219,12 @@ public class BoxCountingMethod extends SimpleVectorMethod {
         monitor.setProgress(0);
         int i = 0;
         for(double size : sizes) {
-            int n = d == 1 ? 1 : (int)(d * Math.pow(1.2, i));
+            int n = d == 1 ? 1 : (int)(d * Math.pow(Math.pow(coef, 0.3), i));
             double delta = size / n;
             monitor.setNote("Resolution : " + size);
             for(double dx = 0; dx < size; dx += delta)
                 for(double dy = 0; dy < size; dy += delta) {
-                    List<Geometry> cells = new ArrayList<Geometry>();
+                    List<Geometry> cells = new ArrayList<>();
                     long sum = 0;
                     for(SquareGrid grid : grids.get(size)) {
                         grid = grid.createTranslatedGrid(dx, dy);

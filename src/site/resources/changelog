@@ -1,3 +1,5 @@
+version 0.5.3 (11/03/2014)
+- BoxCounting vecteur (gliding) : évolution du nb de positions de grille dépendant de coef (évite un ralentissement important à la fin avec coef < 2)
 version 0.5.2 (26/02/2014)
 - EstimationFrame export : ajout de la courbe du comportement scalant lissée
 - DirectEstimation : changement algo estimation par dichotomie et dérivée partielle (Levenberg était très lent dans certains cas)
