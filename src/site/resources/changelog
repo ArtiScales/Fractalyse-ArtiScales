@@ -1,3 +1,6 @@
+version 0.5.4 (12/03/2014)
+- DirectEstimation : ne converge pas pour les courbes décroissantes
+- CLI raster boxcounting : fichier nommé rdil au lieu de rbox
 version 0.5.3 (11/03/2014)
 - BoxCounting vecteur (gliding) : évolution du nb de positions de grille dépendant de coef (évite un ralentissement important à la fin avec coef < 2)
 version 0.5.2 (26/02/2014)

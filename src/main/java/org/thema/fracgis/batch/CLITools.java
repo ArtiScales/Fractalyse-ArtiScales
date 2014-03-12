@@ -34,7 +34,6 @@ import org.thema.fracgis.tools.BinarizeDialog;
 import org.thema.fracgis.estimation.Estimation;
 import org.thema.fracgis.estimation.EstimationFactory;
 import org.thema.fracgis.estimation.EstimationFactory.Type;
-import org.thema.fracgis.method.*;
 import org.thema.process.Rasterizer;
 
 
@@ -155,7 +154,7 @@ public class CLITools {
                 BoxCountingRasterMethod method = new BoxCountingRasterMethod(f.getName(), cov.getRenderedImage(), 
                         JTS.rectToEnv(cov.getEnvelope2D()), coef, max);
                 method.execute(new TaskMonitor.EmptyMonitor(), true);
-                FileWriter w = new FileWriter(new File(f.getParent(), f.getName().substring(0, f.getName().length()-4)+"_rdil_" + suffix + ".txt"));
+                FileWriter w = new FileWriter(new File(f.getParent(), f.getName().substring(0, f.getName().length()-4)+"_rbox_" + suffix + ".txt"));
                 Estimation estim = new EstimationFactory(method).getEstimation(typeEstim);
                 estim.saveToText(w);
                 w.close();

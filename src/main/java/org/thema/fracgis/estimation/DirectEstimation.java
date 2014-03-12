@@ -6,8 +6,6 @@
 package org.thema.fracgis.estimation;
 
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.math3.analysis.ParametricUnivariateFunction;
 import org.apache.commons.math3.optimization.fitting.CurveFitter;
 import org.apache.commons.math3.optimization.general.LevenbergMarquardtOptimizer;
