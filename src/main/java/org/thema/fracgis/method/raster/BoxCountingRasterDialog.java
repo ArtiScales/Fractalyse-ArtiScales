@@ -11,7 +11,7 @@
 
 package org.thema.fracgis.method.raster;
 
-import org.thema.fracgis.BinRasterLayer;
+import org.thema.drawshape.layer.RasterLayer;
 import org.thema.fracgis.LayerModel;
 
 /**
@@ -23,7 +23,7 @@ public class BoxCountingRasterDialog extends javax.swing.JDialog {
     public boolean isOk = false;
 
     public int coef;
-    public BinRasterLayer layer;
+    public RasterLayer layer;
 
     /** Creates new form BoxCountingRasterDialog */
     public BoxCountingRasterDialog(java.awt.Frame parent, LayerModel model) {
@@ -120,7 +120,7 @@ public class BoxCountingRasterDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
-        layer = (BinRasterLayer) layerComboBox.getSelectedItem();
+        layer = (RasterLayer) layerComboBox.getSelectedItem();
         coef = (Integer)coefSpinner.getValue();
         isOk = true;
         setVisible(false);

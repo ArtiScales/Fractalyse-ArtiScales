@@ -488,13 +488,21 @@ public class MainFrame extends javax.swing.JFrame {
                 try {
                     ProgressBar monitor = Config.getProgressBar("Rasterize...", features.size());
                     DefaultFeatureCoverage cov = new DefaultFeatureCoverage(features);
-                    Rasterizer rasterizer = new Rasterizer(cov, dlg.resolution);
+                    Rasterizer rasterizer = new Rasterizer(cov, dlg.resolution, dlg.field);
                     Raster raster = rasterizer.rasterize(monitor);
                     monitor.close();
                     if(raster == null)
                         return;
-                    BinRasterLayer l = new BinRasterLayer(dlg.layer.getName() + "-raster_" + dlg.resolution, 
+                    
+                    RasterLayer l;
+                    if(dlg.field == null)
+                        l = new BinRasterLayer(dlg.layer.getName() + "-raster_" + dlg.resolution, 
                             new RasterShape(new RasterImage(raster), rasterizer.getEnvelope()), dlg.layer.getCRS());
+                    else {
+                        l = new RasterLayer(dlg.layer.getName() + "-raster_" + dlg.field + "_" + dlg.resolution, 
+                            new RasterShape(new RasterImage(raster), rasterizer.getEnvelope()), dlg.layer.getCRS());
+                        l.setRemovable(true);
+                    }
                     ((DefaultGroupLayer) mapViewer.getLayers()).addLayerFirst(l);
                 } catch (Throwable ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);

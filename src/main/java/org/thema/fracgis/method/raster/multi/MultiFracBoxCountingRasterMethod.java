@@ -15,14 +15,15 @@ import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import org.thema.common.parallel.ProgressBar;
-import org.thema.fracgis.method.AbstractMethod;
 import org.thema.fracgis.method.MonoMethod;
 import org.thema.fracgis.method.raster.RasterMethod;
 
@@ -37,6 +38,8 @@ public class MultiFracBoxCountingRasterMethod extends RasterMethod implements Mu
     
     private List<WritableRaster> rasters;
     private double total;
+    
+    private transient TreeMap<Double, TreeMap<Double, Double>> cacheCurves;
 
     public MultiFracBoxCountingRasterMethod(String inputName, RenderedImage img, Envelope env, double coef, double maxSize) {
         super(inputName, img, env);
@@ -45,12 +48,14 @@ public class MultiFracBoxCountingRasterMethod extends RasterMethod implements Mu
         if(maxSize <= 0)
             maxSize = getDefaultMaxSize(img, getResolution());
         this.maxSize = maxSize;
+        
+        this.cacheCurves = new TreeMap<>();
     }
 
     @Override
     public void execute(ProgressBar monitor, boolean threaded) {
         monitor.setMaximum(img.getHeight());
-        int n = (int) Math.ceil(Math.log(maxSize/getResolution()) / Math.log(coef));
+        int n = (int) Math.ceil(Math.log(maxSize/getResolution()) / Math.log(coef)) + 1;
         rasters = new ArrayList<>();
         for(int i = 0; i < n; i++) {
             int w = (int)Math.ceil(img.getWidth() / Math.pow(coef, i));
@@ -95,26 +100,43 @@ public class MultiFracBoxCountingRasterMethod extends RasterMethod implements Mu
     }
     
     @Override
-    public TreeMap<Double, Double> getCurve(double q) {
-        TreeMap<Double, Double> curve = new TreeMap<>();
-        for(int i = 0; i < rasters.size(); i++) {
-            DataBuffer buf = rasters.get(i).getDataBuffer();
-            double sum = 0;
-            for(int j = 0; j < buf.getSize(); j++)
-                if(buf.getElemFloat(j) > 0)
-                    sum += Math.pow(buf.getElemFloat(j) / total, q);
-            curve.put(getResolution()*Math.pow(coef, i), sum);
-        }  
-        return curve;
+    public synchronized TreeMap<Double, Double> getCurve(double q) {
+        if(!cacheCurves.containsKey(q)) {
+            calcCurves(Collections.singleton(q));
+        }
+        return cacheCurves.get(q);
     }
     
     @Override
     public TreeMap<Double, TreeMap<Double, Double>> getCurves(TreeSet<Double> qs) {
+        calcCurves(qs);
         TreeMap<Double, TreeMap<Double, Double>> curves = new TreeMap<>();
         for(Double q : qs) {
-            curves.put(q, getCurve(q));
+            curves.put(q, cacheCurves.get(q));
         }
         return curves;
+    }
+    
+    private void calcCurves(Set<Double> qSet) {
+        List<Double> qList = new ArrayList<>();
+        for(Double q : qSet)
+            if(!cacheCurves.containsKey(q)) {
+                qList.add(q);
+                cacheCurves.put(q, new TreeMap<Double, Double>());
+            }
+        for(int i = 0; i < rasters.size(); i++) {
+            DataBuffer buf = rasters.get(i).getDataBuffer();
+            double [] sum = new double[qList.size()];
+            for(int j = 0; j < buf.getSize(); j++)  {
+                float val = buf.getElemFloat(j);
+                if(val > 0) {
+                    for(int k = 0; k < sum.length; k++)
+                        sum[k] += Math.pow(val / total, qList.get(k));
+                }
+            }
+            for(int k = 0; k < sum.length; k++)
+                cacheCurves.get(qList.get(k)).put(getResolution()*Math.pow(coef, i), sum[k]);
+        }  
     }
 
     @Override
@@ -141,7 +163,8 @@ public class MultiFracBoxCountingRasterMethod extends RasterMethod implements Mu
     }
     
     public static double getDefaultMaxSize(RenderedImage img, double resolution) {
-        return resolution * Math.min(img.getWidth(), img.getHeight())/2;
+        return resolution * Math.max(img.getWidth(), img.getHeight());
+        //return resolution * Math.min(img.getWidth(), img.getHeight())/2;
     }
 
 }

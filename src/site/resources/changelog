@@ -1,3 +1,8 @@
+version 0.5.5 (17/03/2014)
+- DirectEstimation : encore un problème avec les courbes croissantes
+- Rasterisation : possibilité de rasteriser en niveau de gris
+- Estimation multi fractal : optimisation du calcul des courbes pour l'estimation (mise en cache)
+- Muli fractal raster : dist max augmentée pour aller jusqu'au dernier point 
 version 0.5.4 (12/03/2014)
 - DirectEstimation : ne converge pas pour les courbes décroissantes
 - CLI raster boxcounting : fichier nommé rdil au lieu de rbox

@@ -25,8 +25,8 @@ public class NonLinearFitter {
         double d = function.getInit()[0];
         double pas = 0.6;
         // normalement la dérivée est croissante mais au cas où...
-        if(function.getOLSDerivative(x, y, d-pas) > function.getOLSDerivative(x, y, d+pas))
-            pas = -pas;
+//        if(function.getOLSDerivative(x, y, 0) > function.getOLSDerivative(x, y, 2*d))
+//            pas = -pas;
         double res = function.getOLSDerivative(x, y, d);
         for(int i = 0; i < 10 && res != 0; i++) {       
             if(res < 0)

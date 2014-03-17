@@ -12,16 +12,16 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import java.awt.image.DataBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import org.thema.common.parallel.ProgressBar;
 import org.thema.drawshape.feature.Feature;
 import org.thema.drawshape.feature.FeatureCoverage;
-import org.thema.fracgis.method.AbstractMethod;
 import org.thema.fracgis.method.MonoMethod;
 import org.thema.fracgis.method.vector.mono.BoxCountingMethod;
 import org.thema.fracgis.method.vector.VectorMethod;
@@ -48,6 +48,8 @@ public class MultiFracBoxCountingVectorMethod extends VectorMethod implements Mu
     private HashMap<Double, List<SquareGrid>> grids;
     private double totalArea;
     
+    private transient TreeMap<Double, TreeMap<Double, Double>> cacheCurves;
+    
     public MultiFracBoxCountingVectorMethod(String inputName, FeatureCoverage cover, double min, double max, double coef) {
         super(inputName, cover);
         
@@ -56,6 +58,8 @@ public class MultiFracBoxCountingVectorMethod extends VectorMethod implements Mu
         this.coef = coef;
         
         updateParams();
+        
+        this.cacheCurves = new TreeMap<>();
     }
     
     @Override
@@ -109,7 +113,7 @@ public class MultiFracBoxCountingVectorMethod extends VectorMethod implements Mu
         monitor.setProgress(0);
         for(double size : sizes) {
             monitor.setNote("Resolution : " + size);
-            for(SquareGrid grid : grids.get(size)) {
+            for(SquareGrid grid : grids.get(size)) {     
                 SimpleCoverageOperation op = new SimpleCoverageOperation(SimpleCoverageOperation.AREA, "area", coverage);
                 op.setMonitor(monitor.getSubProgress(100.0/(grids.get(size).size())));
                 if(threaded)
@@ -151,29 +155,45 @@ public class MultiFracBoxCountingVectorMethod extends VectorMethod implements Mu
     }
     
     @Override
-    public TreeMap<Double, Double> getCurve(double q) {
-        TreeMap<Double, Double> curve = new TreeMap<>();
-        for(Double size : grids.keySet()) {
-            double sum = 0;
-            for(SquareGrid grid : grids.get(size)) {
-                DataBuffer buf = grid.getRaster("area").getDataBuffer();
-                for(int j = 0; j < buf.getSize(); j++) {
-                    if(buf.getElemFloat(j) > 0)
-                        sum += Math.pow(buf.getElemFloat(j) / totalArea, q);
-                }
-            }
-            curve.put(size, sum);
-        }  
-        return curve;
+    public synchronized TreeMap<Double, Double> getCurve(double q) {
+        if(!cacheCurves.containsKey(q)) {
+            calcCurves(Collections.singleton(q));
+        }
+        return cacheCurves.get(q);
     }
     
     @Override
     public TreeMap<Double, TreeMap<Double, Double>> getCurves(TreeSet<Double> qs) {
+        calcCurves(qs);
         TreeMap<Double, TreeMap<Double, Double>> curves = new TreeMap<>();
         for(Double q : qs) {
-            curves.put(q, getCurve(q));
+            curves.put(q, cacheCurves.get(q));
         }
         return curves;
+    }
+    
+    private void calcCurves(Set<Double> qSet) {
+        List<Double> qList = new ArrayList<>();
+        for(Double q : qSet)
+            if(!cacheCurves.containsKey(q)) {
+                qList.add(q);
+                cacheCurves.put(q, new TreeMap<Double, Double>());
+            }
+        for(Double size : grids.keySet()) {
+            double [] sum = new double[qList.size()];
+            for(SquareGrid grid : grids.get(size)) {
+                DataBuffer buf = grid.getRaster("area").getDataBuffer();
+                for(int j = 0; j < buf.getSize(); j++) {
+                    float val = buf.getElemFloat(j);
+                    if(val > 0) {
+                        for(int k = 0; k < sum.length; k++)
+                            sum[k] += Math.pow(val / totalArea, qList.get(k));
+                    }
+                }
+            }
+            for(int k = 0; k < sum.length; k++)
+                cacheCurves.get(qList.get(k)).put(size, sum[k]);
+        }  
     }
     
 }

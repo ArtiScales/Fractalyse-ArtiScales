@@ -6,12 +6,9 @@
 
 package org.thema.fracgis.method;
 
-import org.thema.fracgis.method.MultiFracMethod;
 import com.vividsolutions.jts.geom.Envelope;
 import java.util.TreeMap;
 import org.thema.common.parallel.ProgressBar;
-import org.thema.fracgis.method.AbstractMethod;
-import org.thema.fracgis.method.MonoMethod;
 
 /**
  *
