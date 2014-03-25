@@ -9,12 +9,12 @@ import com.vividsolutions.jts.geom.*;
 import java.awt.Color;
 import java.util.*;
 import org.thema.common.JTS;
-import org.thema.common.distribute.AbstractDistributeTask;
-import org.thema.common.distribute.ExecutorService;
-import org.thema.common.parallel.ProgressBar;
+import org.thema.parallel.AbstractParallelTask;
+import org.thema.parallel.ExecutorService;
+import org.thema.common.ProgressBar;
 import org.thema.common.param.XMLParams;
-import org.thema.drawshape.feature.Feature;
-import org.thema.drawshape.feature.FeatureCoverage;
+import org.thema.data.feature.Feature;
+import org.thema.data.feature.FeatureCoverage;
 import org.thema.drawshape.layer.GeometryLayer;
 import org.thema.drawshape.style.SimpleStyle;
 import org.thema.msca.Cell;
@@ -32,7 +32,7 @@ import org.thema.msca.SquareGrid;
  
  * @author gvuidel
  */
-class BoxCountingTask extends AbstractDistributeTask<Integer, Integer> {
+class BoxCountingTask extends AbstractParallelTask<Integer, Integer> {
     int total = 0;
     SquareGrid grid;
     FeatureCoverage<Feature> coverage;
@@ -85,7 +85,7 @@ class BoxCountingTask extends AbstractDistributeTask<Integer, Integer> {
 // Le seul problème de la méthode c'est qu'elle peut demander beaucoup de mémoire alors que la précédente ne demande rien 
 // de plus que le coverage
 
-class BoxCountingTask2 extends AbstractDistributeTask<Integer, Collection<Integer>> {
+class BoxCountingTask2 extends AbstractParallelTask<Integer, Collection<Integer>> {
     SquareGrid grid;
     FeatureCoverage<Feature> coverage;
     Set<Integer> allIds = new HashSet<Integer>();

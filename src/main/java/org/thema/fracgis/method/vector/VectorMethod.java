@@ -7,8 +7,8 @@ package org.thema.fracgis.method.vector;
 import com.vividsolutions.jts.geom.Envelope;
 import java.util.TreeMap;
 import org.thema.common.param.XMLParams;
-import org.thema.drawshape.feature.Feature;
-import org.thema.drawshape.feature.FeatureCoverage;
+import org.thema.data.feature.Feature;
+import org.thema.data.feature.FeatureCoverage;
 import org.thema.fracgis.method.AbstractMethod;
 
 /**

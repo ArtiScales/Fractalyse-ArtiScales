@@ -4,6 +4,8 @@
  */
 package org.thema.fracgis.batch;
 
+import org.thema.common.ProgressBar;
+import org.thema.common.swing.TaskMonitor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,10 +15,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.thema.common.parallel.*;
 import org.thema.common.param.XMLParams;
-import org.thema.drawshape.feature.DefaultFeature;
-import org.thema.drawshape.feature.DefaultFeatureCoverage;
-import org.thema.drawshape.feature.Feature;
-import org.thema.drawshape.feature.FeatureCoverage;
+import org.thema.data.feature.DefaultFeature;
+import org.thema.data.feature.DefaultFeatureCoverage;
+import org.thema.data.feature.Feature;
+import org.thema.data.feature.FeatureCoverage;
 import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.fracgis.estimation.Estimation;
 import org.thema.fracgis.estimation.EstimationFactory;

@@ -23,7 +23,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
-import org.thema.common.parallel.ProgressBar;
+import org.thema.common.ProgressBar;
 import org.thema.fracgis.method.MonoMethod;
 import org.thema.fracgis.method.raster.RasterMethod;
 
@@ -57,38 +57,42 @@ public class MultiFracBoxCountingRasterMethod extends RasterMethod implements Mu
         monitor.setMaximum(img.getHeight());
         int n = (int) Math.ceil(Math.log(maxSize/getResolution()) / Math.log(coef)) + 1;
         rasters = new ArrayList<>();
+        List<Double> sizes = new ArrayList<>();
         for(int i = 0; i < n; i++) {
+            sizes.add(Math.pow(coef, i));
             int w = (int)Math.ceil(img.getWidth() / Math.pow(coef, i));
             rasters.add(Raster.createWritableRaster(new ComponentSampleModel(DataBuffer.TYPE_FLOAT,
                     w, (int)Math.ceil(img.getHeight() / Math.pow(coef, i)), 1, w, new int[]{0}), null));
         }
 
         RandomIter iter = RandomIterFactory.create(img, null);
-        double min = Double.MAX_VALUE, max = -Double.MAX_VALUE;
-        for(int y = 0; y < img.getHeight(); y++) {
-            for(int x = 0; x < img.getWidth(); x++) {
-                final double val = iter.getSampleDouble(x, y, 0);
-                if(val > max)
-                    max = val;
-                if(val < min)
-                    min = val;
-            }
-        }
+//        double min = Double.MAX_VALUE;
+//        for(int y = 0; y < img.getHeight(); y++) {
+//            for(int x = 0; x < img.getWidth(); x++) {
+//                final double val = iter.getSampleDouble(x, y, 0);
+//                if(val < min)
+//                    min = val;
+//            }
+//        }
+        
         total = 0;
         for(int y = 0; y < img.getHeight(); y++) {
             for(int x = 0; x < img.getWidth(); x++) {
                 final double val = iter.getSampleDouble(x, y, 0);
-                if(val > min) {
-                    double v = val-min;
-                    for(int i = 0; i < n; i++) {
-                        double size = Math.pow(coef, i);
-                        final int xi = (int)(x / size);
-                        final int yi = (int)(y / size);
-                        rasters.get(i).setSample(xi, yi, 0, rasters.get(i).getSampleFloat(xi, yi, 0)
-                            + v);
-                    }
-                    total += v;
+                if(val < 0)
+                    throw new RuntimeException("Negative value not permitted");
+//                final double v = val-min;
+                if(Double.isNaN(val))// || val < 0.01) 
+                    continue;
+                
+                for(int i = 0; i < n; i++) {
+                    final double size = sizes.get(i);
+                    final int xi = (int)(x / size);
+                    final int yi = (int)(y / size);
+                    rasters.get(i).setSample(xi, yi, 0, rasters.get(i).getSampleFloat(xi, yi, 0)
+                        + val);
                 }
+                total += val;
             }
             monitor.incProgress(1);
         }

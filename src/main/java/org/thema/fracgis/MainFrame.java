@@ -51,18 +51,18 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.thema.GlobalDataStore;
+import org.thema.data.GlobalDataStore;
 import org.thema.common.Config;
 import org.thema.common.JTS;
 import org.thema.common.JavaLoader;
 import org.thema.common.RasterImage;
 import org.thema.common.Util;
-import org.thema.common.io.IOImage;
-import org.thema.common.parallel.ProgressBar;
+import org.thema.data.IOImage;
+import org.thema.common.ProgressBar;
 import org.thema.common.swing.PreferencesDialog;
-import org.thema.drawshape.feature.DefaultFeature;
-import org.thema.drawshape.feature.DefaultFeatureCoverage;
-import org.thema.drawshape.feature.Feature;
+import org.thema.data.feature.DefaultFeature;
+import org.thema.data.feature.DefaultFeatureCoverage;
+import org.thema.data.feature.Feature;
 import org.thema.drawshape.image.CoverageShape;
 import org.thema.drawshape.image.RasterShape;
 import org.thema.drawshape.layer.DefaultGroupLayer;
@@ -489,13 +489,14 @@ public class MainFrame extends javax.swing.JFrame {
                     ProgressBar monitor = Config.getProgressBar("Rasterize...", features.size());
                     DefaultFeatureCoverage cov = new DefaultFeatureCoverage(features);
                     Rasterizer rasterizer = new Rasterizer(cov, dlg.resolution, dlg.field);
+                    rasterizer.setPolygonalRasterization(dlg.polyMode);
                     Raster raster = rasterizer.rasterize(monitor);
                     monitor.close();
                     if(raster == null)
                         return;
                     
                     RasterLayer l;
-                    if(dlg.field == null)
+                    if(dlg.field == null && dlg.polyMode != Rasterizer.PolyRasterMode.AREA)
                         l = new BinRasterLayer(dlg.layer.getName() + "-raster_" + dlg.resolution, 
                             new RasterShape(new RasterImage(raster), rasterizer.getEnvelope()), dlg.layer.getCRS());
                     else {

@@ -17,7 +17,7 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.util.List;
 import javax.swing.JOptionPane;
-import org.thema.common.parallel.TaskMonitor;
+import org.thema.common.swing.TaskMonitor;
 import org.thema.drawshape.PanelMap;
 import org.thema.drawshape.PanelMap.ShapeMouseListener;
 import org.thema.drawshape.SelectableShape;

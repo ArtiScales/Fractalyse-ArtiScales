@@ -6,7 +6,7 @@ package org.thema.fracgis.tools;
 
 import java.util.Collection;
 import javax.swing.JOptionPane;
-import org.thema.drawshape.feature.Feature;
+import org.thema.data.feature.Feature;
 import org.thema.drawshape.layer.DefaultGroupLayer;
 import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.drawshape.layer.Layer;

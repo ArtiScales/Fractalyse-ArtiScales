@@ -8,7 +8,7 @@ package org.thema.fracgis.method;
 
 import com.vividsolutions.jts.geom.Envelope;
 import java.util.TreeMap;
-import org.thema.common.parallel.ProgressBar;
+import org.thema.common.ProgressBar;
 
 /**
  *

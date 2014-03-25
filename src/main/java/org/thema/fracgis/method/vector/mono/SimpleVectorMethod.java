@@ -8,7 +8,7 @@ package org.thema.fracgis.method.vector.mono;
 
 import java.util.TreeMap;
 import org.thema.common.param.XMLParams;
-import org.thema.drawshape.feature.FeatureCoverage;
+import org.thema.data.feature.FeatureCoverage;
 import org.thema.fracgis.method.MonoMethod;
 import org.thema.fracgis.method.vector.VectorMethod;
 

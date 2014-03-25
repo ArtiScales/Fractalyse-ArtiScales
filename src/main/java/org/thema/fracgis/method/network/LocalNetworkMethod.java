@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.TreeMap;
 import org.geotools.graph.structure.Edge;
 import org.thema.common.JTS;
-import org.thema.common.parallel.ProgressBar;
+import org.thema.common.ProgressBar;
 import org.thema.fracgis.method.AbstractMethod;
 import org.thema.fracgis.method.MonoMethod;
 import org.thema.graph.SpatialGraph;

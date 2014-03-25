@@ -16,7 +16,7 @@ import java.util.Locale;
 import java.util.TreeMap;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
-import org.thema.common.parallel.ProgressBar;
+import org.thema.common.ProgressBar;
 import org.thema.fracgis.method.MonoMethod;
 import org.thema.fracgis.method.raster.RasterMethod;
 

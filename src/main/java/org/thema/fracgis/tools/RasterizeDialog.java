@@ -16,10 +16,11 @@ import com.vividsolutions.jts.geom.Envelope;
 import java.util.Collection;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
-import org.thema.drawshape.feature.DefaultFeatureCoverage;
-import org.thema.drawshape.feature.Feature;
+import org.thema.data.feature.DefaultFeatureCoverage;
+import org.thema.data.feature.Feature;
 import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.fracgis.LayerModel;
+import org.thema.process.Rasterizer;
 
 /**
  *
@@ -31,6 +32,7 @@ public class RasterizeDialog extends javax.swing.JDialog {
     public FeatureLayer layer;
     public double resolution;
     public String field;
+    public Rasterizer.PolyRasterMode polyMode;
 
 
     /** Creates new form CorrelationDialog */
@@ -46,6 +48,8 @@ public class RasterizeDialog extends javax.swing.JDialog {
         }
         layerComboBox.setModel(model);
         layerComboBoxActionPerformed(null);
+        
+        polyModeComboBox.setModel(new DefaultComboBoxModel(Rasterizer.PolyRasterMode.values()));
     }
 
     /** This method is called from within the constructor to
@@ -66,6 +70,8 @@ public class RasterizeDialog extends javax.swing.JDialog {
         infoLabel = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         fieldComboBox = new javax.swing.JComboBox();
+        jLabel4 = new javax.swing.JLabel();
+        polyModeComboBox = new javax.swing.JComboBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -109,6 +115,8 @@ public class RasterizeDialog extends javax.swing.JDialog {
             }
         });
 
+        jLabel4.setText("Poly mode");
+
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -117,14 +125,10 @@ public class RasterizeDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
-                        .add(jLabel2)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(resSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 68, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(layout.createSequentialGroup()
                         .add(12, 12, 12)
                         .add(jLabel3)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(fieldComboBox, 0, 244, Short.MAX_VALUE))
+                        .add(fieldComboBox, 0, 259, Short.MAX_VALUE))
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                         .add(jLabel1)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -134,7 +138,18 @@ public class RasterizeDialog extends javax.swing.JDialog {
                         .add(0, 0, Short.MAX_VALUE)
                         .add(okButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 67, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(cancelButton)))
+                        .add(cancelButton))
+                    .add(layout.createSequentialGroup()
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(layout.createSequentialGroup()
+                                .add(jLabel2)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(resSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 68, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                            .add(layout.createSequentialGroup()
+                                .add(jLabel4)
+                                .add(18, 18, 18)
+                                .add(polyModeComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 135, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .add(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
@@ -156,8 +171,12 @@ public class RasterizeDialog extends javax.swing.JDialog {
                     .add(jLabel2)
                     .add(resSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel4)
+                    .add(polyModeComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(12, 12, 12)
                 .add(infoLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 19, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(cancelButton)
                     .add(okButton))
@@ -174,6 +193,7 @@ public class RasterizeDialog extends javax.swing.JDialog {
             field = null;
         else
             field = (String)fieldComboBox.getSelectedItem();
+        polyMode = (Rasterizer.PolyRasterMode) polyModeComboBox.getSelectedItem();
         isOk = true;
         setVisible(false);
         dispose();
@@ -218,7 +238,7 @@ public class RasterizeDialog extends javax.swing.JDialog {
         int p = 1;
         if(fieldComboBox.getSelectedIndex() > 0)
             p = 4;
-        infoLabel.setText("Size : " + w + "x" + h + " - (" + w*h*p/1048000 + " Mo)");
+        infoLabel.setText("Size : " + (int)w + "x" + (int)h + " - (" + w*h*p/1048000 + " Mo)");
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -228,8 +248,10 @@ public class RasterizeDialog extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JComboBox layerComboBox;
     private javax.swing.JButton okButton;
+    private javax.swing.JComboBox polyModeComboBox;
     private javax.swing.JSpinner resSpinner;
     // End of variables declaration//GEN-END:variables
 

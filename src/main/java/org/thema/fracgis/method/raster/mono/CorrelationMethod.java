@@ -18,7 +18,7 @@ import java.util.TreeMap;
 import java.util.concurrent.CancellationException;
 import org.thema.common.parallel.AbstractParallelFTask;
 import org.thema.common.parallel.ParallelFExecutor;
-import org.thema.common.parallel.ProgressBar;
+import org.thema.common.ProgressBar;
 import org.thema.fracgis.method.MonoMethod;
 import org.thema.fracgis.method.raster.RasterMethod;
 

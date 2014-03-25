@@ -28,7 +28,7 @@ import org.geotools.graph.structure.Node;
 import org.thema.drawshape.GeometryDrawableShape;
 import org.thema.drawshape.PanelMap.ShapeMouseListener;
 import org.thema.drawshape.SelectableShape;
-import org.thema.drawshape.feature.Feature;
+import org.thema.data.feature.Feature;
 import org.thema.drawshape.layer.DefaultGroupLayer;
 import org.thema.drawshape.layer.DefaultLayer;
 import org.thema.drawshape.layer.FeatureLayer;
