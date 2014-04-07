@@ -134,8 +134,9 @@ public class MultiFracBoxCountingRasterMethod extends RasterMethod implements Mu
             for(int j = 0; j < buf.getSize(); j++)  {
                 float val = buf.getElemFloat(j);
                 if(val > 0) {
-                    for(int k = 0; k < sum.length; k++)
+                    for(int k = 0; k < sum.length; k++) {
                         sum[k] += Math.pow(val / total, qList.get(k));
+                    }
                 }
             }
             for(int k = 0; k < sum.length; k++)

@@ -50,6 +50,7 @@ import javax.media.jai.iterator.RandomIterFactory;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.data.DataSourceException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.thema.data.GlobalDataStore;
 import org.thema.common.Config;
@@ -444,17 +445,17 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_correlationMenuItemActionPerformed
 
     private void loadRasterMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadRasterMenuItemActionPerformed
-        File f = Util.getFile(".tif", "TIFF image");
+        File f = Util.getFile(".tif|.asc", "Image");
         if(f == null)
             return;
 
         RasterLayer fl;
         try {
             try {
-                GridCoverage2D grid = IOImage.loadTiff(f);
+                GridCoverage2D grid = IOImage.loadCoverage(f);
                 fl = new RasterLayer(f.getName(), new CoverageShape(grid, new RasterStyle()),
                         grid.getCoordinateReferenceSystem2D());
-            } catch(IOException ex) {
+            } catch(DataSourceException ex) {
                 Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "Impossible to load GeoTiff. Try simple TIFF", ex);
                 BufferedImage img = ImageIO.read(f);
                 fl = new RasterLayer(f.getName(), new RasterShape(img, img.getRaster().getBounds()));

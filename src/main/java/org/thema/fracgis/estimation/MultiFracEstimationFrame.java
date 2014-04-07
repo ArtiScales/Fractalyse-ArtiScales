@@ -78,7 +78,6 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
         this.method = method;
         
         setTitle(method.getDetailName());
-        smoothSpinner.setEnabled(method.getCurve(0).size() > 50);
         
         TreeSet<Double> qSet = getqSet();
         M = method.getCurves(qSet);
@@ -205,7 +204,9 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
                 regPlot = new XYPlot(dataset, new NumberAxis("alpha"), new NumberAxis("f(alpha)"), renderer);
         } 
       
+        ((NumberAxis)regPlot.getDomainAxis()).setAutoRangeIncludesZero(false);
         ((NumberAxis)regPlot.getRangeAxis()).setAutoRangeIncludesZero(false);
+        ((XYLineAndShapeRenderer)regPlot.getRenderer()).setBaseShapesVisible(showPointCheckBox.isSelected());
         chart = new JFreeChart("", null, regPlot, false);
 
         chartPanel = new ChartPanel(chart);
@@ -228,10 +229,6 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
         jScrollPane1 = new javax.swing.JScrollPane();
         infoTextArea = new javax.swing.JTextArea();
         exportButton = new javax.swing.JButton();
-        jPanel3 = new javax.swing.JPanel();
-        jLabel5 = new javax.swing.JLabel();
-        scalingCheckBox = new javax.swing.JCheckBox();
-        smoothSpinner = new javax.swing.JSpinner();
         jPanel4 = new javax.swing.JPanel();
         leftToggleButton = new javax.swing.JToggleButton();
         leftSpinner = new javax.swing.JSpinner();
@@ -239,7 +236,7 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
         rightToggleButton = new javax.swing.JToggleButton();
         jLabel6 = new javax.swing.JLabel();
         rightSpinner = new javax.swing.JSpinner();
-        lineCheckBox = new javax.swing.JCheckBox();
+        showPointCheckBox = new javax.swing.JCheckBox();
         jPanel2 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         qMinSpinner = new javax.swing.JSpinner();
@@ -270,45 +267,6 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
                 exportButtonActionPerformed(evt);
             }
         });
-
-        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Scaling behaviour"));
-
-        jLabel5.setText("Smooth");
-
-        scalingCheckBox.setText("Show");
-        scalingCheckBox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                scalingCheckBoxActionPerformed(evt);
-            }
-        });
-
-        smoothSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, 0.0d, 1.0d, 0.01d));
-        smoothSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                smoothSpinnerStateChanged(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(scalingCheckBox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jLabel5)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(smoothSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-        );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                .addComponent(scalingCheckBox)
-                .addComponent(jLabel5)
-                .addComponent(smoothSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-        );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Bounds"));
 
@@ -378,10 +336,10 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
                 .addContainerGap())
         );
 
-        lineCheckBox.setText("Show line");
-        lineCheckBox.addActionListener(new java.awt.event.ActionListener() {
+        showPointCheckBox.setText("Show points");
+        showPointCheckBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                lineCheckBoxActionPerformed(evt);
+                showPointCheckBoxActionPerformed(evt);
             }
         });
 
@@ -473,11 +431,10 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 276, Short.MAX_VALUE)
                     .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(exportButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(lineCheckBox))
+                        .addComponent(showPointCheckBox))
                     .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -511,12 +468,10 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
                     .addComponent(qComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel8)
                     .addComponent(viewqEstimButton))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 29, Short.MAX_VALUE)
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 100, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(exportButton)
-                    .addComponent(lineCheckBox)))
+                    .addComponent(showPointCheckBox)))
         );
 
         splitPane.setLeftComponent(jPanel1);
@@ -594,39 +549,6 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
         }
 }//GEN-LAST:event_exportButtonActionPerformed
 
-    private void scalingCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_scalingCheckBoxActionPerformed
-        if(scalingCheckBox.isSelected()) {
-           smoothSpinnerStateChanged(null);
-           ((CombinedDomainXYPlot)chart.getXYPlot()).add(scalingPlot);
-        } else
-            ((CombinedDomainXYPlot)chart.getXYPlot()).remove(scalingPlot);
-
-    }//GEN-LAST:event_scalingCheckBoxActionPerformed
-
-    private void smoothSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_smoothSpinnerStateChanged
-//        double [][] curve = estim.getScalingBehaviour().toArray();
-//
-//        try {
-//            double bandwidth = (Double)smoothSpinner.getValue();
-//            if(bandwidth > 0)
-//                curve = convolve(curve, bandwidth, true);
-//        } catch (Exception ex) {
-//            Logger.getLogger(EstimationFrame.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        DefaultXYDataset dataset = new DefaultXYDataset();
-//        dataset.addSeries("Scaling behaviour", curve);
-//
-//        if(scalingPlot == null) {
-//            NumberAxis axis = new NumberAxis();
-//            axis.setAutoRangeIncludesZero(false);
-//            scalingPlot = new XYPlot(dataset,
-//                    null, axis, new XYLineAndShapeRenderer(true, false));
-//        } else {
-//            scalingPlot.getRangeAxis().setAutoRange(false);
-//            scalingPlot.setDataset(dataset);
-//        }
-    }//GEN-LAST:event_smoothSpinnerStateChanged
-
     private void leftSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_leftSpinnerStateChanged
         updateEstim();
     }//GEN-LAST:event_leftSpinnerStateChanged
@@ -643,10 +565,9 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
         regPlot.clearDomainMarkers();
     }//GEN-LAST:event_rightToggleButtonActionPerformed
 
-    private void lineCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lineCheckBoxActionPerformed
-        ((XYLineAndShapeRenderer)regPlot.getRenderer()).setSeriesLinesVisible(1, lineCheckBox.isSelected());
-        ((XYLineAndShapeRenderer)regPlot.getRenderer()).setSeriesShapesVisible(1, !lineCheckBox.isSelected());
-    }//GEN-LAST:event_lineCheckBoxActionPerformed
+    private void showPointCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showPointCheckBoxActionPerformed
+        updatePlot();
+    }//GEN-LAST:event_showPointCheckBoxActionPerformed
 
     private void curveComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_curveComboBoxActionPerformed
         updatePlot();
@@ -665,33 +586,6 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
         new EstimationFrame(this, new EstimationFactory(method.getSimpleMethod((Double)qComboBox.getSelectedItem()))).setVisible(true);
     }//GEN-LAST:event_viewqEstimButtonActionPerformed
 
-   
-    private double [][] convolve(double [][] curve, double bandwidth, boolean log) {
-        int n = curve[0].length;
-        double min = curve[0][0];
-        double max = curve[0][n-1];
-        double [][] smooth = new double[2][n];
-        
-        double sigma = (max-min) * bandwidth;
-        if(log)
-            sigma = (Math.log(max)-Math.log(min)) * bandwidth;
-        Gaussian gaussian = new Gaussian(0, sigma);
-        
-        for(int i = 0; i < n; i++) {
-            double x = curve[0][i];
-            double sum = 0, sumCoef = 0;
-            for(int j = 0; j < n; j++) {
-                double coef = gaussian.value(log ? (Math.log(curve[0][j]) - Math.log(x)) : (curve[0][j] - x));
-                sum += coef * curve[1][j];
-                sumCoef += coef;
-            }
-            smooth[0][i] = x;
-            smooth[1][i] = sum / sumCoef;
-        }
-        
-        return smooth;
-    }
-    
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -702,18 +596,15 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSpinner leftSpinner;
     private javax.swing.JToggleButton leftToggleButton;
-    private javax.swing.JCheckBox lineCheckBox;
     private javax.swing.JComboBox qComboBox;
     private javax.swing.JSpinner qMaxSpinner;
     private javax.swing.JSpinner qMinSpinner;
@@ -721,8 +612,7 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
     private javax.swing.JButton qUpdateButton;
     private javax.swing.JSpinner rightSpinner;
     private javax.swing.JToggleButton rightToggleButton;
-    private javax.swing.JCheckBox scalingCheckBox;
-    private javax.swing.JSpinner smoothSpinner;
+    private javax.swing.JCheckBox showPointCheckBox;
     private javax.swing.JSplitPane splitPane;
     private javax.swing.JButton viewqEstimButton;
     // End of variables declaration//GEN-END:variables

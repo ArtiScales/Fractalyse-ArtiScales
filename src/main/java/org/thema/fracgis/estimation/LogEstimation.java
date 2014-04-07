@@ -7,6 +7,7 @@ package org.thema.fracgis.estimation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
@@ -16,6 +17,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.data.Range;
 import org.jfree.data.xy.XYSeries;
 import org.thema.fracgis.method.AbstractMethod;
 import org.thema.fracgis.method.MonoMethod;
@@ -30,6 +32,11 @@ public class LogEstimation extends AbstractEstimation{
 
     public LogEstimation(MonoMethod method) {
         super(method);
+        Iterator<Double> it = curve.keySet().iterator();
+        while(it.hasNext())
+            if(curve.get(it.next()) <= 0)
+                it.remove();
+        range = new Range(curve.firstKey(), curve.lastKey());
         estimate();
     }
 
