@@ -1,34 +1,56 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * CorrelationDialog.java
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
  *
- * Created on 26 févr. 2010, 16:57:09
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.thema.fracgis.method.raster.mono;
+
+package org.thema.fracgis.method.raster;
 
 import javax.swing.JOptionPane;
 import org.thema.common.JTS;
+import org.thema.drawshape.layer.RasterLayer;
 import org.thema.fracgis.BinRasterLayer;
 import org.thema.fracgis.LayerModel;
+import org.thema.fracgis.sampling.DefaultSampling;
 
 /**
- *
- * @author gvuidel
+ * Dialog form for all raster methods but radial.
+ * 
+ * @author Gilles Vuidel
  */
-public class CorrelationDialog extends javax.swing.JDialog {
+public class RasterMethodDialog extends javax.swing.JDialog {
 
+    /** is user clicked OK ? */
     public boolean isOk = false;
-    public BinRasterLayer layer;
-    public double maxSize;
+    /** the selected layer */
+    public RasterLayer layer;
+    /** the resulting scale sampling */
+    public DefaultSampling sampling;
 
-    /** Creates new form CorrelationDialog */
-    public CorrelationDialog(java.awt.Frame parent, LayerModel model) {
+    /** 
+     * Creates new form RasterMethodDialog 
+     * @param parent the parent window
+     * @param title title of this dialog
+     * @param model list of raster layers 
+     * @param sampling sampling used for calculating max size
+     */
+    public RasterMethodDialog(java.awt.Frame parent, String title, LayerModel model, DefaultSampling sampling) {
         super(parent, true);
+        setTitle(title);
+        this.sampling = sampling;
         initComponents();
         setLocationRelativeTo(parent);
         getRootPane().setDefaultButton(okButton);
@@ -56,6 +78,8 @@ public class CorrelationDialog extends javax.swing.JDialog {
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         dMaxSpinner = new javax.swing.JSpinner();
+        jLabel4 = new javax.swing.JLabel();
+        coefSpinner = new javax.swing.JSpinner();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -81,33 +105,40 @@ public class CorrelationDialog extends javax.swing.JDialog {
 
         jLabel1.setText("Layer");
 
-        jLabel2.setText("Dist. max");
+        jLabel2.setText("Max size");
 
         dMaxSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(0.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+
+        jLabel4.setText("Coef");
+
+        coefSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1.5d), Double.valueOf(1.0d), null, Double.valueOf(0.1d)));
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
+                .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(layout.createSequentialGroup()
-                                .add(jLabel1)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(layerComboBox, 0, 219, Short.MAX_VALUE))
-                            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                                .add(okButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 67, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(cancelButton))))
-                    .add(layout.createSequentialGroup()
-                        .add(28, 28, 28)
-                        .add(jLabel2)
+                        .add(jLabel1)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(dMaxSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 89, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .add(layerComboBox, 0, 223, Short.MAX_VALUE))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                        .add(okButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 67, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(cancelButton)))
                 .addContainerGap())
+            .add(layout.createSequentialGroup()
+                .add(21, 21, 21)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jLabel2)
+                    .add(jLabel4))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(coefSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 78, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(dMaxSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 132, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         layout.linkSize(new java.awt.Component[] {cancelButton, okButton}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
@@ -119,11 +150,15 @@ public class CorrelationDialog extends javax.swing.JDialog {
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(layerComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jLabel1))
-                .add(18, 18, 18)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(coefSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jLabel4))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel2)
                     .add(dMaxSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 30, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 17, Short.MAX_VALUE)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(cancelButton)
                     .add(okButton))
@@ -134,8 +169,10 @@ public class CorrelationDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
-        layer = (BinRasterLayer) layerComboBox.getSelectedItem();
-        maxSize = (Double)dMaxSpinner.getValue();
+        layer = (RasterLayer) layerComboBox.getSelectedItem();
+        double maxSize = (Double)dMaxSpinner.getValue();
+        double coef = (Double)coefSpinner.getValue();
+        sampling = new DefaultSampling(maxSize, coef);
         isOk = true;
         setVisible(false);
         dispose();
@@ -148,16 +185,18 @@ public class CorrelationDialog extends javax.swing.JDialog {
 
     private void layerComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_layerComboBoxActionPerformed
         BinRasterLayer l = (BinRasterLayer) layerComboBox.getSelectedItem();
-        dMaxSpinner.setValue(CorrelationMethod.getDefaultMax(JTS.rectToEnv(l.getBounds())));
+        dMaxSpinner.setValue(sampling.getDefaultMax(JTS.rectToEnv(l.getBounds())));
 }//GEN-LAST:event_layerComboBoxActionPerformed
 
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
+    private javax.swing.JSpinner coefSpinner;
     private javax.swing.JSpinner dMaxSpinner;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JComboBox layerComboBox;
     private javax.swing.JButton okButton;
     // End of variables declaration//GEN-END:variables

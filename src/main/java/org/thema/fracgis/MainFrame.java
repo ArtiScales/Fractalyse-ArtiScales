@@ -1,16 +1,25 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * MainFrame.java
- *
- * Created on 26 janv. 2010, 14:14:26
- */
 
 package org.thema.fracgis;
 
+import org.thema.fracgis.sampling.DefaultSampling;
 import org.thema.fracgis.method.network.LocalNetworkDialog;
 import org.thema.fracgis.method.network.DesserteDialog;
 import org.thema.fracgis.method.vector.mono.DilationMethod;
@@ -19,12 +28,10 @@ import org.thema.fracgis.method.vector.mono.DilationDialog;
 import org.thema.fracgis.method.vector.mono.BoxCountingMethod;
 import org.thema.fracgis.method.vector.BoxCountingDialog;
 import org.thema.fracgis.method.vector.mono.RadialDialog;
-import org.thema.fracgis.method.raster.mono.CorrelationDialog;
+import org.thema.fracgis.method.raster.RasterMethodDialog;
 import org.thema.fracgis.method.raster.mono.DilationRasterMethod;
-import org.thema.fracgis.method.raster.mono.DilationRasterDialog;
 import org.thema.fracgis.method.raster.mono.RadialRasterDialog;
 import org.thema.fracgis.method.raster.mono.BoxCountingRasterMethod;
-import org.thema.fracgis.method.raster.BoxCountingRasterDialog;
 import org.thema.fracgis.method.raster.mono.CorrelationMethod;
 import org.thema.fracgis.method.raster.mono.RadialRasterMethod;
 import org.thema.fracgis.tools.RasterizeDialog;
@@ -35,6 +42,7 @@ import com.vividsolutions.jts.geom.Lineal;
 import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.operation.buffer.BufferParameters;
 import com.vividsolutions.jts.precision.GeometryPrecisionReducer;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
@@ -48,7 +56,6 @@ import javax.imageio.ImageIO;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import javax.swing.JOptionPane;
-import javax.swing.UIManager;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.data.DataSourceException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -79,24 +86,29 @@ import org.thema.fracgis.method.*;
 import org.thema.fracgis.method.raster.multi.MultiFracBoxCountingRasterMethod;
 import org.thema.fracgis.method.vector.multi.MultiFracBoxCountingVectorMethod;
 import org.thema.fracgis.estimation.MultiFracEstimationFrame;
+import org.thema.fracgis.method.raster.multi.MultiFracWaveletMethod;
+import org.thema.fracgis.sampling.MultiFracSampling;
+import org.thema.fracgis.sampling.RasterBoxSampling;
 import org.thema.fracgis.tools.RasterSelectionDialog;
 import org.thema.fracgis.tools.VectorSelectionDialog;
 import org.thema.graph.SpatialGraph;
 import org.thema.process.Rasterizer;
 
 /**
- *
- * @author gvuidel
+ * The main frame of the program and the main entry point.
+ * 
+ * @author Giles Vuidel
  */
 public class MainFrame extends javax.swing.JFrame {
 
-    DefaultGroupLayer groupLayer;
+    private DefaultGroupLayer groupLayer;
 
     /** Creates new form MainFrame */
     public MainFrame() {
+        setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/org/thema/fracgis/fractal.png")));
         initComponents();
         setLocationRelativeTo(null);
-        setTitle("FracGIS - " + getVersion());
+        setTitle("FracGIS - " + JavaLoader.getVersion(MainFrame.class));
         groupLayer = new DefaultGroupLayer("Layers", true);
         mapViewer.setRootLayer(groupLayer);
         mapViewer.disableInfoPanel();
@@ -133,7 +145,9 @@ public class MainFrame extends javax.swing.JFrame {
         correlationMenuItem = new javax.swing.JMenuItem();
         radialRasterMenuItem = new javax.swing.JMenuItem();
         multiRadialRasterMenuItem = new javax.swing.JMenuItem();
-        multiFracRasterMenuItem = new javax.swing.JMenuItem();
+        jMenu2 = new javax.swing.JMenu();
+        multiFracBoxRasterMenuItem = new javax.swing.JMenuItem();
+        waveletMenuItem = new javax.swing.JMenuItem();
         networkMenu = new javax.swing.JMenu();
         backBoneMenuItem = new javax.swing.JMenuItem();
         desserteMenuItem = new javax.swing.JMenuItem();
@@ -179,7 +193,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         vectorMenu.setText("Vector");
 
-        boxCountingMenuItem.setText("Box counting...");
+        boxCountingMenuItem.setText("Box counting");
         boxCountingMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 boxCountingMenuItemActionPerformed(evt);
@@ -187,7 +201,7 @@ public class MainFrame extends javax.swing.JFrame {
         });
         vectorMenu.add(boxCountingMenuItem);
 
-        dilationMenuItem.setText("Dilation...");
+        dilationMenuItem.setText("Dilation");
         dilationMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 dilationMenuItemActionPerformed(evt);
@@ -195,7 +209,7 @@ public class MainFrame extends javax.swing.JFrame {
         });
         vectorMenu.add(dilationMenuItem);
 
-        radialMenuItem.setText("Radial...");
+        radialMenuItem.setText("Radial");
         radialMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 radialMenuItemActionPerformed(evt);
@@ -204,7 +218,7 @@ public class MainFrame extends javax.swing.JFrame {
         vectorMenu.add(radialMenuItem);
         vectorMenu.add(jSeparator2);
 
-        batchVectorMenuItem.setText("Batch...");
+        batchVectorMenuItem.setText("Batch");
         batchVectorMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 batchVectorMenuItemActionPerformed(evt);
@@ -212,7 +226,7 @@ public class MainFrame extends javax.swing.JFrame {
         });
         vectorMenu.add(batchVectorMenuItem);
 
-        multiFracVectorMenuItem1.setText("Multifractal...");
+        multiFracVectorMenuItem1.setText("Multi-fractal");
         multiFracVectorMenuItem1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 multiFracVectorMenuItem1ActionPerformed(evt);
@@ -224,7 +238,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         rasterMenu.setText("Raster");
 
-        boxCountingRasterMenuItem.setText("Box counting...");
+        boxCountingRasterMenuItem.setText("Box counting");
         boxCountingRasterMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 boxCountingRasterMenuItemActionPerformed(evt);
@@ -232,7 +246,7 @@ public class MainFrame extends javax.swing.JFrame {
         });
         rasterMenu.add(boxCountingRasterMenuItem);
 
-        dilRasterMenuItem.setText("Dilation...");
+        dilRasterMenuItem.setText("Dilation");
         dilRasterMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 dilRasterMenuItemActionPerformed(evt);
@@ -240,7 +254,7 @@ public class MainFrame extends javax.swing.JFrame {
         });
         rasterMenu.add(dilRasterMenuItem);
 
-        correlationMenuItem.setText("Correlation...");
+        correlationMenuItem.setText("Correlation");
         correlationMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 correlationMenuItemActionPerformed(evt);
@@ -248,7 +262,7 @@ public class MainFrame extends javax.swing.JFrame {
         });
         rasterMenu.add(correlationMenuItem);
 
-        radialRasterMenuItem.setText("Radial...");
+        radialRasterMenuItem.setText("Radial");
         radialRasterMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 radialRasterMenuItemActionPerformed(evt);
@@ -256,7 +270,7 @@ public class MainFrame extends javax.swing.JFrame {
         });
         rasterMenu.add(radialRasterMenuItem);
 
-        multiRadialRasterMenuItem.setText("Multi radial...");
+        multiRadialRasterMenuItem.setText("Multi radial");
         multiRadialRasterMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 multiRadialRasterMenuItemActionPerformed(evt);
@@ -264,13 +278,26 @@ public class MainFrame extends javax.swing.JFrame {
         });
         rasterMenu.add(multiRadialRasterMenuItem);
 
-        multiFracRasterMenuItem.setText("Multifractal...");
-        multiFracRasterMenuItem.addActionListener(new java.awt.event.ActionListener() {
+        jMenu2.setText("Multi-fractal");
+
+        multiFracBoxRasterMenuItem.setText("Box");
+        multiFracBoxRasterMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                multiFracRasterMenuItemActionPerformed(evt);
+                multiFracBoxRasterMenuItemActionPerformed(evt);
             }
         });
-        rasterMenu.add(multiFracRasterMenuItem);
+        jMenu2.add(multiFracBoxRasterMenuItem);
+
+        waveletMenuItem.setText("Wavelet");
+        waveletMenuItem.setEnabled(false);
+        waveletMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                waveletMenuItemActionPerformed(evt);
+            }
+        });
+        jMenu2.add(waveletMenuItem);
+
+        rasterMenu.add(jMenu2);
 
         jMenuBar1.add(rasterMenu);
 
@@ -360,10 +387,12 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void loadVectorMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadVectorMenuItemActionPerformed
     final File f = Util.getFile(".shp", "Shapefile");
-    if(f == null)
+    if(f == null) {
         return;
+    }
 
     new Thread(new Runnable() {
+        @Override
         public void run() {
          try {
             String layer = f.getName().substring(0, f.getName().length()-4);
@@ -403,16 +432,17 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_backBoneMenuItemActionPerformed
 
     private void boxCountingMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_boxCountingMenuItemActionPerformed
-        final BoxCountingDialog dlg = new BoxCountingDialog(this, new LayerModel(mapViewer.getLayers(), FeatureLayer.class));
+        final BoxCountingDialog dlg = new BoxCountingDialog(this, new LayerModel(mapViewer.getLayers(), FeatureLayer.class),
+            new DefaultSampling());
         dlg.setVisible(true);
-        if(!dlg.isOk)
+        if(!dlg.isOk) {
             return;
-
+        }
         new Thread(new Runnable() {
+            @Override
             public void run() {
-                BoxCountingMethod boxCountingMethod = new BoxCountingMethod(dlg.layer.getName(), new DefaultFeatureCoverage(dlg.layer.getFeatures()), 
-                        dlg.minSize, dlg.maxSize, dlg.coef, dlg.d);
-                boxCountingMethod.setKeepCells(dlg.viewBoxes);
+                BoxCountingMethod boxCountingMethod = new BoxCountingMethod(dlg.layer.getName(), dlg.sampling, 
+                        new DefaultFeatureCoverage(dlg.layer.getFeatures()), dlg.d, dlg.viewBoxes);
                 launchMethod(boxCountingMethod);
             }
         }).start();      
@@ -429,16 +459,18 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_localNetMenuItemActionPerformed
 
     private void correlationMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_correlationMenuItemActionPerformed
-        final CorrelationDialog dlg = new CorrelationDialog(this, new LayerModel(mapViewer.getLayers(), BinRasterLayer.class));
+        final RasterMethodDialog dlg = new RasterMethodDialog(this, "Correlation", 
+                new LayerModel(mapViewer.getLayers(), BinRasterLayer.class), new DefaultSampling());
         dlg.setVisible(true);
 
-        if(!dlg.isOk)
+        if(!dlg.isOk) {
             return;
-
+        }
         new Thread(new Runnable() {
+            @Override
             public void run() { 
-                CorrelationMethod method = new CorrelationMethod(dlg.layer.getName(), dlg.layer.getImageShape().getImage(), 
-                        JTS.rectToEnv(dlg.layer.getBounds()), dlg.maxSize);
+                CorrelationMethod method = new CorrelationMethod(dlg.layer.getName(), dlg.sampling, 
+                        dlg.layer.getImageShape().getImage(), JTS.rectToEnv(dlg.layer.getBounds()));
                 launchMethod(method);
             }
         }).start();
@@ -446,8 +478,9 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void loadRasterMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadRasterMenuItemActionPerformed
         File f = Util.getFile(".tif|.asc", "Image");
-        if(f == null)
+        if(f == null) {
             return;
+        }
 
         RasterLayer fl;
         try {
@@ -478,38 +511,35 @@ public class MainFrame extends javax.swing.JFrame {
     private void rasterizeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rasterizeMenuItemActionPerformed
         final RasterizeDialog dlg = new RasterizeDialog(this, new LayerModel(mapViewer.getLayers(), FeatureLayer.class));
         dlg.setVisible(true);
-        if(!dlg.isOk)
+        if(!dlg.isOk) {
             return;
+        }
         
         new Thread(new Runnable() {
+            @Override
             public void run() {
                 final Collection<? extends Feature> features =
                         dlg.layer.getSelectedFeatures().isEmpty() ? dlg.layer.getFeatures() : dlg.layer.getSelectedFeatures();
 
-                try {
-                    ProgressBar monitor = Config.getProgressBar("Rasterize...", features.size());
-                    DefaultFeatureCoverage cov = new DefaultFeatureCoverage(features);
-                    Rasterizer rasterizer = new Rasterizer(cov, dlg.resolution, dlg.field);
-                    rasterizer.setPolygonalRasterization(dlg.polyMode);
-                    Raster raster = rasterizer.rasterize(monitor);
-                    monitor.close();
-                    if(raster == null)
-                        return;
-                    
-                    RasterLayer l;
-                    if(dlg.field == null && dlg.polyMode != Rasterizer.PolyRasterMode.AREA)
-                        l = new BinRasterLayer(dlg.layer.getName() + "-raster_" + dlg.resolution, 
-                            new RasterShape(new RasterImage(raster), rasterizer.getEnvelope()), dlg.layer.getCRS());
-                    else {
-                        l = new RasterLayer(dlg.layer.getName() + "-raster_" + dlg.field + "_" + dlg.resolution, 
-                            new RasterShape(new RasterImage(raster), rasterizer.getEnvelope()), dlg.layer.getCRS());
-                        l.setRemovable(true);
-                    }
-                    ((DefaultGroupLayer) mapViewer.getLayers()).addLayerFirst(l);
-                } catch (Throwable ex) {
-                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-                    JOptionPane.showMessageDialog(null, "An error occured :\n"+ex.getLocalizedMessage());
+                ProgressBar monitor = Config.getProgressBar("Rasterize...", features.size());
+                DefaultFeatureCoverage cov = new DefaultFeatureCoverage(features);
+                Rasterizer rasterizer = new Rasterizer(cov, dlg.resolution, dlg.field);
+                rasterizer.setPolygonalRasterization(dlg.polyMode);
+                Raster raster = rasterizer.rasterize(monitor);
+                monitor.close();
+                if(raster == null) {
+                    return;
                 }
+                RasterLayer l;
+                if(dlg.field == null && dlg.polyMode != Rasterizer.PolyRasterMode.AREA) {
+                    l = new BinRasterLayer(dlg.layer.getName() + "-raster_" + dlg.resolution,
+                            new RasterShape(new RasterImage(raster), rasterizer.getEnvelope()), dlg.layer.getCRS());
+                } else {
+                    l = new RasterLayer(dlg.layer.getName() + "-raster_" + dlg.field + "_" + dlg.resolution, 
+                        new RasterShape(new RasterImage(raster), rasterizer.getEnvelope()), dlg.layer.getCRS());
+                    l.setRemovable(true);
+                }
+                ((DefaultGroupLayer) mapViewer.getLayers()).addLayerFirst(l);       
             }
         }).start();
     }//GEN-LAST:event_rasterizeMenuItemActionPerformed
@@ -526,15 +556,17 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_prefMenuItemActionPerformed
 
     private void boxCountingRasterMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_boxCountingRasterMenuItemActionPerformed
-        final BoxCountingRasterDialog dlg = new BoxCountingRasterDialog(this, new LayerModel(mapViewer.getLayers(), BinRasterLayer.class));
+        final RasterMethodDialog dlg = new RasterMethodDialog(this, "Box counting", new LayerModel(mapViewer.getLayers(), BinRasterLayer.class), new RasterBoxSampling());
         dlg.setVisible(true);
-        if(!dlg.isOk)
+        if(!dlg.isOk) {
             return;
-
+        }
         new Thread(new Runnable() {
+            @Override
             public void run() {
-                BoxCountingRasterMethod boxCountingMethod = new BoxCountingRasterMethod(dlg.layer.getName(),  
-                        dlg.layer.getImageShape().getImage(), JTS.rectToEnv(dlg.layer.getBounds()), dlg.coef, 0);
+                BoxCountingRasterMethod boxCountingMethod = new BoxCountingRasterMethod(dlg.layer.getName(),
+                        new RasterBoxSampling(dlg.sampling),
+                        dlg.layer.getImageShape().getImage(), JTS.rectToEnv(dlg.layer.getBounds()));
                 launchMethod(boxCountingMethod);
             }
         }).start();
@@ -543,15 +575,17 @@ public class MainFrame extends javax.swing.JFrame {
     private void dilationMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dilationMenuItemActionPerformed
         final DilationDialog dlg = new DilationDialog(this, new LayerModel(mapViewer.getLayers(), FeatureLayer.class));
         dlg.setVisible(true);
-        if(!dlg.isOk)
+        if(!dlg.isOk) {
             return;
+        }
 
         new Thread(new Runnable() {
+            @Override
             public void run() {
-                DilationMethod dilMethod = new DilationMethod(dlg.layer.getName(), new DefaultFeatureCoverage(dlg.layer.getFeatures()), 
-                        dlg.startDist, dlg.maxDist, dlg.coef);
-                dilMethod.setKeepBuffers(dlg.viewBuf);
-                launchMethod(dilMethod);
+                DilationMethod dilMethod = new DilationMethod(dlg.layer.getName(), new DefaultSampling(dlg.startDist, dlg.maxDist, dlg.coef),
+                        new DefaultFeatureCoverage(dlg.layer.getFeatures()), dlg.maxDist == -1, dlg.viewBuf);
+                EstimationFrame estimFrame = launchMethod(dilMethod);
+                estimFrame.addOtherCurve("Clusters", dilMethod.getClusters());
             }
         }).start();
     }//GEN-LAST:event_dilationMenuItemActionPerformed
@@ -561,35 +595,39 @@ public class MainFrame extends javax.swing.JFrame {
         dlg.setVisible(true);
         
         new Thread(new Runnable() {
+            @Override
             public void run() {
                 // on attend que la boite de dialogue soit fermée
-                while(dlg.isDisplayable()) 
+                while(dlg.isDisplayable()) { 
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                if(!dlg.isOk)    
+                }
+                if(!dlg.isOk) {
                     return;
-
-                RadialMethod radMethod = new RadialMethod(dlg.layer.getName(), new DefaultFeatureCoverage(dlg.layer.getFeatures()), 
-                        dlg.centre, dlg.minSize, dlg.maxSize, dlg.step, BufferParameters.CAP_ROUND);
+                }
+                RadialMethod radMethod = new RadialMethod(dlg.layer.getName(), dlg.sampling, new DefaultFeatureCoverage(dlg.layer.getFeatures()), 
+                        dlg.centre, BufferParameters.CAP_ROUND);
                 launchMethod(radMethod);
             }
         }).start();
     }//GEN-LAST:event_radialMenuItemActionPerformed
 
     private void dilRasterMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dilRasterMenuItemActionPerformed
-        final DilationRasterDialog dlg = new DilationRasterDialog(this, new LayerModel(mapViewer.getLayers(), BinRasterLayer.class));
+        final RasterMethodDialog dlg = new RasterMethodDialog(this, "Dilation", 
+                new LayerModel(mapViewer.getLayers(), BinRasterLayer.class), new DefaultSampling());
         dlg.setVisible(true);
 
-        if(!dlg.isOk)
+        if(!dlg.isOk) {
             return;
-
+        }
         new Thread(new Runnable() {
+            @Override
             public void run() { 
-                DilationRasterMethod method = new DilationRasterMethod(dlg.layer.getName(), dlg.layer.getImageShape().getImage(), 
-                        JTS.rectToEnv(dlg.layer.getBounds()), dlg.nStep);
+                DilationRasterMethod method = new DilationRasterMethod(dlg.layer.getName(), dlg.sampling, dlg.layer.getImageShape().getImage(), 
+                        JTS.rectToEnv(dlg.layer.getBounds()));
                 launchMethod(method);
             }
         }).start();
@@ -598,17 +636,18 @@ public class MainFrame extends javax.swing.JFrame {
     private void batchVectorMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_batchVectorMenuItemActionPerformed
         final BatchVectorDialog dlg = new BatchVectorDialog(this, new LayerModel(mapViewer.getLayers(), FeatureLayer.class));
         dlg.setVisible(true);
-        if(!dlg.isOk)
+        if(!dlg.isOk) {
             return;
-        
+        }
         new Thread(new Runnable() {
+            @Override
             public void run() {
                 BatchVectorMethod batchMethod;
-                if(dlg.grid)
+                if(dlg.grid) {
                     batchMethod = new BatchVectorMethod(dlg.layer, dlg.method, dlg.resolution);
-                else
+                } else {
                     batchMethod = new BatchVectorMethod(dlg.layer, dlg.method, dlg.zoneLayer, dlg.idZone);
-                
+                }
                 batchMethod.execute(Config.getProgressBar("Batch " + dlg.method.getName()));
                 FeatureLayer l = new FeatureLayer(dlg.layer.getName() + "_Batch" + dlg.method.getDetailName() + "#", batchMethod.getResults(),
                         new FeatureStyle("Dim", ColorRamp.RAMP_TEMP, 0, 2));
@@ -623,19 +662,21 @@ public class MainFrame extends javax.swing.JFrame {
         dlg.setVisible(true);
         
         new Thread(new Runnable() {
+            @Override
             public void run() {
                 // on attend que la boite de dialogue soit fermée
-                while(dlg.isDisplayable()) 
+                while(dlg.isDisplayable()) { 
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                if(!dlg.isOk)    
+                }
+                if(!dlg.isOk) {   
                     return;
-                
-                RadialRasterMethod radMethod = new RadialRasterMethod(dlg.layer.getName(), dlg.layer.getImageShape().getImage(), 
-                        JTS.rectToEnv(dlg.layer.getBounds()), dlg.centre,  dlg.maxSize);
+                }
+                RadialRasterMethod radMethod = new RadialRasterMethod(dlg.layer.getName(), dlg.sampling, dlg.layer.getImageShape().getImage(), 
+                        JTS.rectToEnv(dlg.layer.getBounds()), dlg.centre);
                 launchMethod(radMethod);
             }
         }).start();
@@ -644,10 +685,12 @@ public class MainFrame extends javax.swing.JFrame {
     private void multiRadialRasterMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_multiRadialRasterMenuItemActionPerformed
         final MultiRadialRasterDialog dlg = new MultiRadialRasterDialog(this, new LayerModel(mapViewer.getLayers(), BinRasterLayer.class));
         dlg.setVisible(true);
-        if(!dlg.isOk)    
+        if(!dlg.isOk) {
             return;
+        }
         
         new Thread(new Runnable() {
+            @Override
             public void run() {
                 ProgressBar monitor = Config.getProgressBar("Multi radial...");
                 MultiRadialRaster radMethod = new MultiRadialRaster(dlg.layer.getImageShape().getImage(), 
@@ -709,49 +752,74 @@ public class MainFrame extends javax.swing.JFrame {
         dlg.setVisible(true);
     }//GEN-LAST:event_selRasterMenuItemActionPerformed
 
-    private void multiFracRasterMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_multiFracRasterMenuItemActionPerformed
-        final BoxCountingRasterDialog dlg = new BoxCountingRasterDialog(this, new LayerModel(mapViewer.getLayers(), RasterLayer.class));
+    private void multiFracBoxRasterMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_multiFracBoxRasterMenuItemActionPerformed
+        final RasterMethodDialog dlg = new RasterMethodDialog(this, "Multi-fractal box", 
+                new LayerModel(mapViewer.getLayers(), RasterLayer.class), new MultiFracSampling());
         dlg.setVisible(true);
-        if(!dlg.isOk)
+        if(!dlg.isOk) {
             return;
-
+        }
         new Thread(new Runnable() {
-            public void run() {
-                
-                MultiFracBoxCountingRasterMethod method = new MultiFracBoxCountingRasterMethod(dlg.layer.getName(),  
-                        dlg.layer.getImageShape().getImage(), JTS.rectToEnv(dlg.layer.getBounds()), dlg.coef, 0);
+            @Override
+            public void run() {       
+                MultiFracBoxCountingRasterMethod method = new MultiFracBoxCountingRasterMethod(dlg.layer.getName(), 
+                        new RasterBoxSampling(dlg.sampling), 
+                        dlg.layer.getImageShape().getImage(), JTS.rectToEnv(dlg.layer.getBounds()));
                 launchMethod(method);
             }
         }).start();
-    }//GEN-LAST:event_multiFracRasterMenuItemActionPerformed
+    }//GEN-LAST:event_multiFracBoxRasterMenuItemActionPerformed
 
     private void multiFracVectorMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_multiFracVectorMenuItem1ActionPerformed
-        final BoxCountingDialog dlg = new BoxCountingDialog(this, new LayerModel(mapViewer.getLayers(), FeatureLayer.class));
+        final BoxCountingDialog dlg = new BoxCountingDialog(this, new LayerModel(mapViewer.getLayers(), FeatureLayer.class),
+            new MultiFracSampling());
         dlg.setVisible(true);
-        if(!dlg.isOk)
+        if(!dlg.isOk) {
             return;
-
+        }
         new Thread(new Runnable() {
+            @Override
             public void run() {
                 MultiFracBoxCountingVectorMethod method = new MultiFracBoxCountingVectorMethod(dlg.layer.getName(),  
-                        new DefaultFeatureCoverage(dlg.layer.getFeatures()), dlg.minSize, dlg.maxSize, dlg.coef);
+                        dlg.sampling, new DefaultFeatureCoverage(dlg.layer.getFeatures()));
                 launchMethod(method);
             }
         }).start();
     }//GEN-LAST:event_multiFracVectorMenuItem1ActionPerformed
 
+    private void waveletMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_waveletMenuItemActionPerformed
+        final RasterMethodDialog dlg = new RasterMethodDialog(this, "Multi-fractal wavelet",
+                new LayerModel<>(mapViewer.getLayers(), RasterLayer.class), new DefaultSampling());
+        dlg.setVisible(true);
+        if(!dlg.isOk) {
+            return;
+        }
+        
+        new Thread(new Runnable() {
+            @Override
+            public void run() {       
+                MultiFracWaveletMethod method = new MultiFracWaveletMethod(dlg.layer.getName(), 
+                        dlg.sampling, 
+                        dlg.layer.getImageShape().getImage(), JTS.rectToEnv(dlg.layer.getBounds()));
+                launchMethod(method);
+            }
+        }).start();
+    }//GEN-LAST:event_waveletMenuItemActionPerformed
+
     private boolean isBinary(RenderedImage img) {
         RandomIter iter = RandomIterFactory.create(img, null);
         
-        for(int i = 0; i < img.getHeight(); i++)
-            for(int j = 0; j < img.getWidth(); j++)
-                if(iter.getSampleDouble(j, i, 0) != 0 && iter.getSampleDouble(j, i, 0) != 1)
+        for(int i = 0; i < img.getHeight(); i++) {
+            for(int j = 0; j < img.getWidth(); j++) {
+                if(iter.getSampleDouble(j, i, 0) != 0 && iter.getSampleDouble(j, i, 0) != 1) {
                     return false;
+                }
+            }
+        }
         return true;
     }
 
-
-    private void launchMethod(MonoMethod method) {
+    private EstimationFrame launchMethod(MonoMethod method) {
         ProgressBar monitor = Config.getProgressBar(method.getName() + "...");
         method.execute(monitor, true);
         ((DefaultGroupLayer)mapViewer.getLayers()).addLayerFirst(method.getGroupLayer());
@@ -760,6 +828,7 @@ public class MainFrame extends javax.swing.JFrame {
         EstimationFrame frm = new EstimationFrame(MainFrame.this, new EstimationFactory(method));
         frm.setVisible(true);
         monitor.close();
+        return frm;
     }
     
     private void launchMethod(MultiFracMethod method) {
@@ -772,53 +841,19 @@ public class MainFrame extends javax.swing.JFrame {
         frm.setVisible(true);
         monitor.close();
     }
-    
-    public static String getVersion() {
-        String version = MainFrame.class.getPackage().getImplementationVersion();
-        if(version == null)
-            return "unpackage version";
-        else
-            return version;
-    }
-    
+
     /**
     * @param args the command line arguments
     */
-    public static void main(String args[]) {
-
-        Config.setNodeClass(MainFrame.class);
-        try {
-            if(args.length == 0) 
-                if(JavaLoader.launchApp(MainFrame.class, 1024))
-                    System.exit(0);
-
-        } catch (Exception ex) {
-            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    public static void main(String args[]) throws IOException {
 
         if(args.length > 0 && !args[0].equals(JavaLoader.NOFORK)) {
-            try {
-                new CLITools().execute(args);
-            } catch (Throwable ex) {
-                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-                System.exit(1);
-            }
-            System.exit(0);
+            CLITools.execute(args);
+        } else {
+            Config.setNodeClass(MainFrame.class);
+            PreferencesDialog.initLanguage();
+            JavaLoader.launchGUI(MainFrame.class, args.length == 0, 1024);
         }
-
-        PreferencesDialog.initLanguage();
-
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {
-            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new MainFrame().setVisible(true);
-            }
-        });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -833,6 +868,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem dilationMenuItem;
     private javax.swing.JMenu fileMenu;
     private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
@@ -840,7 +876,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem loadVectorMenuItem;
     private javax.swing.JMenuItem localNetMenuItem;
     private org.thema.drawshape.ui.MapViewer mapViewer;
-    private javax.swing.JMenuItem multiFracRasterMenuItem;
+    private javax.swing.JMenuItem multiFracBoxRasterMenuItem;
     private javax.swing.JMenuItem multiFracVectorMenuItem1;
     private javax.swing.JMenuItem multiRadialRasterMenuItem;
     private javax.swing.JMenu networkMenu;
@@ -853,6 +889,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem selVectorMenuItem;
     private javax.swing.JMenu toolsMenu;
     private javax.swing.JMenu vectorMenu;
+    private javax.swing.JMenuItem waveletMenuItem;
     // End of variables declaration//GEN-END:variables
 
 }

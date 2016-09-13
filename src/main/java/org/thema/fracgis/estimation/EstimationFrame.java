@@ -1,16 +1,23 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * EstimationFrame.java
- *
- * Created on 1 févr. 2010, 16:08:27
- */
 
 package org.thema.fracgis.estimation;
-
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -48,24 +55,25 @@ import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 
 /**
- *
- * @author gvuidel
+ * Frame for unifractal dimension estimation.
+ * 
+ * @author Gilles Vuidel
  */
 public class EstimationFrame extends javax.swing.JFrame implements ChartMouseListener {
 
-    JFreeChart chart;
-    ChartPanel chartPanel;
-    EstimationFactory estimFactory;
-    Estimation estim;
-    XYPlot regPlot;
-    XYPlot scalingPlot;
-    XYPlot otherPlot;
-    HashMap<String, TreeMap<Double, Double>> otherCurves = new HashMap<>();
+    private JFreeChart chart;
+    private ChartPanel chartPanel;
+    private EstimationFactory estimFactory;
+    private Estimation estim;
+    private XYPlot regPlot;
+    private XYPlot scalingPlot;
+    private XYPlot otherPlot;
+    private HashMap<String, TreeMap<Double, Double>> otherCurves = new HashMap<>();
     
     /** 
-     * Creates new form EstimationFrame
-     * @param frm
-     * @param estimFac 
+     * Creates new form EstimationFrame.
+     * @param frm the parent frame
+     * @param estimFac the estimation factory
      */
     public EstimationFrame(JFrame frm, EstimationFactory estimFac) {
         initComponents();
@@ -82,7 +90,7 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
         setEstimation(estim);
     }
 
-    public void setEstimation(Estimation estim) {
+    private void setEstimation(Estimation estim) {
         this.estim = estim;
         regPlot = estim.getPlot();
         lineCheckBoxActionPerformed(null);
@@ -115,8 +123,9 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
     
     @Override
     public void chartMouseClicked(ChartMouseEvent event) {
-        if(!rightToggleButton.isSelected() && !leftToggleButton.isSelected())
+        if(!rightToggleButton.isSelected() && !leftToggleButton.isSelected()) {
             return;
+        }
 
         regPlot.clearDomainMarkers();
         
@@ -135,8 +144,9 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
 
     @Override
     public void chartMouseMoved(ChartMouseEvent event) {
-        if(!rightToggleButton.isSelected() && !leftToggleButton.isSelected())
+        if(!rightToggleButton.isSelected() && !leftToggleButton.isSelected()) {
             return;
+        }
 
         Point2D p = chartPanel.translateScreenToJava2D(event.getTrigger().getPoint());
         double x = regPlot.getDomainAxis().java2DToValue(p.getX(),
@@ -162,10 +172,12 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
         lineCheckBoxActionPerformed(null);
         CombinedDomainXYPlot plot = new CombinedDomainXYPlot(regPlot.getDomainAxis());
         plot.add(regPlot);
-        if(scalingCheckBox.isSelected())
+        if(scalingCheckBox.isSelected()) {
             plot.add(scalingPlot);
-        if(curveComboBox.getSelectedIndex() > 0)
+        }
+        if(curveComboBox.getSelectedIndex() > 0) {
             plot.add(otherPlot);
+        }
         chart = new JFreeChart(plot);
         chartPanel.setChart(chart);
 
@@ -460,13 +472,15 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
         fileChooser.addChoosableFileFilter(filter);
 
         int option = fileChooser.showSaveDialog(null);
-        if (option != JFileChooser.APPROVE_OPTION)
+        if (option != JFileChooser.APPROVE_OPTION) {
             return;
+        }
             
         String filename = fileChooser.getSelectedFile().getPath();
         if(fileChooser.getFileFilter() == filter) { //TXT
-            if (!filename.endsWith(".txt"))
+            if (!filename.endsWith(".txt")) {
                 filename = filename + ".txt";
+            }
             try (BufferedWriter w = new BufferedWriter(new FileWriter(new File(filename)))) {
                 estim.saveToText(w);
                 double smooth = (Double)smoothSpinner.getValue();
@@ -480,8 +494,9 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
                 for(String key : otherCurves.keySet()) {
                     TreeMap<Double, Double> curve = otherCurves.get(key);
                     w.write("\nX\t" + key + "\n");
-                    for(Double x : curve.keySet())
+                    for(Double x : curve.keySet()) {
                         w.write(x + "\t" + curve.get(x) + "\n");
+                    }
                 }
             } catch (IOException ex) {
                 Logger.getLogger(EstimationFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -489,8 +504,9 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
 
         } else { // SVG
         
-            if (!filename.endsWith(".svg"))
+            if (!filename.endsWith(".svg")) {
                 filename = filename + ".svg";
+            }
 
             DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
             Document document = domImpl.createDocument(null, "svg", null);
@@ -520,22 +536,24 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
         if(scalingCheckBox.isSelected()) {
            smoothSpinnerStateChanged(null);
            ((CombinedDomainXYPlot)chart.getXYPlot()).add(scalingPlot);
-        } else
+        } else {
             ((CombinedDomainXYPlot)chart.getXYPlot()).remove(scalingPlot);
+        }
 
     }//GEN-LAST:event_scalingCheckBoxActionPerformed
 
     private void smoothSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_smoothSpinnerStateChanged
-        double [][] curve = estim.getScalingBehaviour().toArray();
+        double [][] curve = estim.getScalingBehaviour();
         double bandwidth = (Double)smoothSpinner.getValue();
         List<Integer> pointInflex = null;
-        if(bandwidth > 0)
+        if(bandwidth > 0) {
             try {
                 curve = estim.getSmoothedScalingBehaviour(bandwidth);
                 pointInflex = estim.getInflexPointIndices(bandwidth, 0);
             } catch (Exception ex) {
                 Logger.getLogger(EstimationFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
         DefaultXYDataset dataset = new DefaultXYDataset();
         dataset.addSeries("Scaling behaviour", curve);
         if(pointInflex != null) {
@@ -589,8 +607,9 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
         String name = curveComboBox.getSelectedItem().toString();
         TreeMap<Double, Double> curve = otherCurves.get(name);
         XYSeries serie = new XYSeries(name);
-        for(Double key : curve.keySet())
+        for(Double key : curve.keySet()) {
             serie.add(key, curve.get(key));
+        }
 
         NumberAxis axis = typeComboBox.getSelectedItem().equals(EstimationFactory.Type.DIRECT) ? new NumberAxis() : new LogarithmicAxis("");
         axis.setAutoRangeIncludesZero(false);

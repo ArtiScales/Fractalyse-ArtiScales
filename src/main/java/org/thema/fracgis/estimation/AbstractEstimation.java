@@ -1,7 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 package org.thema.fracgis.estimation;
 
@@ -23,8 +37,9 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.thema.fracgis.method.MonoMethod;
 
 /**
- *
- * @author gvuidel
+ * Base class for estimation.
+ * 
+ * @author Gilles Vuidel
  */
 public abstract class AbstractEstimation implements Estimation {
 
@@ -32,6 +47,10 @@ public abstract class AbstractEstimation implements Estimation {
     protected TreeMap<Double, Double> curve;
     protected Range range;
 
+    /**
+     * Creates an Estimation based on the result of an unifractal method.
+     * @param method the unifractal method
+     */
     public AbstractEstimation(MonoMethod method) {
         this.method = method;
         curve = method.getCurve();
@@ -43,11 +62,11 @@ public abstract class AbstractEstimation implements Estimation {
         XYSeriesCollection dataset = new XYSeriesCollection();
         dataset.addSeries(getEstimationSerie());
         XYSeries serie = new XYSeries("Empirical");
-        for(Double d : curve.keySet())
+        for(Double d : curve.keySet()) {
             serie.add(d, curve.get(d));
+        }
         dataset.addSeries(serie);
 
-        
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, true);
         renderer.setSeriesLinesVisible(1, false);
         renderer.setSeriesShapesFilled(1, false);
@@ -59,7 +78,7 @@ public abstract class AbstractEstimation implements Estimation {
     }
 
     @Override
-    public XYSeries getScalingBehaviour() {
+    public double [][] getScalingBehaviour() {
         XYSeries serie = new XYSeries("Scaling behaviour");
         Iterator<Double> it = curve.keySet().iterator();
         double precX = it.next();
@@ -70,26 +89,28 @@ public abstract class AbstractEstimation implements Estimation {
             precX = x;
         }
         
-        return serie;
+        return serie.toArray();
     }
     
     @Override
     public double[][] getSmoothedScalingBehaviour(double bandwidth) {
-        double[][] smoothed = convolve(getScalingBehaviour().toArray(), bandwidth, getType() == EstimationFactory.Type.LOG);
+        double[][] smoothed = convolve(getScalingBehaviour(), bandwidth, getType() == EstimationFactory.Type.LOG);
         return smoothed;
     }
 
     @Override
     public List<Integer> getInflexPointIndices(double bandwidth, int minInd) {
-        return getPointInflex(getScalingBehaviour().toArray(), bandwidth, minInd, getType() == EstimationFactory.Type.LOG);
+        return getPointInflex(getScalingBehaviour(), bandwidth, minInd, getType() == EstimationFactory.Type.LOG);
     }
     
     @Override
     public void setRange(double xmin, double xmax) {
-        if(curve.floorKey(xmin) == null)
+        if(curve.floorKey(xmin) == null) {
             xmin = curve.firstKey();
-        if(curve.ceilingKey(xmax) == null)
+        }
+        if(curve.ceilingKey(xmax) == null) {
             xmax = curve.lastKey();
+        }
         range = new Range(curve.floorKey(xmin), curve.ceilingKey(xmax));
         estimate();
     }
@@ -109,32 +130,44 @@ public abstract class AbstractEstimation implements Estimation {
         return method;
     }
 
+    /**
+     * The abscissas may not correspond to the empirical curve abscissas
+     * @return the estimation curve for plotting purpose
+     */
     protected abstract XYSeries getEstimationSerie();
 
+    /**
+     * Calculates the regression
+     */
     protected abstract void estimate();
 
+    /**
+     * @return the part of the empirical curve used for the estimation
+     */
     protected NavigableMap<Double, Double> getRangeCurve() {
         return curve.subMap(range.getLowerBound(), true, range.getUpperBound(), true);
     }
 
     @Override
     public void saveToText(Writer w) throws IOException {
-        w.write("Input : " + method.getInputName() + "\n");
+        w.write("Input : " + method.getInputLayerName() + "\n");
         w.write("Method : " + method.getName() + "\n");
-        w.write("Parameters : " + method.getParamsName() + "\n\n");
+        w.write("Parameters : " + method.getParamString() + "\n\n");
         
         w.write(getResultInfo());
         w.write("\n\nX\tY\tScaling behaviour\tEstim\n");
-        XYSeries scalingBehaviour = getScalingBehaviour();
+        double[] scalingBehaviour = getScalingBehaviour()[1];
         int i = 0;
         for(Double x : curve.keySet()) {
             double sc = Double.NaN;
-            if(i < scalingBehaviour.getItemCount())
-                sc = ((Number)scalingBehaviour.getY(i++)).doubleValue();
-            if(getRangeCurve().containsKey(x)) 
+            if(i < scalingBehaviour.length) {
+                sc = scalingBehaviour[i++];
+            }
+            if(getRangeCurve().containsKey(x)) { 
                 w.write(String.format("%g\t%g\t%g\t%g\n", x, curve.get(x), sc, getEstimValue(x)));
-            else
+            } else {
                 w.write(String.format("%g\t%g\t%g\t\n", x, curve.get(x), sc));
+            }
         }
 
     }
@@ -146,8 +179,9 @@ public abstract class AbstractEstimation implements Estimation {
         double [][] smooth = new double[2][n];
         
         double sigma = (max-min) * bandwidth;
-        if(log)
+        if(log) {
             sigma = (Math.log(max)-Math.log(min)) * bandwidth;
+        }
         Gaussian gaussian = new Gaussian(0, sigma);
         
         for(int i = 0; i < n; i++) {
@@ -173,8 +207,9 @@ public abstract class AbstractEstimation implements Estimation {
         double [][] smooth = new double[2][n];
         
         double sigma = (max-min) * bandwidth;
-        if(log)
+        if(log) {
             sigma = (Math.log(max)-Math.log(min)) * bandwidth;
+        }
         Gaussian gaussian = new Gaussian(0, sigma);
         
         for(int i = 0; i < n; i++) {
@@ -193,8 +228,9 @@ public abstract class AbstractEstimation implements Estimation {
         
         List<Integer> ptInflex = new ArrayList<>();
         for(int i = minInd; i < n-1; i++) {
-            if(smooth[1][i]*smooth[1][i+1] <= 0 && (smooth[1][i] != 0 || smooth[1][i+1] != 0))
+            if(smooth[1][i]*smooth[1][i+1] <= 0 && (smooth[1][i] != 0 || smooth[1][i+1] != 0)) {
                 ptInflex.add(i);
+            }
         }
         return ptInflex;
     }

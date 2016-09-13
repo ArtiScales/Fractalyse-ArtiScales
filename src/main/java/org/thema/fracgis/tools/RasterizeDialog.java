@@ -1,16 +1,23 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * CorrelationDialog.java
- *
- * Created on 26 févr. 2010, 16:57:09
- */
 
 package org.thema.fracgis.tools;
-
 
 import com.vividsolutions.jts.geom.Envelope;
 import java.util.Collection;
@@ -23,19 +30,28 @@ import org.thema.fracgis.LayerModel;
 import org.thema.process.Rasterizer;
 
 /**
- *
- * @author gvuidel
+ * Dialog form for setting parameters for rasterizing a vector layer.
+ * 
+ * @author Gilles Vuidel
  */
 public class RasterizeDialog extends javax.swing.JDialog {
-
+    /* is user clicked ok ? */
     public boolean isOk = false;
+    /** the selected vector layer */
     public FeatureLayer layer;
+    /** resolution of the rasterization ie pixel size */
     public double resolution;
+    /** the field name containing value or null */
     public String field;
+    /** rasterization mode for polygon */
     public Rasterizer.PolyRasterMode polyMode;
 
 
-    /** Creates new form CorrelationDialog */
+    /** 
+     * Creates new form RasterizeDialog
+     * @param parent the parent frame
+     * @param model the list of vector layer
+     */
     public RasterizeDialog(java.awt.Frame parent, LayerModel model) {
         super(parent, true);
         initComponents();
@@ -189,10 +205,11 @@ public class RasterizeDialog extends javax.swing.JDialog {
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
         resolution = (Double)resSpinner.getValue();
         layer = (FeatureLayer) layerComboBox.getSelectedItem();
-        if(fieldComboBox.getSelectedIndex() == 0)
+        if(fieldComboBox.getSelectedIndex() == 0) {
             field = null;
-        else
+        } else {
             field = (String)fieldComboBox.getSelectedItem();
+        }
         polyMode = (Rasterizer.PolyRasterMode) polyModeComboBox.getSelectedItem();
         isOk = true;
         setVisible(false);
@@ -212,9 +229,11 @@ public class RasterizeDialog extends javax.swing.JDialog {
         Feature f = features.iterator().next();
         DefaultComboBoxModel model = new DefaultComboBoxModel();
         model.addElement("(None)");
-        for(int i = 0; i < f.getAttributeNames().size(); i++)
-            if(Number.class.isAssignableFrom(f.getAttributeType(i)))
+        for(int i = 0; i < f.getAttributeNames().size(); i++) {
+            if(Number.class.isAssignableFrom(f.getAttributeType(i))) {
                 model.addElement(f.getAttributeNames().get(i));
+            }
+        }
         fieldComboBox.setModel(model);
         
         updateImageSizeLabel();
@@ -236,9 +255,10 @@ public class RasterizeDialog extends javax.swing.JDialog {
         double w = Math.ceil(env.getWidth()/res);
         double h = Math.ceil(env.getHeight()/res);
         int p = 1;
-        if(fieldComboBox.getSelectedIndex() > 0)
+        if(fieldComboBox.getSelectedIndex() > 0) {
             p = 4;
-        infoLabel.setText("Size : " + (int)w + "x" + (int)h + " - (" + w*h*p/1048000 + " Mo)");
+        }
+        infoLabel.setText("Size : " + (int)w + "x" + (int)h + " - (" + (int)(w*h*p/1048000) + " Mo)");
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

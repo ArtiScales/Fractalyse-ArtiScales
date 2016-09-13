@@ -1,16 +1,23 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * EstimationFrame.java
- *
- * Created on 1 févr. 2010, 16:08:27
- */
 
 package org.thema.fracgis.estimation;
-
 
 import org.thema.fracgis.method.MultiFracMethod;
 import java.awt.BasicStroke;
@@ -30,14 +37,12 @@ import javax.swing.JFrame;
 import javax.swing.SpinnerListModel;
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
-import org.apache.commons.math3.analysis.function.Gaussian;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.CombinedDomainXYPlot;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
@@ -46,31 +51,34 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ExtensionFileFilter;
 import org.thema.drawshape.layer.RasterLayer;
 import org.thema.fracgis.method.AbstractMethod;
+import org.thema.fracgis.method.raster.multi.MultiFracWaveletMethod;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 
 /**
- *
+ * Frame for multifractal dimension estimation.
+ * 
  * @author Gilles Vuidel
  */
 public class MultiFracEstimationFrame extends javax.swing.JFrame implements ChartMouseListener {
 
-    MultiFracMethod method;
+    private MultiFracMethod method;
     
-    TreeMap<Double, TreeMap<Double, Double>> M;
-    TreeMap<Double, LogEstimation> estims;
-    TreeMap<Double, Double> Tq;
-    TreeMap<Double, Double> Dq;
-    TreeMap<Double, Double> alpha;
-    TreeMap<Double, Double> f;
+    private TreeMap<Double, TreeMap<Double, Double>> M;
+    private TreeMap<Double, LogEstimation> estims;
+    private TreeMap<Double, Double> Tq;
+    private TreeMap<Double, Double> Dq;
+    private TreeMap<Double, Double> alpha;
+    private TreeMap<Double, Double> f;
     
-    JFreeChart chart;
-    ChartPanel chartPanel;
-    XYPlot regPlot, scalingPlot;
+    private JFreeChart chart;
+    private ChartPanel chartPanel;
+    private XYPlot regPlot;
     
-    /** Creates new form MultiFracEstimationFrame
-     * @param frm
-     * @param method 
+    /** 
+     * Creates new form MultiFracEstimationFrame
+     * @param frm the parent frame
+     * @param method the multifractal method
      */
     public MultiFracEstimationFrame(JFrame frm, MultiFracMethod method) {
         initComponents();
@@ -93,7 +101,7 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
         updateEstim();
     }
     
-    public final void updateEstim() {
+    private void updateEstim() {
         TreeSet<Double> qSet = getqSet();
         estims = new TreeMap<>();
         Tq = new TreeMap<>();
@@ -104,9 +112,10 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
             LogEstimation estim = new LogEstimation(method.getSimpleMethod(q));
             estim.setRange((Double)leftSpinner.getValue(), (Double)rightSpinner.getValue());
             estims.put(q, estim);
-            Tq.put(q, estim.getDimension());
-            if(Math.abs(q-1) > 0.00001)
-                Dq.put(q, estim.getDimension() / (1-q));
+            Tq.put(q, estim.getDimension() + (isLWTMethod() ? 2 : 0));
+            if(Math.abs(q-1) > 0.00001) {
+                Dq.put(q, Tq.get(q) / (1-q));
+            }
             if(qSet.first() != q) {
                 double q1 = qSet.lower(q);
                 alpha.put(q, -(Tq.get(q)-Tq.get(q1))/(q-q1));
@@ -115,20 +124,26 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
         }
         
         updatePlot();
-        double d0 = Double.NaN;
-        if(qSet.contains(0.0))
-            d0 = Dq.get(0.0);
-        infoTextArea.setText(String.format("Dmin : %g\nD0 : %g\nDmax : %g", Collections.min(Dq.values()), d0, Collections.max(Dq.values())));
-        
+        if(!isLWTMethod()) {
+            double d0 = Double.NaN;
+            if(qSet.contains(0.0)) {
+                d0 = Dq.get(0.0);
+            }
+            infoTextArea.setText(String.format("Dmin : %g\nD0 : %g\nDmax : %g", Collections.min(Dq.values()), d0, Collections.max(Dq.values())));
+        }
         // TODO pas bien 
         ((AbstractMethod)method).getGroupLayer().setRange((Double)leftSpinner.getValue(), (Double)rightSpinner.getValue());
     }
 
+    private boolean isLWTMethod() {
+        return method instanceof MultiFracWaveletMethod;
+    }
     
     @Override
     public void chartMouseClicked(ChartMouseEvent event) {
-        if(!rightToggleButton.isSelected() && !leftToggleButton.isSelected())
+        if(!rightToggleButton.isSelected() && !leftToggleButton.isSelected()) {
             return;
+        }
 
         regPlot.clearDomainMarkers();
         
@@ -147,9 +162,9 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
 
     @Override
     public void chartMouseMoved(ChartMouseEvent event) {
-        if(!rightToggleButton.isSelected() && !leftToggleButton.isSelected())
+        if(!rightToggleButton.isSelected() && !leftToggleButton.isSelected()) {
             return;
-
+        }
         Point2D p = chartPanel.translateScreenToJava2D(event.getTrigger().getPoint());
         double x = regPlot.getDomainAxis().java2DToValue(p.getX(),
                 chartPanel.getChartRenderingInfo().getPlotInfo().getDataArea(),
@@ -175,31 +190,36 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
             case "Mq":
                 for(Double q : M.keySet()) {
                     XYSeries serie = new XYSeries("q"+q);
-                    for(Double x : M.get(q).keySet())
-                        if(M.get(q).get(x) > 0)
+                    for(Double x : M.get(q).keySet()) {
+                        if(M.get(q).get(x) > 0) {
                             serie.add(x, M.get(q).get(x));
+                        }
+                    }
                     dataset.addSeries(serie);
                 }
                 regPlot = new XYPlot(dataset, new LogarithmicAxis("x"), new LogarithmicAxis("y"), renderer);
                 break;
             case "Tq":
                 XYSeries serie = new XYSeries("Tq");
-                for(Double q : Tq.keySet())
+                for(Double q : Tq.keySet()) {
                     serie.add(q, Tq.get(q));
+                }
                 dataset.addSeries(serie);
                 regPlot = new XYPlot(dataset, new NumberAxis("q"), new NumberAxis("t"), renderer);
                 break;
             case "Dq":
                 serie = new XYSeries("Dq");
-                for(Double q : Dq.keySet())
+                for(Double q : Dq.keySet()) {
                     serie.add(q, Dq.get(q));
+                }
                 dataset.addSeries(serie);
                 regPlot = new XYPlot(dataset, new NumberAxis("q"), new NumberAxis("D"), renderer);
                 break;
             default:
                 serie = new XYSeries("f(alpha)");
-                for(Double q : alpha.keySet())
+                for(Double q : alpha.keySet()) {
                     serie.add(alpha.get(q), f.get(q));
+                }
                 dataset.addSeries(serie);
                 regPlot = new XYPlot(dataset, new NumberAxis("alpha"), new NumberAxis("f(alpha)"), renderer);
         } 
@@ -496,36 +516,17 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
         ExtensionFileFilter filter = new ExtensionFileFilter(
                 "Image SVG", ".svg");
         fileChooser.addChoosableFileFilter(filter);
-        filter = new ExtensionFileFilter(
-                "Texte", ".txt");
-        fileChooser.addChoosableFileFilter(filter);
 
         int option = fileChooser.showSaveDialog(null);
-        if (option != JFileChooser.APPROVE_OPTION)
+        if (option != JFileChooser.APPROVE_OPTION) {
             return;
+        }
             
         String filename = fileChooser.getSelectedFile().getPath();
-        if(fileChooser.getFileFilter() == filter) { //TXT
-            if (!filename.endsWith(".txt"))
-                filename = filename + ".txt";
-//            try {
-//                BufferedWriter w = new BufferedWriter(new FileWriter(new File(filename)));
-//                estim.saveToText(w);
-//                for(String key : otherCurves.keySet()) {
-//                    TreeMap<Double, Double> curve = otherCurves.get(key);
-//                    w.write("\nX\t" + key + "\n");
-//                    for(Double x : curve.keySet())
-//                        w.write(x + "\t" + curve.get(x) + "\n");
-//                }
-//                w.close();
-//            } catch (IOException ex) {
-//                Logger.getLogger(EstimationFrame.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-
-        } else { // SVG
-        
-            if (!filename.endsWith(".svg"))
+        if(fileChooser.getFileFilter() == filter) {// SVG
+            if (!filename.endsWith(".svg")) {
                 filename = filename + ".svg";
+            }
 
             DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
             Document document = domImpl.createDocument(null, "svg", null);
@@ -537,12 +538,10 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
             chart.draw(svgGenerator, new Rectangle2D.Float(0, 0, 600, 400));
 
             // Write svg file
-            try {
-                OutputStream outputStream = new FileOutputStream(filename);
+            try (OutputStream outputStream = new FileOutputStream(filename)) {
                 Writer out = new OutputStreamWriter(outputStream, "UTF-8");
                 svgGenerator.stream(out, true /* use css */);
                 outputStream.flush();
-                outputStream.close();
             } catch (IOException ex) {
                 Logger.getLogger(RasterLayer.class.getName()).log(Level.SEVERE, null, ex);
             }

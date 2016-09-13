@@ -1,13 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * BackboneDialog.java
- *
- * Created on 26 janv. 2010, 15:06:07
- */
 
 package org.thema.fracgis;
 
@@ -41,17 +49,22 @@ import org.thema.graph.pathfinder.Path;
 
 
 /**
- *
- * @author gvuidel
+ * Dialog form for comuting backbone analysis.
+ * 
+ * @author Gilles Vuidel
  */
 public class BackboneDialog extends javax.swing.JDialog implements ShapeMouseListener{
 
-    MapViewer mapViewer;
+    private MapViewer mapViewer;
 
-    List<Feature> shortestPathFeatures;
-    List<Feature> otherPathFeatures;
+    private List<Feature> shortestPathFeatures;
+    private List<Feature> otherPathFeatures;
 
-    /** Creates new form BackboneDialog */
+    /**
+     * Creates new form BackboneDialog 
+     * @param parent the parent frame
+     * @param map map viewer of the mainframe for selecting points et displaying results
+     */
     public BackboneDialog(java.awt.Frame parent, MapViewer map) {
         super(parent, false);
         initComponents();
@@ -231,10 +244,8 @@ public class BackboneDialog extends javax.swing.JDialog implements ShapeMouseLis
 
         mapViewer.getMap().removeShapeMouseListener(this);
 
-        
-
         new Thread(new Runnable() {
-
+            @Override
             public void run() {
                 ProgressMonitor monitor = new ProgressMonitor(BackboneDialog.this, "Backbone", "", 0, 100);
 
@@ -256,10 +267,11 @@ public class BackboneDialog extends javax.swing.JDialog implements ShapeMouseLis
                 HashSet shortEdges = new HashSet(path.getEdges());
                 // puis on cherche tous les autres chemins possibles
                 HashSet selEdges = new HashSet(shortEdges);
-                for(Object o : graph.getGraph().getNodes())
+                for(Object o : graph.getGraph().getNodes()) {
                     ((Node)o).setCount(0);
-                HashSet<Node> nodes = new HashSet<Node>();
-                HashSet<Node> newNodes = new HashSet<Node>();
+                }
+                HashSet<Node> nodes = new HashSet<>();
+                HashSet<Node> newNodes = new HashSet<>();
                 for(Node n : path.getNodes()) {
                     n.setCount(1);
                     newNodes.add(n);
@@ -277,8 +289,9 @@ public class BackboneDialog extends javax.swing.JDialog implements ShapeMouseLis
 
                         for(Node n2 : nodes) {
                             path = finder.getPath(n2);
-                            if(path == null || n1 == n2)
+                            if(path == null || n1 == n2) {
                                 continue;
+                            }
 
                             for(Node n : path.getNodes()) {
                                 if(n.getCount() == 0) {
@@ -304,11 +317,14 @@ public class BackboneDialog extends javax.swing.JDialog implements ShapeMouseLis
                     while(it.hasNext()) {
                         boolean close = true;
                         Iterator itn = it.next().getRelated();
-                        while(itn.hasNext())
-                            if(((Node)itn.next()).getCount() == 0)
+                        while(itn.hasNext()) {
+                            if(((Node)itn.next()).getCount() == 0) {
                                 close = false;
-                        if(close)
+                            }
+                        }
+                        if(close) {
                             it.remove();
+                        }
                     }
 
                 }
@@ -316,15 +332,17 @@ public class BackboneDialog extends javax.swing.JDialog implements ShapeMouseLis
                 DefaultGroupLayer gl = new DefaultGroupLayer("Backbone");
 
                 // create layers & features
-                otherPathFeatures = new ArrayList<Feature>();
-                for(Object e : selEdges)
+                otherPathFeatures = new ArrayList<>();
+                for(Object e : selEdges) {
                     otherPathFeatures.add((Feature)((Edge)e).getObject());
+                }
 
                 gl.addLayerFirst(new FeatureLayer("All paths", otherPathFeatures));
 
-                shortestPathFeatures = new ArrayList<Feature>();
-                for(Object e : shortEdges)
+                shortestPathFeatures = new ArrayList<>();
+                for(Object e : shortEdges) {
                     shortestPathFeatures.add((Feature)((Edge)e).getObject());
+                }
 
                 gl.addLayerFirst(new FeatureLayer("Shortest path", shortestPathFeatures));
 
@@ -339,6 +357,7 @@ public class BackboneDialog extends javax.swing.JDialog implements ShapeMouseLis
         
     }//GEN-LAST:event_okButtonActionPerformed
 
+    @Override
     public void mouseClicked(Point2D p, List<SelectableShape> shapes, MouseEvent sourceEvent, int cursorMode) {
         x2TextField.setText(x1TextField.getText());
         y2TextField.setText(y1TextField.getText());

@@ -1,13 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * DesserteDialog.java
- *
- * Created on 4 févr. 2010, 11:08:40
- */
 
 package org.thema.fracgis.method.network;
 
@@ -30,14 +38,19 @@ import org.thema.graph.SpatialGraph;
 
 
 /**
- *
- * @author gvuidel
+ * Dialog form for computing radial network analysis.
+ * 
+ * @author Gilles Vuidel
  */
 public class LocalNetworkDialog extends javax.swing.JDialog implements ShapeMouseListener {
 
-    MapViewer viewer;
+    private MapViewer viewer;
 
-    /** Creates new form DesserteDialog */
+    /** 
+     * Creates new form LocalNetworkDialog 
+     * @param parent the parent frame 
+     * @param viewer the map viewer for point selection
+     */
     public LocalNetworkDialog(java.awt.Frame parent, MapViewer viewer) {
         super(parent, false);
         initComponents();
@@ -98,12 +111,6 @@ public class LocalNetworkDialog extends javax.swing.JDialog implements ShapeMous
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
-            }
-        });
-
-        netComboBox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                netComboBoxActionPerformed(evt);
             }
         });
 
@@ -198,9 +205,10 @@ public class LocalNetworkDialog extends javax.swing.JDialog implements ShapeMous
         viewer.removeShapeMouseListener(this);
 
         new Thread(new Runnable() {
+            @Override
             public void run() {
                 LocalNetworkMethod method = new LocalNetworkMethod(layer.getName(), graph, new GeometryFactory()
-                .createPoint(new Coordinate(cx, cy)), (Double)resSpinner.getValue());
+                    .createPoint(new Coordinate(cx, cy)), (Double)resSpinner.getValue());
                 method.execute(new TaskMonitor(LocalNetworkDialog.this, "Local network", "", 0, 100), true);
 
                 new EstimationFrame(null, new EstimationFactory(method)).setVisible(true);
@@ -215,14 +223,11 @@ public class LocalNetworkDialog extends javax.swing.JDialog implements ShapeMous
         dispose(); 
     }//GEN-LAST:event_cancelButtonActionPerformed
 
-    private void netComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_netComboBoxActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_netComboBoxActionPerformed
-
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
         viewer.removeShapeMouseListener(this);
     }//GEN-LAST:event_formWindowClosed
 
+    @Override
     public void mouseClicked(Point2D p, List<SelectableShape> shapes, MouseEvent sourceEvent, int cursorMode) {
         xTextField.setText(""+p.getX());
         yTextField.setText(""+p.getY());

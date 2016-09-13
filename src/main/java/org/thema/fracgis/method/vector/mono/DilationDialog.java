@@ -1,13 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * BoxCountingDialog.java
- *
- * Created on 2 févr. 2010, 10:57:31
- */
 
 package org.thema.fracgis.method.vector.mono;
 
@@ -16,17 +24,30 @@ import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.fracgis.LayerModel;
 
 /**
- *
- * @author gvuidel
+ * Dialog form for vectorial dilation methods.
+ * 
+ * @author Gilles Vuidel
  */
 public class DilationDialog extends javax.swing.JDialog {
 
+    /** is user clicked OK ? */
     public boolean isOk = false;
-    public double startDist, coef, maxDist;
+    /** minimal distance */
+    public double startDist;
+    /** coefficient factor for each step */
+    public double coef;
+    /** the maximum distance or -1 */
+    public double maxDist;
+    /** true for viewing buffers at each scale, use much memory */
     public boolean viewBuf;
+    /** the selected layer for input data */
     public FeatureLayer layer;
 
-    /** Creates new form BoxCountingDialog */
+    /** 
+     * Creates new form BoxCountingDialog 
+     * @param parent the parent frame
+     * @param model the list of vector layers
+     */
     public DilationDialog(java.awt.Frame parent, LayerModel<FeatureLayer> model) {
         super(parent, true);
         initComponents();
@@ -98,7 +119,7 @@ public class DilationDialog extends javax.swing.JDialog {
         buttonGroup1.add(stopDistRadioButton);
         stopDistRadioButton.setText("Stop at distance");
 
-        maxDistSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+        maxDistSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(0.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
 
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, stopDistRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), maxDistSpinner, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
@@ -182,10 +203,11 @@ public class DilationDialog extends javax.swing.JDialog {
         layer = (FeatureLayer) layerComboBox.getSelectedItem();
         startDist = (Double)distSpinner.getValue();
         coef = (Double)coefSpinner.getValue();
-        if(stopDistRadioButton.isSelected())
+        if(stopDistRadioButton.isSelected()) {
             maxDist = (Double)maxDistSpinner.getValue();
-        else
-            maxDist = 0;
+        } else {
+            maxDist = -1;
+        }
         viewBuf = viewBufCheckBox.isSelected();
         
         isOk = true;

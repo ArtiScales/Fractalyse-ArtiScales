@@ -1,7 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 package org.thema.fracgis.method.raster.mono;
 
@@ -12,75 +26,85 @@ import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Locale;
+import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.concurrent.CancellationException;
-import org.thema.common.parallel.AbstractParallelFTask;
-import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.ProgressBar;
 import org.thema.fracgis.method.MonoMethod;
+import org.thema.fracgis.sampling.DefaultSampling;
 import org.thema.fracgis.method.raster.RasterMethod;
+import org.thema.parallel.AbstractParallelTask;
+import org.thema.parallel.ExecutorService;
 
 /**
- *
- * @author gvuidel
+ * Calculates correlation dimension for binary raster data.
+ * The algorithm is based on Grassberger-Procaccia Algorithm.
+ * @author Gilles Vuidel
  */
 
-
 public class CorrelationMethod extends RasterMethod implements MonoMethod {
-
-    public static class CorrelationTask extends AbstractParallelFTask<TreeMap<Double, Double>, double[]>
+    /**
+     * Parallel task for computing correlation.
+     * This task can be run in threaded mode or MPI.
+     */
+    private static class CorrelationTask extends AbstractParallelTask<TreeMap<Double, Double>, double[]>
             implements Serializable {
-        Raster raster;
-        double resolution;
-        int dMax;
-
+        private Raster raster;
+        private double resolution;
+        private int dMax;
+        private DefaultSampling sampling;
+        private double [] sumY;
         private TreeMap<Double, Double> curve;
 
-        public CorrelationTask(ProgressBar monitor, RenderedImage img, double resolution, double maxSize) {
+        private CorrelationTask(ProgressBar monitor, DefaultSampling sampling, RenderedImage img, double resolution) {
             super(monitor);
-            this.dMax = (int)((maxSize / resolution -1) / 2);
+            this.sampling = sampling;
+            dMax = sampling.getDiscreteValues().last();
             this.resolution = resolution;
             raster = img.getData();
         }
 
         @Override
-        protected double[] execute(int start, int end) {
+        public void init() {
+            super.init(); 
+            sumY = new double[dMax+1];
+            Arrays.fill(sumY, 0.0);
+        }
 
-            if(raster.getSampleModel().getDataType() != DataBuffer.TYPE_BYTE || raster.getSampleModel().getSampleSize()[0] != 8)
+        @Override
+        public double[] execute(int start, int end) {
+
+            if(raster.getSampleModel().getDataType() != DataBuffer.TYPE_BYTE || raster.getSampleModel().getSampleSize()[0] != 8) {
                 return slowMethod(raster, start, end);
-
+            }
             final byte [] buf = ((DataBufferByte)raster.getDataBuffer()).getData();
 
             final int w = raster.getWidth();
             final int h = raster.getHeight();
             final double [] fy = new double[dMax+1];
 
-
             for(int i = start; i < end; i++) {
-                for(int j = 0; j < w; j++)
+                for(int j = 0; j < w; j++) {
                     if(raster.getSample(j, i, 0) == 1) {
-                        if(isCanceled())
+                        if(isCanceled()) {
                             return null;
-
+                        }
                         final int i1 = i-dMax < 0 ? 0 : i-dMax;
                         final int i2 = i+dMax >= h ? h-1 : i+dMax;
 
                         final int j1 = j-dMax < 0 ? 0 : j-dMax;
                         final int j2 = j+dMax >= w ? w-1 : j+dMax;
 
-
-                        for(int k = i1; k <= i2; k++)
-                        {
+                        for(int k = i1; k <= i2; k++) {
                             int ind = (k) * w + (j1);
-                            for(int l = j1; l <= j2; l++)
-                            {
-                                if(buf[ind] == 1)
+                            for(int l = j1; l <= j2; l++) {
+                                if(buf[ind] == 1) {
                                     fy[Math.max(Math.abs(k-i), Math.abs(l-j))]++;
+                                }
                                 ind++;
                             }
                         }
+                    }
 
                 }
                 incProgress(1);
@@ -89,31 +113,39 @@ public class CorrelationMethod extends RasterMethod implements MonoMethod {
             return fy;
         }
 
+        /**
+         * Slower method for raster which pixels are not on 1 byte (8 bits)
+         * @param r
+         * @param start
+         * @param end
+         * @return 
+         */
         private double[] slowMethod(Raster r, int start, int end) {
             final int w = r.getWidth();
             final int h = r.getHeight();
 
             final double [] fy = new double[dMax+1];
 
-
             for(int i = start; i < end; i++) {
-                for(int j = 0; j < w; j++)
+                for(int j = 0; j < w; j++) {
                     if(r.getSample(j, i, 0) == 1) {
-                        if(isCanceled())
+                        if(isCanceled()) {
                             return null;
-
+                        }
                         final int i1 = i-dMax < 0 ? 0 : i-dMax;
                         final int i2 = i+dMax >= h ? h-1 : i+dMax;
 
                         final int j1 = j-dMax < 0 ? 0 : j-dMax;
                         final int j2 = j+dMax >= w ? w-1 : j+dMax;
 
-                        for(int k = i1; k <= i2; k++)
-                            for(int l = j1; l <= j2; l++)
-                                if(r.getSample(l, k, 0) == 1)
+                        for(int k = i1; k <= i2; k++) {
+                            for(int l = j1; l <= j2; l++) {
+                                if(r.getSample(l, k, 0) == 1) {
                                     fy[Math.max(Math.abs(k-i), Math.abs(l-j))]++;
-
-
+                                }
+                            }
+                        }
+                    }
                 }
                 incProgress(1);
             }
@@ -122,75 +154,76 @@ public class CorrelationMethod extends RasterMethod implements MonoMethod {
         }
 
 
+        @Override
         public int getSplitRange() {
             return raster.getHeight();
         }
-
-        public void finish(Collection results) {
-            double [] fy = new double[dMax+1];
-            Arrays.fill(fy, 0.0);
-
-            for(Object o : results)
-                for(int i = 0; i <= dMax; i++)
-                    fy[i] += ((double [])o)[i];
-
-            
-            int nbTot = 0;
-            for(int i = 0; i < raster.getHeight(); i++)
-                for(int j = 0; j < raster.getWidth(); j++)
-                    if(raster.getSample(j, i, 0) == 1)
-                        nbTot++;
-
-            System.out.println("Nb point : " + nbTot);
-            
-            for(int i = 0; i <= dMax; i++)
-            {
-                fy[i] /= (double)nbTot;		/* on divise fy par le nombre total de points */
-                if(i > 0)
-                    fy[i] += fy[i-1];		/* et on fait le cumul */
+        
+        @Override
+        public void gather(double[] result) {
+            for(int i = 0; i <= dMax; i++) {
+                sumY[i] += result[i];
             }
-
-            curve = new TreeMap<Double, Double>();
-            for(int i = 0; i <= dMax; i++)
-                curve.put((2*i+1.0)*resolution, fy[i]*resolution*resolution);
+        }
+        
+        @Override
+        public void finish() {           
+            int nbTot = 0;
+            for(int i = 0; i < raster.getHeight(); i++) {
+                for(int j = 0; j < raster.getWidth(); j++) {
+                    if(raster.getSample(j, i, 0) == 1) {
+                        nbTot++;
+                    }
+                }
+            }
+            
+            for(int i = 0; i <= dMax; i++) {
+                sumY[i] /= (double)nbTot;		/* on divise fy par le nombre total de points */
+                if(i > 0) {
+                    sumY[i] += sumY[i-1];		/* et on fait le cumul */
+                }
+            }
+            SortedSet<Integer> scales = sampling.getDiscreteValues();
+            curve = new TreeMap<>();
+            for(int i = 0; i <= dMax; i++) {
+                if(scales.contains(i)) {
+                    curve.put((2*i+1.0)*resolution, sumY[i]*resolution*resolution);
+                }
+            }
         }
 
+        @Override
         public TreeMap<Double, Double> getResult() {
             return curve;
         }
 
     }
-
-    private double maxSize;
     
     private TreeMap<Double, Double> curve;
 
-    public CorrelationMethod(String inputName, RenderedImage img, Envelope env) {
-        this(inputName, img, env, getDefaultMax(env));
-    }
-
-    public CorrelationMethod(String inputName, RenderedImage img, Envelope env, double maxSize) {
-        super(inputName, img, env);
-        if(maxSize <= 0)
-            maxSize = getDefaultMax(env);
-        this.maxSize = maxSize;
-    }
-
-    public double getMaxSize() {
-        return maxSize;
+    /**
+     * Creates a new correlation method for the given data
+     * @param inputName input layer name (must be a binary raster layer)
+     * @param sampling scale sampling
+     * @param img raster input data
+     * @param env envelope of the raster in world coordinate
+     */
+    public CorrelationMethod(String inputName, DefaultSampling scaling, RenderedImage img, Envelope env) {
+        super(inputName, scaling, img, env);
     }
 
     @Override
-    public void execute(ProgressBar monitor, boolean threaded) {
-        CorrelationTask task = new CorrelationTask(monitor, img, getResolution(), maxSize);
+    public void execute(ProgressBar monitor, boolean parallel) {
+        CorrelationTask task = new CorrelationTask(monitor, getSampling(), getImg(), getResolution());
         
-        if(threaded)
-            new ParallelFExecutor(task).executeAndWait();
-        else
-            new ParallelFExecutor(task, 1).executeAndWait();
-
-        if(task.isCanceled())
+        if(parallel) {
+            ExecutorService.execute(task);
+        } else {
+            ExecutorService.executeSequential(task);
+        }
+        if(task.isCanceled()) {
             throw new CancellationException();
+        }
         curve = task.getResult();
     }
 
@@ -203,19 +236,10 @@ public class CorrelationMethod extends RasterMethod implements MonoMethod {
     public int getDimSign() {
         return 1;
     }
-
-    @Override
-    public String getParamsName() {
-        return String.format(Locale.US, "max%g", maxSize);
-    }
     
     @Override
     public String getName() {
         return "Correlation";
-    }
-    
-    public static double getDefaultMax(Envelope env) {
-        return 2 * Math.min(env.getWidth(), env.getHeight()) / 8;
     }
 
 }

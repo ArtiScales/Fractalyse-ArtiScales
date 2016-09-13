@@ -1,8 +1,21 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 package org.thema.fracgis.method.vector.multi;
 
@@ -15,78 +28,51 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import org.thema.common.ProgressBar;
 import org.thema.data.feature.Feature;
 import org.thema.data.feature.FeatureCoverage;
 import org.thema.fracgis.method.MonoMethod;
-import org.thema.fracgis.method.vector.mono.BoxCountingMethod;
 import org.thema.fracgis.method.vector.VectorMethod;
+import org.thema.fracgis.sampling.DefaultSampling;
 import org.thema.msca.SquareGrid;
 import org.thema.msca.operation.SimpleCoverageOperation;
 
 /**
- *
- * @author gvuidel
- */
-
-
-/**
+ * Multifractal analysis with boxcounting and vector data.
  * 
- * @author gvuidel
+ * @author Gilles Vuidel
  */
 public class MultiFracBoxCountingVectorMethod extends VectorMethod implements MultiFracMethod {
-
-    private double minSize = 0;
-    private double maxSize = 0;
-    private double coef = 2;
     
-    private TreeSet<Double> sizes;
     private HashMap<Double, List<SquareGrid>> grids;
     private double totalArea;
     
     private transient TreeMap<Double, TreeMap<Double, Double>> cacheCurves;
     
-    public MultiFracBoxCountingVectorMethod(String inputName, FeatureCoverage cover, double min, double max, double coef) {
-        super(inputName, cover);
-        
-        this.minSize = min;
-        this.maxSize = max;
-        this.coef = coef;
-        
-        updateParams();
-        
+    /**
+     * Creates a new multifractal box counting method for vector data.
+     * @param inputName the input data layer name 
+     * @param sampling the scale sampling
+     * @param cover the input vector data
+     */
+    public MultiFracBoxCountingVectorMethod(String inputName, DefaultSampling sampling, FeatureCoverage cover) {
+        super(inputName, sampling, cover);
         this.cacheCurves = new TreeMap<>();
-    }
-    
-    @Override
-    protected final void updateParams() {
-        if(minSize == 0) minSize = BoxCountingMethod.getDefaultMin(coverage);
-        if(maxSize == 0) maxSize = BoxCountingMethod.getDefaultMax(coverage);
-        
-        if(minSize > maxSize)
-            throw new IllegalArgumentException("Min is greater than max !");
-        
-        sizes = new TreeSet<>();
-        double val = minSize;
-        while(val <= maxSize) {
-            sizes.add(val);
-            val *= coef;
-        }
     }
 
     @Override
-    public void execute(ProgressBar monitor, boolean threaded) {
+    public void execute(ProgressBar monitor, boolean parallel) {
         totalArea = 0;
-        for(Feature f : coverage.getFeatures()) {
+        for(Feature f : getCoverage().getFeatures()) {
             totalArea += f.getGeometry().getArea();
         }
-        
+        SortedSet<Double> sizes = getSampling().getValues();
         grids = new HashMap<>();
-        Envelope env = new Envelope(coverage.getEnvelope());
+        Envelope env = new Envelope(getDataEnvelope());
         env.init(env.getMinX()-sizes.last()*1.01, env.getMaxX(), env.getMinY()-sizes.last()*1.01, env.getMaxY());
         for(double size : sizes) {
             List<SquareGrid> gridSize = new ArrayList<>();
@@ -114,12 +100,13 @@ public class MultiFracBoxCountingVectorMethod extends VectorMethod implements Mu
         for(double size : sizes) {
             monitor.setNote("Resolution : " + size);
             for(SquareGrid grid : grids.get(size)) {     
-                SimpleCoverageOperation op = new SimpleCoverageOperation(SimpleCoverageOperation.AREA, "area", coverage);
+                SimpleCoverageOperation op = new SimpleCoverageOperation(SimpleCoverageOperation.AREA, "area", getCoverage());
                 op.setMonitor(monitor.getSubProgress(100.0/(grids.get(size).size())));
-                if(threaded)
+                if(parallel) {
                     grid.executeThreaded(op);
-                else
+                } else {
                     grid.execute(op);
+                }
             }
 
         }
@@ -131,24 +118,11 @@ public class MultiFracBoxCountingVectorMethod extends VectorMethod implements Mu
         return -1;
     }
 
-    public double getMax() {
-        return sizes.last();
-    }
-
-    public double getMin() {
-        return minSize;
-    }
-
     @Override
     public String getName() {
         return "MultiFractal";
     }
     
-    @Override
-    public String getParamsName() {
-        return String.format(Locale.US, "coef%g_min%g_max%g", coef, getMin(), getMax());
-    }
-
     @Override
     public MonoMethod getSimpleMethod(final double q) {
         return new QMonoMethod(this, q);
@@ -174,11 +148,12 @@ public class MultiFracBoxCountingVectorMethod extends VectorMethod implements Mu
     
     private void calcCurves(Set<Double> qSet) {
         List<Double> qList = new ArrayList<>();
-        for(Double q : qSet)
+        for(Double q : qSet) {
             if(!cacheCurves.containsKey(q)) {
                 qList.add(q);
                 cacheCurves.put(q, new TreeMap<Double, Double>());
             }
+        }
         for(Double size : grids.keySet()) {
             double [] sum = new double[qList.size()];
             for(SquareGrid grid : grids.get(size)) {
@@ -186,13 +161,15 @@ public class MultiFracBoxCountingVectorMethod extends VectorMethod implements Mu
                 for(int j = 0; j < buf.getSize(); j++) {
                     float val = buf.getElemFloat(j);
                     if(val > 0) {
-                        for(int k = 0; k < sum.length; k++)
+                        for(int k = 0; k < sum.length; k++) {
                             sum[k] += Math.pow(val / totalArea, qList.get(k));
+                        }
                     }
                 }
             }
-            for(int k = 0; k < sum.length; k++)
+            for(int k = 0; k < sum.length; k++) {
                 cacheCurves.get(qList.get(k)).put(size, sum[k]);
+            }
         }  
     }
     

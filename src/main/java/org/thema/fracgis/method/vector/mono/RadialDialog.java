@@ -1,13 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * BoxCountingDialog.java
- *
- * Created on 2 févr. 2010, 10:57:31
- */
 
 package org.thema.fracgis.method.vector.mono;
 
@@ -27,22 +35,35 @@ import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.drawshape.style.PointStyle;
 import org.thema.drawshape.ui.MapViewer;
 import org.thema.fracgis.LayerModel;
+import org.thema.fracgis.sampling.DefaultSampling;
+import org.thema.fracgis.sampling.RadialSampling;
+import org.thema.fracgis.sampling.Sampling;
 
 /**
+ * Dialog form for setting parameters of radial analysis.
  *
- * @author gvuidel
+ * @author Gilles Vuidel
  */
 public class RadialDialog extends javax.swing.JDialog implements PanelMap.ShapeMouseListener {
 
+    /** is user clicked OK ? */
     public boolean isOk = false;
-    public double minSize, maxSize, step;
-    public Coordinate centre;
+    /** the resulting sampling */
+    public RadialSampling sampling;
+    /** the selected layer */
     public FeatureLayer layer;
+    /** the starting point */
+    public Coordinate centre;
     
     private MapViewer mapViewer;
     private PointShape centreShape;
-
-    /** Creates new form BoxCountingDialog */
+    
+    /** 
+     * Creates new form RadialDialog 
+     * @param parent the parent frame 
+     * @param model list of vector layer
+     * @param mapViewer the map viewer for point selection
+     */
     public RadialDialog(java.awt.Frame parent, LayerModel<FeatureLayer> model, MapViewer mapViewer) {
         super(parent, false);
         initComponents();
@@ -201,10 +222,10 @@ public class RadialDialog extends javax.swing.JDialog implements PanelMap.ShapeM
         layer = (FeatureLayer) layerComboBox.getSelectedItem();
         String[] coords = centreTextField.getText().split(",");
         centre = new Coordinate(Double.parseDouble(coords[0]), Double.parseDouble(coords[1]));
-        minSize = Double.parseDouble(minTextField.getText());
-        maxSize = Double.parseDouble(maxTextField.getText());
-        step = (Double)coefSpinner.getValue();
-        
+        Double minSize = Double.parseDouble(minTextField.getText());
+        Double maxSize = Double.parseDouble(maxTextField.getText());
+        Double step = (Double)coefSpinner.getValue();
+        sampling = new RadialSampling(new DefaultSampling(minSize, maxSize, step, Sampling.Sequence.ARITH), centre);
         isOk = true;
         setVisible(false);
         dispose();
@@ -217,11 +238,12 @@ public class RadialDialog extends javax.swing.JDialog implements PanelMap.ShapeM
 
     private void layerComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_layerComboBoxActionPerformed
         FeatureLayer l = (FeatureLayer) layerComboBox.getSelectedItem();
-        centre = RadialMethod.getDefaultCentre(JTS.rectToEnv(l.getBounds()));
+        centre = RadialSampling.getDefaultCentre(JTS.rectToEnv(l.getBounds()));
         centreTextField.setText(centre.x + "," + centre.y);
-        maxTextField.setText(String.format(Locale.US, "%g", RadialMethod.getDefaultMax(JTS.rectToEnv(l.getBounds()), centre)));
-        if(centreShape != null)
+        maxTextField.setText(String.format(Locale.US, "%g", RadialSampling.getDefaultMax(JTS.rectToEnv(l.getBounds()), centre)));
+        if(centreShape != null) {
             centreShape.setPoint2D(new Point2D.Double(centre.x, centre.y));
+        }
     }//GEN-LAST:event_layerComboBoxActionPerformed
 
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
@@ -229,15 +251,15 @@ public class RadialDialog extends javax.swing.JDialog implements PanelMap.ShapeM
         mapViewer.getMap().removeShapes(Arrays.asList(centreShape));
     }//GEN-LAST:event_formWindowClosed
 
+    @Override
     public void mouseClicked(Point2D p, List<SelectableShape> shapes, MouseEvent sourceEvent, int cursorMode) {
         FeatureLayer l = (FeatureLayer) layerComboBox.getSelectedItem();
         centreTextField.setText(p.getX() + "," + p.getY());
-        maxTextField.setText(String.format(Locale.US, "%g", RadialMethod.getDefaultMax(JTS.rectToEnv(l.getBounds()), new Coordinate(p.getX(), p.getY()))));
+        maxTextField.setText(String.format(Locale.US, "%g", RadialSampling.getDefaultMax(JTS.rectToEnv(l.getBounds()), new Coordinate(p.getX(), p.getY()))));
         centreShape.setPoint2D(p);
         mapViewer.getMap().fullRepaint();
     }
     
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
     private javax.swing.JTextField centreTextField;

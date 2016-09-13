@@ -1,13 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * CorrelationDialog.java
- *
- * Created on 26 févr. 2010, 16:57:09
- */
 
 package org.thema.fracgis.tools;
 
@@ -25,16 +33,19 @@ import org.thema.fracgis.BinRasterLayer;
 import org.thema.fracgis.LayerModel;
 
 /**
- *
- * @author gvuidel
+ * Dialog form for binarizing a grayscale raster layer.
+ * 
+ * @author Gilles Vuidel
  */
 public class BinarizeDialog extends javax.swing.JDialog {
 
-    public boolean isOk = false;
-    public RasterLayer layer;
-    MapViewer viewer;
+    private MapViewer viewer;
 
-    /** Creates new form CorrelationDialog */
+    /** 
+     * Creates new form BinarizeDialog
+     * @param parent the parent frame
+     * @param viewer the map viewer for getting layers and adding the resulting binarized layer
+     */
     public BinarizeDialog(java.awt.Frame parent, MapViewer viewer) {
         super(parent, true);
         initComponents();
@@ -82,12 +93,6 @@ public class BinarizeDialog extends javax.swing.JDialog {
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
-            }
-        });
-
-        layerComboBox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                layerComboBoxActionPerformed(evt);
             }
         });
 
@@ -158,8 +163,8 @@ public class BinarizeDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
-        layer = (RasterLayer) layerComboBox.getSelectedItem();
-        isOk = true;
+        RasterLayer layer = (RasterLayer) layerComboBox.getSelectedItem();
+
         setVisible(false);
         dispose();
 
@@ -181,16 +186,20 @@ public class BinarizeDialog extends javax.swing.JDialog {
         dispose();
     }//GEN-LAST:event_cancelButtonActionPerformed
 
-    private void layerComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_layerComboBoxActionPerformed
-
-}//GEN-LAST:event_layerComboBoxActionPerformed
-
-
+    /**
+     * Binarize a raster image src into dest raster.
+     * @param src the source raster image
+     * @param dest the binary destination raster
+     * @param min the min pixel value included
+     * @param max the max pixel value included
+     */
     public static void binarize(RenderedImage src, WritableRaster dest, double min, double max) {
         RandomIter iter = RandomIterFactory.create(src, null);
-        for(int i = 0; i < src.getHeight(); i++)
-            for(int j = 0; j < src.getWidth(); j++)
+        for(int i = 0; i < src.getHeight(); i++) {
+            for(int j = 0; j < src.getWidth(); j++) {
                 dest.setSample(j, i, 0, iter.getSample(j, i, 0) >= min && iter.getSample(j, i, 0) <= max ? 1 : 0);
+            }
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

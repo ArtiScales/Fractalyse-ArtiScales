@@ -1,7 +1,22 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+
 package org.thema.fracgis.method.vector.mono;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -15,95 +30,99 @@ import java.util.TreeMap;
 import java.util.concurrent.CancellationException;
 import org.thema.common.parallel.BufferForkJoinTask;
 import org.thema.common.ProgressBar;
-import org.thema.common.param.XMLParams;
+import org.thema.common.param.ReflectObject;
 import org.thema.data.feature.Feature;
 import org.thema.data.feature.FeatureCoverage;
 import org.thema.drawshape.layer.GeometryLayer;
 import org.thema.drawshape.style.SimpleStyle;
-import org.thema.fracgis.method.MonoMethod;
+import org.thema.fracgis.sampling.DefaultSampling;
 
 /**
+ * Computes unifractal dimension by successive dilation.
  *
- * @author gvuidel
+ * @author Gilles Vuidel
  */
-public class DilationMethod extends SimpleVectorMethod {
-
-    private double minSize = 0;
-    private double maxSize = 0;
-    private double coef = 1.5;
+public class DilationMethod extends MonoVectorMethod {
     
-    @XMLParams.NoParam
-    TreeMap<Double, Double> clusters;
+    private boolean stopOne;
     
-    @XMLParams.NoParam
-    boolean keepBuffers = false;
-    @XMLParams.NoParam
-    TreeMap<Double, Geometry> bufGeoms;
+    @ReflectObject.NoParam
+    private TreeMap<Double, Double> clusters;
+    
+    @ReflectObject.NoParam
+    private boolean keepBuffers = false;
+    @ReflectObject.NoParam
+    private TreeMap<Double, Geometry> bufGeoms;
 
-    public DilationMethod(String inputName, FeatureCoverage<Feature> coverage, double minSize, double maxSize, double coef) {
-        super(inputName, coverage);
-        this.minSize = minSize;
-        this.maxSize = maxSize;
-        this.coef = coef;
+    /**
+     * Creates a new dilation method for the given vector data
+     * @param inputName the input data layer name 
+     * @param sampling the scale sampling
+     * @param coverage the input vector data
+     * @param stopOne stop when it remains only one cluster ?
+     * @param keepBuffers keep buffers for displaying it ?
+     */
+    public DilationMethod(String inputName, DefaultSampling sampling, FeatureCoverage<Feature> coverage, boolean stopOne, boolean keepBuffers) {
+        super(inputName, sampling, coverage);
+        this.stopOne = stopOne;
+        this.keepBuffers = keepBuffers;
     }
 
     /**
      * For parameter management only
      */
     public DilationMethod() {
-        super();
     }
 
     @Override
-    protected void updateParams() {
-    }
-
-    @Override
-    public void execute(ProgressBar monitor, boolean threaded) {
-        double radius = minSize / 2;
-        List<Geometry> geoms = new ArrayList<Geometry>();
-        for(Feature f : coverage.getFeatures())
+    public void execute(ProgressBar monitor, boolean parallel) {
+        double radius = getSampling().getMinSize() / 2;
+        List<Geometry> geoms = new ArrayList<>();
+        for(Feature f : getCoverage().getFeatures()) {
             geoms.add(f.getGeometry());
+        }
         Geometry geom = new GeometryFactory().buildGeometry(geoms);
         Geometry bufGeom = geom;
-        curve = new TreeMap<Double, Double>();
-        clusters = new TreeMap<Double, Double>();
-        if(keepBuffers)
-            bufGeoms = new TreeMap<Double, Geometry>();
-        if(maxSize > 0)
-            monitor.setMaximum(1+(int)((Math.log(maxSize) - Math.log(radius))/Math.log(coef)));
-        else
+        curve = new TreeMap<>();
+        clusters = new TreeMap<>();
+        if(keepBuffers) {
+            bufGeoms = new TreeMap<>();
+        }
+        if(!stopOne) {
+            monitor.setMaximum(getSampling().getValues().size());
+        } else {
             monitor.setMaximum(100);
-
-        while(maxSize > 0 && radius*2 <= maxSize || maxSize <= 0 && bufGeom.getNumGeometries() > 1) {
-            if(monitor.isCanceled())
+        }
+        while(!stopOne && radius*2 <= getSampling().getMaxSize() || stopOne && bufGeom.getNumGeometries() > 1) {
+            if(monitor.isCanceled()) {
                 throw new CancellationException();
+            }
             monitor.setNote("Distance : " + (radius*2));
-            if(threaded)
+            if(parallel) {
                 bufGeom = BufferForkJoinTask.threadedBuffer(geom, radius);
-            else
+            } else {
                 bufGeom = BufferForkJoinTask.buffer(geom, radius, BufferParameters.DEFAULT_QUADRANT_SEGMENTS);
+            }
             double refArea = Math.PI*Math.pow(radius, 2);
             curve.put(2*radius, bufGeom.getArea() / refArea);
             clusters.put(2*radius, (double)bufGeom.getNumGeometries());
             
-            if(maxSize <= 0)
-                monitor.setProgress((int)(100 - 100*Math.log(bufGeom.getNumGeometries()) / Math.log(geoms.size())));
-            else
-                monitor.incProgress(1);
+            monitor.incProgress(1);
             
-            if(keepBuffers)
+            if(keepBuffers) {
                 bufGeoms.put(2*radius, bufGeom);
+            }
             
-            radius *= coef;
+            radius = getSampling().getNext(radius*2) / 2;
         }
         
-        if(keepBuffers)
+        if(keepBuffers) {
             for(Double dist : bufGeoms.keySet()) {
                 GeometryLayer l = new GeometryLayer(String.format("%g", dist), bufGeoms.get(dist), new SimpleStyle(Color.BLACK, Color.BLACK));
                 l.setVisible(false);
-                getGroupLayer().addLayer(l);
+                getGroupLayer().addLayerFirst(l);
             }
+        }
     }
 
     @Override
@@ -111,28 +130,21 @@ public class DilationMethod extends SimpleVectorMethod {
         return -1;
     }
     
+    /**
+     * The method {@link #execute(org.thema.common.ProgressBar, boolean) } must be called before.
+     * @return the number of clusters for each step of dilation
+     */
     public TreeMap<Double, Double> getClusters() {
         return clusters;
     }
     
-    public double getMax() {
-        if(curve.isEmpty())
-            return maxSize;
-        else
-            return curve.lastKey();
-    }
-
-    public boolean isKeepBuffers() {
-        return keepBuffers;
-    }
-
-    public void setKeepBuffers(boolean keepBuffers) {
-        this.keepBuffers = keepBuffers;
-    }
-    
     @Override
-    public String getParamsName() {
-        return String.format(Locale.US, "coef%g_min%g_max%g", coef, minSize, getMax());
+    public String getParamString() {
+        if(stopOne) {
+            return String.format(Locale.US, "coef%g_min%g_stop1", getSampling().getCoef(), getSampling().getMinSize());
+        } else {
+            return super.getParamString();
+        }
     }
     
     @Override

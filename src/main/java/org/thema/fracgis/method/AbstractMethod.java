@@ -1,10 +1,25 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 package org.thema.fracgis.method;
 
+import org.thema.fracgis.sampling.DefaultSampling;
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedHashMap;
@@ -12,35 +27,49 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.thema.common.param.XMLParams;
+import org.thema.common.param.ReflectObject;
 
 /**
- *
- * @author gvuidel
+ * Base class for implementing fractal dimension calculation.
+ * Class used for uni and multi fractal.
+ * @author Gilles Vuidel
  */
 public abstract class AbstractMethod implements Method {
 
-    @XMLParams.NoParam
+    private DefaultSampling scaling;
+    
+    @ReflectObject.NoParam
     protected String inputName;
     
     // pas utile en version batch ou CLI qui utilise la sérialisation
     transient private MethodLayers glayers;
 
-
-    public AbstractMethod(String inputName) {
+    /**
+     * Initializes a new method 
+     * @param inputName the input layer name
+     * @param scaling the default scaling
+     */
+    public AbstractMethod(String inputName, DefaultSampling scaling) {
         this.inputName = inputName;
+        this.scaling = scaling;
+    }
+
+    @Override
+    public DefaultSampling getSampling() {
+        return scaling;
     }
 
     @Override
     public String getDetailName() {
-        return inputName + " - " + getName() + " - " + getParamsName();
+        return inputName + " - " + getName() + " - " + getParamString();
     }
 
     @Override
-    public String getInputName() {
+    public String getInputLayerName() {
         return inputName;
     }
 
+    @Override
     public synchronized MethodLayers getGroupLayer() {
         if(glayers == null) {
             Runnable run = new Runnable() {
@@ -51,12 +80,13 @@ public abstract class AbstractMethod implements Method {
             };
             if(EventQueue.isDispatchThread()) {
                 run.run();
-            } else
+            } else {
                 try {
                     EventQueue.invokeAndWait(run);
                 } catch (InterruptedException | InvocationTargetException ex) {
                     Logger.getLogger(AbstractMethod.class.getName()).log(Level.SEVERE, null, ex);
                 }
+            }
         }
         return glayers;
     }
@@ -65,15 +95,20 @@ public abstract class AbstractMethod implements Method {
     public String toString() {
         return getName();
     }
-    
+
     @Override
-    public LinkedHashMap<String, Double> getParams() {
-        return paramsFromString(getParamsName());
+    public String getParamString() {
+        return scaling.getParamString();
     }
     
+    /**
+     * Extracts parameters from a string created by {@link #getParamString() }
+     * @param str parameters string
+     * @return map of parameter's name and value
+     */
     public static LinkedHashMap<String, Double> paramsFromString(String str) {
         String[] tokens = str.split("_");
-        Pattern p = Pattern.compile("([^0-9]+)([0-9\\.]+)");
+        Pattern p = Pattern.compile("([^0-9]+)([0-9\\.]+|NaN)");
         LinkedHashMap<String, Double> params = new LinkedHashMap<>();
         for(String token : tokens) {
             Matcher m = p.matcher(token);

@@ -1,41 +1,58 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * BoxCountingDialog.java
- *
- * Created on 2 févr. 2010, 10:57:31
- */
 
 package org.thema.fracgis.method.vector;
 
-import com.vividsolutions.jts.geom.Envelope;
-import java.util.Collection;
 import java.util.Locale;
 import javax.swing.JOptionPane;
 import org.thema.data.feature.DefaultFeatureCoverage;
-import org.thema.data.feature.Feature;
 import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.fracgis.LayerModel;
-import org.thema.fracgis.method.vector.mono.BoxCountingMethod;
+import org.thema.fracgis.sampling.DefaultSampling;
 
 /**
- *
- * @author gvuidel
+ * Dialog form for vectorial box methods (uni and multifractal).
+ * 
+ * @author Gilles Vuidel
  */
 public class BoxCountingDialog extends javax.swing.JDialog {
 
+    /** is user clicked OK ? */
     public boolean isOk = false;
-    public double minSize, maxSize, coef;
+    /** the resulting scale sampling */
+    public DefaultSampling sampling;
+    /** optimize boxcounting by gliding grid if d > 1 */
     public int d;
+    /** the selected layer for input data */
     public FeatureLayer layer;
+    /** true for viewing boxes at each scales, use much memory */
     public boolean viewBoxes;
 
-    /** Creates new form BoxCountingDialog */
-    public BoxCountingDialog(java.awt.Frame parent, LayerModel<FeatureLayer> model) {
+    /** 
+     * Creates new form BoxCountingDialog 
+     * @param parent the parent frame
+     * @param model list of vector layers
+     * @param sampling sampling used for calculating default min and max size
+     */
+    public BoxCountingDialog(java.awt.Frame parent, LayerModel<FeatureLayer> model, DefaultSampling sampling) {
         super(parent, true);
+        this.sampling = sampling;
         initComponents();
         setLocationRelativeTo(parent);
         getRootPane().setDefaultButton(okButton);
@@ -190,9 +207,10 @@ public class BoxCountingDialog extends javax.swing.JDialog {
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
         layer = (FeatureLayer) layerComboBox.getSelectedItem();
-        minSize = Double.parseDouble(minTextField.getText());
-        maxSize = Double.parseDouble(maxTextField.getText());
-        coef = (Double)coefSpinner.getValue();
+        double minSize = Double.parseDouble(minTextField.getText());
+        double maxSize = Double.parseDouble(maxTextField.getText());
+        double coef = (Double)coefSpinner.getValue();
+        sampling = new DefaultSampling(minSize, maxSize, coef);
         d = (Integer)dSpinner.getValue();
         viewBoxes = viewBoxCheckBox.isSelected();
         
@@ -208,18 +226,9 @@ public class BoxCountingDialog extends javax.swing.JDialog {
 
     private void layerComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_layerComboBoxActionPerformed
         FeatureLayer l = (FeatureLayer) layerComboBox.getSelectedItem();
-        Collection<? extends Feature> features = l.getSelectedFeatures();
-        if(features.isEmpty())
-            features = l.getFeatures();
-        DefaultFeatureCoverage cov = new DefaultFeatureCoverage(features);
-        maxTextField.setText(String.format(Locale.US, "%g", BoxCountingMethod.getDefaultMax(cov)));
-        double minArea = Double.MAX_VALUE;
-        for(Feature f : features) {
-            double area = f.getGeometry().getArea();
-            if(area < minArea)
-                minArea = area;
-        }
-        minTextField.setText(String.format(Locale.US, "%g", BoxCountingMethod.getDefaultMin(cov)));
+        DefaultFeatureCoverage cov = new DefaultFeatureCoverage(l.getFeatures());
+        maxTextField.setText(String.format(Locale.US, "%g", sampling.getDefaultMax(cov.getEnvelope())));
+        minTextField.setText(String.format(Locale.US, "%g", sampling.getDefaultMin(cov.getFeatures())));
 
     }//GEN-LAST:event_layerComboBoxActionPerformed
 

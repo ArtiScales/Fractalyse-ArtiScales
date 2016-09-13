@@ -1,36 +1,82 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package org.thema.fracgis.method;
 
+import org.thema.fracgis.sampling.DefaultSampling;
 import com.vividsolutions.jts.geom.Envelope;
-import java.util.LinkedHashMap;
 import org.thema.common.ProgressBar;
+import org.thema.fracgis.estimation.ScaleRangeShape;
 
 /**
- *
- * @author gvuidel
+ * Main interface for implementing fractal dimension calculation.
+ * 4 sub interface exist :
+ * - mono or multi fractal method
+ * - vector or raster data
+ * 
+ * @author Gilles Vuidel
  */
 public interface Method {
     
-    public String getDetailName();
+    /**
+     * @return the full name of the method and its parameters
+     */
+    String getDetailName();
 
-    public String getInputName();
+    /**
+     * @return the name of the input layer
+     */
+    String getInputLayerName();
     
-    public Envelope getDataEnvelope();
+    /**
+     * @return the envelope in world coordinate of the data (input layer)
+     */
+    Envelope getDataEnvelope();
     
-    public String getName();
+    /**
+     * @return the name of the method
+     */
+    String getName();
 
-    public void execute(ProgressBar monitor, boolean threaded);
+    /**
+     * Launch the execution of this method. 
+     * @param monitor the progression monitor
+     * @param parallel is the computation parallelized ?
+     */
+    void execute(ProgressBar monitor, boolean parallel);
     
-    public int getDimSign();
+    /**
+     * @return the sign (-1 or +1) of the fractal dimension for this method
+     */
+    int getDimSign();
     
-    public String getParamsName();
+    /**
+     * @return a string containing all parameters
+     */
+    String getParamString();
     
-    public LinkedHashMap<String, Double> getParams();
+    /**
+     * @return a group layer containing at least {@link ScaleRangeShape}
+     */
+    MethodLayers getGroupLayer();
     
-    public MethodLayers getGroupLayer();
+    /**
+     * @return the default scale sampling for this method
+     */
+    DefaultSampling getSampling();
 }

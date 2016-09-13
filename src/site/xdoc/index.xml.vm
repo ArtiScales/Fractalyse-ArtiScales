@@ -2,16 +2,32 @@
 
 <document>
   <body>
-    <section name="Download">
-	<p>
-	Download last version : <a href="http://dev.umrthema.univ-fcomte.fr/repository/org/thema/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}.jar">${project.version}</a>
-	</p>
-	<p>
-	View changelog : <a href="changelog">changelog</a>
-	</p>
-	<p>
-	Download previous version : <a href="http://dev.umrthema.univ-fcomte.fr/repository/org/thema/${project.artifactId}/">Previous versions</a>
-	</p>
-    </section>
-  </body>
+        <img src="logo.gif"/>
+
+        <section name="Fractal analysis">
+            <p>
+            </p>
+
+            <subsection name="Download">
+                <p>
+                Download last version : <a href="http://dev.umrthema.univ-fcomte.fr/repository/org/thema/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}.jar">${project.version}</a>
+                </p>
+                <p>
+                View changelog : <a href="changelog.html">changelog</a>
+                </p>
+                <p>
+                Download previous version : <a href="http://dev.umrthema.univ-fcomte.fr/repository/org/thema/${project.artifactId}/">Previous versions</a>
+                </p>
+            </subsection>
+            <subsection name="Documentation">
+                <p>
+                    User manual :
+                    <ul>
+                        <li>User manual (EN) <a href="manual-en.pdf">[PDF]</a> <a href="manual-en.html">[HTML]</a></li> 
+                    </ul>
+                </p>
+                
+            </subsection>
+        </section>
+    </body> 
 </document>

@@ -1,13 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * DesserteFrame.java
- *
- * Created on 26 févr. 2010, 09:40:37
- */
 
 package org.thema.fracgis.method.network;
 
@@ -15,32 +23,37 @@ import java.util.TreeMap;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 /**
- *
- * @author gvuidel
+ * Frame for displaying results of "desserte" analysis.
+ * 
+ * @author Gilles Vuidel
  */
 public class DesserteFrame extends javax.swing.JFrame {
 
-    XYSeries netSerie, desserteSerie;
-    double scale = 50;
+    private XYSeries netSerie, desserteSerie;
+    private double scale = 50;
 
-    /** Creates new form DesserteFrame */
+    /** 
+     * Creates new form DesserteFrame 
+     * @param netCurve curve of the networkd method
+     * @param desserteCurve curve of the desserte method
+     */
     public DesserteFrame(TreeMap<Double, Double> netCurve, TreeMap<Double, Double> desserteCurve) {
         initComponents();
 
-
         XYSeriesCollection dataset = new XYSeriesCollection();
         netSerie = new XYSeries("Network");
-        for(Double x : netCurve.keySet())
+        for(Double x : netCurve.keySet()) {
             netSerie.add(x/2, netCurve.get(x));
+        }
         dataset.addSeries(netSerie);
         desserteSerie = new XYSeries("Desserte");
-        for(Double x : desserteCurve.keySet())
+        for(Double x : desserteCurve.keySet()) {
             desserteSerie.add((double)x, scale*desserteCurve.get(x));
+        }
         dataset.addSeries(desserteSerie);
         ChartPanel chartPanel = new ChartPanel(ChartFactory.createXYLineChart("", "x", "y", dataset, PlotOrientation.VERTICAL, true, true, true));
         splitPane.setRightComponent(chartPanel);
@@ -112,11 +125,11 @@ public class DesserteFrame extends javax.swing.JFrame {
     private void scaleSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_scaleSpinnerStateChanged
         desserteSerie.setNotify(false);
         double s = (Double)scaleSpinner.getValue();
-        for(int i = 0; i < desserteSerie.getItemCount(); i++)
+        for(int i = 0; i < desserteSerie.getItemCount(); i++) {
             desserteSerie.updateByIndex(i, desserteSerie.getY(i).doubleValue() * s / scale);
+        }
 
         desserteSerie.setNotify(true);
-
         scale = s;
     }//GEN-LAST:event_scaleSpinnerStateChanged
 

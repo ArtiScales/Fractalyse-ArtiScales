@@ -1,13 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * BoxCountingDialog.java
- *
- * Created on 2 févr. 2010, 10:57:31
- */
 
 package org.thema.fracgis.method.raster.mono;
 
@@ -27,22 +35,33 @@ import org.thema.drawshape.style.PointStyle;
 import org.thema.drawshape.ui.MapViewer;
 import org.thema.fracgis.BinRasterLayer;
 import org.thema.fracgis.LayerModel;
+import org.thema.fracgis.sampling.RadialSampling;
 
 /**
- *
- * @author gvuidel
+ * Dialog form for setting parameters of radial analysis.
+ * 
+ * @author Gilles Vuidel
  */
 public class RadialRasterDialog extends javax.swing.JDialog implements PanelMap.ShapeMouseListener {
 
+    /** is user clicked OK ? */
     public boolean isOk = false;
-    public double maxSize;
+    /** the resulting sampling */
+    public RadialSampling sampling;
+    /** the starting point */
     public Coordinate centre;
+    /** the selected layer */
     public BinRasterLayer layer;
     
     private MapViewer mapViewer;
     private PointShape centreShape;
 
-    /** Creates new form BoxCountingDialog */
+    /** 
+     * Creates new form RadialRasterDialog 
+     * @param parent the parent frame 
+     * @param model list of binary raster layer
+     * @param mapViewer the map viewer for point selection
+     */
     public RadialRasterDialog(java.awt.Frame parent, LayerModel<BinRasterLayer> model, MapViewer mapViewer) {
         super(parent, false);
         initComponents();
@@ -174,8 +193,8 @@ public class RadialRasterDialog extends javax.swing.JDialog implements PanelMap.
         layer = (BinRasterLayer) layerComboBox.getSelectedItem();
         String[] coords = centreTextField.getText().split(",");
         centre = new Coordinate(Double.parseDouble(coords[0]), Double.parseDouble(coords[1]));
-        maxSize = Double.parseDouble(maxTextField.getText());
-        
+        double maxSize = Double.parseDouble(maxTextField.getText());
+        sampling = new RadialSampling(centre, maxSize);
         isOk = true;
         setVisible(false);
         dispose();
@@ -188,11 +207,12 @@ public class RadialRasterDialog extends javax.swing.JDialog implements PanelMap.
 
     private void layerComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_layerComboBoxActionPerformed
         layer = (BinRasterLayer) layerComboBox.getSelectedItem();
-        centre = RadialRasterMethod.getDefaultCentre(JTS.rectToEnv(layer.getBounds()));
+        centre = RadialSampling.getDefaultCentre(JTS.rectToEnv(layer.getBounds()));
         centreTextField.setText(centre.x + "," + centre.y);
-        maxTextField.setText(String.format(Locale.US, "%g", RadialRasterMethod.getDefaultMaxSize(JTS.rectToEnv(layer.getBounds()), centre)));
-        if(centreShape != null)
+        maxTextField.setText(String.format(Locale.US, "%g", RadialSampling.getDefaultMax(JTS.rectToEnv(layer.getBounds()), centre)));
+        if(centreShape != null) {
             centreShape.setPoint2D(new Point2D.Double(centre.x, centre.y));
+        }
     }//GEN-LAST:event_layerComboBoxActionPerformed
 
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
@@ -200,10 +220,11 @@ public class RadialRasterDialog extends javax.swing.JDialog implements PanelMap.
         mapViewer.getMap().removeShapes(Arrays.asList(centreShape));
     }//GEN-LAST:event_formWindowClosed
 
+    @Override
     public void mouseClicked(Point2D p, List<SelectableShape> shapes, MouseEvent sourceEvent, int cursorMode) {
         layer = (BinRasterLayer) layerComboBox.getSelectedItem();
         centreTextField.setText(p.getX() + "," + p.getY());
-        maxTextField.setText(String.format(Locale.US, "%g", RadialRasterMethod.getDefaultMaxSize(JTS.rectToEnv(layer.getBounds()), new Coordinate(p.getX(), p.getY()))));
+        maxTextField.setText(String.format(Locale.US, "%g", RadialSampling.getDefaultMax(JTS.rectToEnv(layer.getBounds()), new Coordinate(p.getX(), p.getY()))));
         centreShape.setPoint2D(p);
         mapViewer.getMap().fullRepaint();
     }

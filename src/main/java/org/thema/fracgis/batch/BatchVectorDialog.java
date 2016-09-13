@@ -1,17 +1,29 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.thema.fracgis.batch;
 
+package org.thema.fracgis.batch;
 
 import com.vividsolutions.jts.geom.Envelope;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import org.thema.common.param.DefaultParamEditor;
 import org.thema.data.feature.DefaultFeatureCoverage;
 import org.thema.data.feature.Feature;
@@ -20,25 +32,36 @@ import org.thema.fracgis.LayerModel;
 import org.thema.fracgis.method.vector.mono.BoxCountingMethod;
 import org.thema.fracgis.method.vector.mono.DilationMethod;
 import org.thema.fracgis.method.vector.mono.RadialMethod;
-import org.thema.fracgis.method.vector.mono.SimpleVectorMethod;
+import org.thema.fracgis.method.vector.mono.MonoVectorMethod;
 import org.thema.fracgis.method.vector.VectorMethod;
 
 /**
- *
- * @author gvuidel
+ * Dialog form for setting parameters for vector batch processing.
+ * 
+ * @author Gilles Vuidel
  */
 public class BatchVectorDialog extends javax.swing.JDialog {
 
+    /** Is user clicked on OK button ? */
     public boolean isOk = false;
-    
+    /** the vector layer containing the data */
     public FeatureLayer layer;
-    public SimpleVectorMethod method;
+    /** the selected vector method for calculating unifractal dimension */
+    public MonoVectorMethod method;
+    /** is grid partitionning ? (or from a shapefile) */
     public boolean grid;
+    /** the size of the cells of the grid. this parameter is used only if grid == true */
     public double resolution;
+    /** the partitionning layer. this parameter is used only if grid == false */
     public FeatureLayer zoneLayer;
+    /** the id field in zoneLayer. this parameter is used only if grid == false */
     public String idZone;
 
-    /** Creates new form BatchVectorDialog */
+    /** 
+     * Creates new form BatchVectorDialog 
+     * @param parent the parent frame
+     * @param model a list of vector layers
+     */
     public BatchVectorDialog(java.awt.Frame parent, LayerModel<FeatureLayer> model) {
         super(parent, true);
         initComponents();
@@ -50,6 +73,7 @@ public class BatchVectorDialog extends javax.swing.JDialog {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), cancelName);
         ActionMap actionMap = getRootPane().getActionMap();
         actionMap.put(cancelName, new AbstractAction() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 doClose();
             }
@@ -303,12 +327,12 @@ public class BatchVectorDialog extends javax.swing.JDialog {
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
         layer = (FeatureLayer) layerComboBox.getSelectedItem();
-        method = (SimpleVectorMethod) methodComboBox.getSelectedItem();
+        method = (MonoVectorMethod) methodComboBox.getSelectedItem();
         
         grid = gridRadioButton.isSelected();
-        if(grid)
+        if(grid) {
             resolution = (Double)resolSpinner.getValue();
-        else {
+        } else {
             zoneLayer = (FeatureLayer) zoneLayerComboBox.getSelectedItem();
             idZone = (String) idComboBox.getSelectedItem();
         }

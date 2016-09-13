@@ -1,8 +1,21 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 package org.thema.fracgis.estimation;
 
@@ -14,8 +27,9 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
 
 /**
- *
- * @author gvuidel
+ * Shape displaying 2 squares (or circles) representing a distance range (min, max) of a radial analysis.
+ * 
+ * @author Gilles Vuidel
  */
 public class RectangularRangeShape extends ScaleRangeShape {
 
@@ -41,6 +55,5 @@ public class RectangularRangeShape extends ScaleRangeShape {
         p.append(shape, false);
         return t.createTransformedShape(p);
     }
-    
     
 }

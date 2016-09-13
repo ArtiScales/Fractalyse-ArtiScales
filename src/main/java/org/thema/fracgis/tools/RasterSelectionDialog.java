@@ -1,11 +1,25 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+
 package org.thema.fracgis.tools;
 
 import java.awt.Color;
-import java.awt.HeadlessException;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
@@ -26,18 +40,20 @@ import org.thema.fracgis.BinRasterLayer;
 import org.thema.fracgis.LayerModel;
 
 /**
- *
- * @author gvuidel
+ * Dialog form for creating new raster layer from a part of another one.
+ * 
+ * @author Gilles Vuidel
  */
 public class RasterSelectionDialog extends javax.swing.JDialog {
 
-    MapViewer mapViewer;
-    DefaultLayer selLayer;
-    RectModShape selShape;
+    private MapViewer mapViewer;
+    private DefaultLayer selLayer;
+    private RectModShape selShape;
+    
     /**
      * Creates new dialog RasterSelectionDialog
-     * @param parent
-     * @param mapViewer
+     * @param parent the parent frame
+     * @param mapViewer the map viewer for selecting layer, defining selection area
      */
     public RasterSelectionDialog(java.awt.Frame parent, MapViewer mapViewer) {
         super(parent, false);
@@ -162,6 +178,7 @@ public class RasterSelectionDialog extends javax.swing.JDialog {
             ImageShape img = layer.getImageShape();
             AffineTransform t = img.getGrid2World().createInverse();
             Rectangle r = selShape.getJavaShape(t).getBounds();
+            r = r.intersection(new Rectangle(img.getImage().getWidth(), img.getImage().getHeight()));
             Raster selRaster = img.getImage().getData(r).createTranslatedChild(0, 0);
             BinRasterLayer l = new BinRasterLayer(layerNameTextField.getText(), new RasterShape(selRaster, 
                     img.getGrid2World().createTransformedShape(r).getBounds2D(), new RasterStyle(), true), layer.getCRS());

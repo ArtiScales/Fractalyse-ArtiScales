@@ -1,31 +1,58 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+
 package org.thema.fracgis.method.vector;
 
 import com.vividsolutions.jts.geom.Envelope;
-import java.util.TreeMap;
-import org.thema.common.param.XMLParams;
+import org.thema.common.param.ReflectObject;
 import org.thema.data.feature.Feature;
 import org.thema.data.feature.FeatureCoverage;
 import org.thema.fracgis.method.AbstractMethod;
+import org.thema.fracgis.sampling.DefaultSampling;
 
 /**
- *
- * @author gvuidel
+ * Base class for implementing fractal dimension calculation with vector data.
+ * This class is used for uni and multi fractal.
+ * 
+ * @author Gilles Vuidel
  */
 public abstract class VectorMethod extends AbstractMethod {
-    @XMLParams.NoParam
-    protected FeatureCoverage<Feature> coverage;
+    @ReflectObject.NoParam
+    private FeatureCoverage<Feature> coverage;
     
+    /**
+     * For parameter management only
+     */
     public VectorMethod() {
-        super("");
+        super("", new DefaultSampling(0, 0, 2));
     }
     
-    public VectorMethod(String inputName, FeatureCoverage coverage) {
-        super(inputName);
+    /**
+     * Initializes a new vector method
+     * @param inputName the input layer name
+     * @param sampling the scale sampling
+     * @param coverage the vector data
+     */
+    public VectorMethod(String inputName, DefaultSampling sampling, FeatureCoverage coverage) {
+        super(inputName, sampling);
         this.coverage = coverage;
+        sampling.updateSampling(coverage);
     }
     
     @Override
@@ -33,13 +60,24 @@ public abstract class VectorMethod extends AbstractMethod {
         return coverage.getEnvelope();
     }
     
+    /**
+     * Sets the input data
+     * @param inputName the input layer name
+     * @param coverage the vector data
+     */
     public void setInputData(String inputName, FeatureCoverage coverage) {
         this.inputName = inputName;
         this.coverage = coverage;
         
-        updateParams();
+        getSampling().updateSampling(coverage);
+    }
+
+    /**
+     * @return the input vector data
+     */
+    public FeatureCoverage<Feature> getCoverage() {
+        return coverage;
     }
     
-    protected abstract void updateParams();
     
 }

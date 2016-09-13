@@ -1,7 +1,22 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+
 package org.thema.fracgis.method.vector.mono;
 
 import com.vividsolutions.jts.geom.*;
@@ -16,99 +31,88 @@ import java.util.concurrent.CancellationException;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.ProgressBar;
 import org.thema.common.parallel.SimpleParallelTask;
-import org.thema.common.param.XMLParams;
+import org.thema.common.param.ReflectObject;
 import org.thema.data.feature.Feature;
 import org.thema.data.feature.FeatureCoverage;
 import org.thema.fracgis.estimation.RectangularRangeShape;
 import org.thema.fracgis.method.MethodLayers;
-import org.thema.fracgis.method.MonoMethod;
+import org.thema.fracgis.sampling.RadialSampling;
 
 /**
- *
- * @author gvuidel
+ * Radial analysis on vector data.
+ * 
+ * @author Gilles Vuidel
  */
-public class RadialMethod extends SimpleVectorMethod {
+public class RadialMethod extends MonoVectorMethod {
 
-    @XMLParams.NoParam
+    @ReflectObject.NoParam
     private Coordinate centre = null;
     
-    private double minSize;
-    private double maxSize = 0;
-    private double stepSize = 1;
     private int shape = BufferParameters.CAP_ROUND;    
         
     /**
      * For parameter management only
      */
     public RadialMethod() {
-        super();
     }
     
-    public RadialMethod(String inputName, FeatureCoverage coverage, Coordinate centre, double min, double max, double step, int cap) {
-        super(inputName, coverage);
-
-        this.centre = centre;
-        this.minSize = min;
-        this.maxSize = max;
-        this.stepSize = step;
-        this.shape = cap;
-        
-        updateParams();
-    }
-
-    @Override
-    protected final void updateParams() {
-        if(centre == null)
-            centre = getDefaultCentre(coverage.getEnvelope());
-        if(maxSize == 0)
-            maxSize = getDefaultMax(coverage.getEnvelope(), centre);
-        
-        if(minSize > maxSize)
-            throw new IllegalArgumentException("Min is greater than max !");
-        if(!coverage.getEnvelope().contains(centre))
+    /**
+     * Creates a new radial analysis for vector data.
+     * @param inputName the input data layer name 
+     * @param sampling the scale sampling
+     * @param coverage the input vector data
+     * @param centre the starting point
+     * @param cap specifies the buffer geometry that will be created. The styles provided are:
+     *  - BufferOp.CAP_ROUND (default)
+     *  - BufferOp.CAP_SQUARE
+     */
+    public RadialMethod(String inputName, RadialSampling sampling, FeatureCoverage coverage, Coordinate centre, int cap) {
+        super(inputName, sampling, coverage);
+        if(!coverage.getEnvelope().contains(centre)) {
             throw new IllegalArgumentException("Centre is outside !");
+        }
+        this.centre = centre;
+        this.shape = cap;
     }
     
-    
-
     @Override
-    public void execute(ProgressBar monitor, boolean threaded) {
+    public void execute(ProgressBar monitor, boolean parallel) {
         curve = new TreeMap<>();
         final Point p = new GeometryFactory().createPoint(centre);
-        List<Double> radius = new ArrayList<>();
-        for(double d = minSize/2; d <= maxSize/2; d+=stepSize/2)
-            radius.add(d);
-        SimpleParallelTask<Double> task = new SimpleParallelTask<Double>(radius, monitor) {
+        List<Double> sizes = new ArrayList<>(getSampling().getValues());
+        SimpleParallelTask<Double> task = new SimpleParallelTask<Double>(sizes, monitor) {
             @Override
-            protected void executeOne(Double r) {
-                Geometry buf = p.buffer(r, BufferParameters.DEFAULT_QUADRANT_SEGMENTS, shape);
-                List<Feature> features = coverage.getFeaturesIn(buf);
+            protected void executeOne(Double d) {
+                Geometry buf = p.buffer(d/2, BufferParameters.DEFAULT_QUADRANT_SEGMENTS, shape);
+                List<Feature> features = getCoverage().getFeaturesIn(buf);
                 double area = 0;
-                for(Feature f : features)
+                for(Feature f : features) {
                     area += f.getGeometry().intersection(buf).getArea();
+                }
                 synchronized(RadialMethod.this) {
-                    curve.put(2*r, area);
+                    curve.put(d, area);
                 }
             }
         };
         
-        if(threaded)
+        if(parallel) {
             new ParallelFExecutor(task).executeAndWait();
-        else
+        } else {
             new ParallelFExecutor(task, 1).executeAndWait();
-        
-        if(task.isCanceled())
+        }
+        if(task.isCanceled()) {
             throw new CancellationException();
+        }
     }
     
     @Override
     public int getDimSign() {
         return 1;
     }
-
+    
     @Override
-    public String getParamsName() {
-        return String.format(Locale.US, "cx%g_cy%g_min%g_max%g_step%g", centre!=null?centre.x:0.0, centre!=null?centre.y:0.0, minSize, maxSize, stepSize);
+    public String getParamString() {
+        return String.format(Locale.US, "cx%g_cy%g_", centre!=null?centre.x:0.0, centre!=null?centre.y:0.0) + super.getParamString();
     }
     
     @Override
@@ -119,18 +123,10 @@ public class RadialMethod extends SimpleVectorMethod {
     @Override
     public MethodLayers getGroupLayer() {
         MethodLayers groupLayer = super.getGroupLayer(); 
-        RectangularRangeShape rangeShape = new RectangularRangeShape(new Point2D.Double(centre.x, centre.y), 0, maxSize);
+        RectangularRangeShape rangeShape = new RectangularRangeShape(new Point2D.Double(centre.x, centre.y), 0, getSampling().getMaxSize());
         rangeShape.setShape(new Ellipse2D.Double());
         groupLayer.setScaleRangeShape(rangeShape);
         return groupLayer;
     }
     
-    public static Coordinate getDefaultCentre(Envelope env) {
-        return env.centre();
-    }
-    
-    public static double getDefaultMax(Envelope env, Coordinate centre) {
-        return 2*Math.min(Math.min(env.getMaxX() - centre.x, env.getMaxY() - centre.y), Math.min(centre.x - env.getMinX(), centre.y - env.getMinY())); 
-    }
-
 }

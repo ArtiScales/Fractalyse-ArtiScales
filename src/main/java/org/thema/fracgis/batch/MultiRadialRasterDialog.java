@@ -1,13 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * CorrelationDialog.java
- *
- * Created on 26 févr. 2010, 16:57:09
- */
 
 package org.thema.fracgis.batch;
 
@@ -19,19 +27,30 @@ import org.thema.fracgis.estimation.DirectEstimation;
 
 /**
  *
- * @author gvuidel
+ * @author Gilles Vuidel
  */
 public class MultiRadialRasterDialog extends javax.swing.JDialog {
 
+    /** Is user clicked on OK button ? */
     public boolean isOk = false;
+    /** the selected binary raster layer */
     public BinRasterLayer layer;
+    /** the max size of the radial analysis */
     public double maxSize;
+    /** calculates the confindence interval for each estimation ? */
     public boolean confidenceInterval;
+    /** if true the max size is calculated for each analysis based on main inflexion point of the scaling behaviour */
     public boolean autoThreshold;
+    /** the minimum max size. used only if autoThreshold == true */
     public double minThreshold;
+    /** index of the non linear model used for the estimation */
     public int indModel;
 
-    /** Creates new form CorrelationDialog */
+    /** 
+     * Creates new form MultiRadialRasterDialog 
+     * @param parent the parent frame
+     * @param model the list of binary raster layers
+     */
     public MultiRadialRasterDialog(java.awt.Frame parent, LayerModel model) {
         super(parent, true);
         initComponents();

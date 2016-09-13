@@ -1,7 +1,22 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+
 package org.thema.fracgis.tools;
 
 import java.util.Collection;
@@ -9,19 +24,22 @@ import javax.swing.JOptionPane;
 import org.thema.data.feature.Feature;
 import org.thema.drawshape.layer.DefaultGroupLayer;
 import org.thema.drawshape.layer.FeatureLayer;
-import org.thema.drawshape.layer.Layer;
 import org.thema.drawshape.ui.MapViewer;
 import org.thema.fracgis.LayerModel;
 
 /**
- *
- * @author gvuidel
+ * Dialog form for creating new vector layer from the selected elements of another one.
+ * 
+ * @author Gilles Vuidel
  */
 public class VectorSelectionDialog extends javax.swing.JDialog {
 
-    MapViewer mapViewer;
+    private MapViewer mapViewer;
+    
     /**
-     * Creates new form VectorSelectionDialog
+     * Creates new form VectorSelectionDialog.
+     * @param parent the parent frame
+     * @param mapViewer the map viewer for selecting layer, getting selected elements and adding new layer
      */
     public VectorSelectionDialog(java.awt.Frame parent, MapViewer mapViewer) {
         super(parent, false);

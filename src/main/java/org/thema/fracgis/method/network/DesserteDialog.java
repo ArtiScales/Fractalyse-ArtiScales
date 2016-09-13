@@ -1,13 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * DesserteDialog.java
- *
- * Created on 4 févr. 2010, 11:08:40
- */
 
 package org.thema.fracgis.method.network;
 
@@ -22,7 +30,6 @@ import org.thema.common.swing.TaskMonitor;
 import org.thema.drawshape.PanelMap;
 import org.thema.drawshape.PanelMap.ShapeMouseListener;
 import org.thema.drawshape.SelectableShape;
-import org.thema.data.feature.Feature;
 import org.thema.drawshape.layer.DefaultGroupLayer;
 import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.drawshape.ui.MapViewer;
@@ -31,14 +38,19 @@ import org.thema.fracgis.SpatialGraphLayer;
 import org.thema.graph.SpatialGraph;
 
 /**
- *
- * @author gvuidel
+ * Dialog form for computing "desserte" analysis.
+ * 
+ * @author Gilles Vuidel
  */
 public class DesserteDialog extends javax.swing.JDialog implements ShapeMouseListener {
 
-    MapViewer viewer;
+    private MapViewer viewer;
 
-    /** Creates new form DesserteDialog */
+    /** 
+     * Creates new form DesserteDialog
+     * @param parent the parent frame 
+     * @param viewer the map viewer for point selection
+     */
     public DesserteDialog(java.awt.Frame parent, MapViewer viewer) {
         super(parent, false);
         initComponents();
@@ -189,9 +201,10 @@ public class DesserteDialog extends javax.swing.JDialog implements ShapeMouseLis
         viewer.removeShapeMouseListener(this);
 
         new Thread(new Runnable() {
+            @Override
             public void run() {
                 DesserteMethod method = new DesserteMethod(layer.getName(), graph, new GeometryFactory().createPoint(new Coordinate(cx, cy)),
-                        new ArrayList<Feature>(((FeatureLayer)buildComboBox.getSelectedItem()).getFeatures()));
+                        new ArrayList<>(((FeatureLayer)buildComboBox.getSelectedItem()).getFeatures()));
 
                 method.execute(new TaskMonitor(DesserteDialog.this, "Desserte network", "", 0, 100), true);
                 //new EstimationFrame(null, method.getEstimation()).setVisible(true);
@@ -206,6 +219,7 @@ public class DesserteDialog extends javax.swing.JDialog implements ShapeMouseLis
         viewer.removeShapeMouseListener(this);
     }//GEN-LAST:event_cancelButtonActionPerformed
 
+    @Override
     public void mouseClicked(Point2D p, List<SelectableShape> shapes, MouseEvent sourceEvent, int cursorMode) {
         xTextField.setText(""+p.getX());
         yTextField.setText(""+p.getY());

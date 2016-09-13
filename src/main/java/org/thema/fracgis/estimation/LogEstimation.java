@@ -1,7 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 package org.thema.fracgis.estimation;
 
@@ -19,31 +33,41 @@ import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.Range;
 import org.jfree.data.xy.XYSeries;
-import org.thema.fracgis.method.AbstractMethod;
 import org.thema.fracgis.method.MonoMethod;
 
 /**
- *
- * @author gvuidel
+ * Fractal dimension estimation for log linear model : log(y) = d*log(x)+b.
+ * This is the default estimator for fractal dimension used in most cases.
+ * 
+ * @author Gilles Vuidel
  */
-public class LogEstimation extends AbstractEstimation{
+public class LogEstimation extends AbstractEstimation {
 
-    transient SimpleRegression regression;
+    private transient SimpleRegression regression;
 
+    /**
+     * Calculates a new estimation using the resulting curve of the given unifractal method.
+     * 
+     * @param method the unifractal method
+     */
     public LogEstimation(MonoMethod method) {
         super(method);
         Iterator<Double> it = curve.keySet().iterator();
-        while(it.hasNext())
-            if(curve.get(it.next()) <= 0)
+        while(it.hasNext()) {
+            if(curve.get(it.next()) <= 0) {
                 it.remove();
+            }
+        }
         range = new Range(curve.firstKey(), curve.lastKey());
         estimate();
     }
 
+    @Override
     public double getDimension() {
         return method.getDimSign() * regression.getSlope();
     }
 
+    @Override
     public double getR2() {
         return regression.getRSquare();
     }
@@ -64,6 +88,7 @@ public class LogEstimation extends AbstractEstimation{
         }
     }
     
+    @Override
     public double[] getBootStrapConfidenceInterval() {
         ArrayList<Entry<Double, Double>> init = new ArrayList(getRangeCurve().entrySet());
         DescriptiveStatistics stat = new DescriptiveStatistics();
@@ -79,6 +104,7 @@ public class LogEstimation extends AbstractEstimation{
         return new double[] {stat.getPercentile(2.5), stat.getPercentile(97.5)};
     }
 
+    @Override
     public double[] getCoef() {
         return new double[] {regression.getSlope(), regression.getIntercept()};
     }
@@ -91,6 +117,7 @@ public class LogEstimation extends AbstractEstimation{
         return plot;
     }
 
+    @Override
     public double getEstimValue(double x) {
         return Math.exp(regression.predict(Math.log(x)));
     }
@@ -103,33 +130,45 @@ public class LogEstimation extends AbstractEstimation{
         return serie;
     }
 
+    @Override
     public String getResultInfo() {
         double[] inter = getBootStrapConfidenceInterval();
         return String.format("Dimension : %.4g\nb : %g\n\nR2 : %g\np-value : %g\nConfidence (95%%): [%.4g - %.4g]\nBootstrap confidence : [%.4g - %.4g]", getDimension(), regression.getIntercept(),
                 getR2(), getSignificance(), getDimension() - getConfidenceInterval(), getDimension() + getConfidenceInterval(), inter[0], inter[1]);
     }
 
+    @Override
     public String getParamInfo() {
         return String.format(Locale.US, "b%g", regression.getIntercept());
     }
 
+    @Override
     public final void estimate() {
         regression = new SimpleRegression();
-        for(Double x : getRangeCurve().keySet())
+        for(Double x : getRangeCurve().keySet()) {
             regression.addData(Math.log(x), Math.log(curve.get(x)));
+        }
     }
 
+    @Override
     public List getModels() {
         return Arrays.asList(getModel());
     }
 
+    @Override
     public String getModel() {
         return "Log(y) = D * Log(x) + b";
     }
     
+    /**
+     * No-op method. There is only one model.
+     * @param indModel 
+     */
+    @Override
     public void setModel(int indModel) {
     }
     
+    @Override
     public EstimationFactory.Type getType() {
         return EstimationFactory.Type.LOG;
     }
