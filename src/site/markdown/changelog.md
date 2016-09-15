@@ -1,5 +1,9 @@
 ## Changelog
 
+##### 0.6.1 (15/09/2016)
+- Points and lines vector data wasn't supported for Radial and MultiFracBox methods
+- Dilation vector : better accuracy of the reference size
+
 ##### 0.6 (13/09/2016)
 - Add wavelet multifractal method
 - Set default scaling to geometric serie for all methods but radial

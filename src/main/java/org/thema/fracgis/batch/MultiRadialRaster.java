@@ -28,7 +28,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
-import org.jfree.data.xy.XYSeries;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.ProgressBar;
 import org.thema.common.parallel.SimpleParallelTask;

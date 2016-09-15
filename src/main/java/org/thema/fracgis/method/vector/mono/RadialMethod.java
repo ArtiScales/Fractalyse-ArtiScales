@@ -78,6 +78,7 @@ public class RadialMethod extends MonoVectorMethod {
     @Override
     public void execute(ProgressBar monitor, boolean parallel) {
         curve = new TreeMap<>();
+        
         final Point p = new GeometryFactory().createPoint(centre);
         List<Double> sizes = new ArrayList<>(getSampling().getValues());
         SimpleParallelTask<Double> task = new SimpleParallelTask<Double>(sizes, monitor) {
@@ -85,12 +86,18 @@ public class RadialMethod extends MonoVectorMethod {
             protected void executeOne(Double d) {
                 Geometry buf = p.buffer(d/2, BufferParameters.DEFAULT_QUADRANT_SEGMENTS, shape);
                 List<Feature> features = getCoverage().getFeaturesIn(buf);
-                double area = 0;
+                double sum = 0;
                 for(Feature f : features) {
-                    area += f.getGeometry().intersection(buf).getArea();
+                    if(f.getGeometry() instanceof Puntal) {
+                        sum += f.getGeometry().intersection(buf).getNumGeometries();
+                    } else if(f.getGeometry() instanceof Lineal) {
+                        sum += f.getGeometry().intersection(buf).getLength();
+                    } else {
+                        sum += f.getGeometry().intersection(buf).getArea();
+                    } 
                 }
                 synchronized(RadialMethod.this) {
-                    curve.put(d, area);
+                    curve.put(d, sum);
                 }
             }
         };

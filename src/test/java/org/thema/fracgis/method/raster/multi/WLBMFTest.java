@@ -17,7 +17,7 @@
  */
 
 
-package org.thema.fracgis;
+package org.thema.fracgis.method.raster.multi;
 
 import org.thema.fracgis.method.raster.multi.WLBMF;
 import org.apache.commons.math3.linear.MatrixUtils;

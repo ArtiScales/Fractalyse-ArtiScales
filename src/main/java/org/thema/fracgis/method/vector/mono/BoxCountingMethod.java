@@ -248,7 +248,7 @@ public class BoxCountingMethod extends MonoVectorMethod {
         curve = new TreeMap<>();
         
         Envelope env = new Envelope(getDataEnvelope());
-        env.init(env.getMinX()-sizes.last()*1.01, env.getMaxX(), env.getMinY()-sizes.last()*1.01, env.getMaxY());
+        env.init(env.getMinX()-sizes.last()*1.001, env.getMaxX(), env.getMinY()-sizes.last()*1.001, env.getMaxY());
         for(double size : sizes) {
             List<SquareGrid> gridSize = new ArrayList<>();
             int nx = (int)Math.ceil(Math.ceil(env.getWidth() / (double)size) / 40000.0);

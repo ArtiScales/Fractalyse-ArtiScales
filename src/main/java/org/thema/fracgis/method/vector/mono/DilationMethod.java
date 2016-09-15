@@ -19,8 +19,10 @@
 
 package org.thema.fracgis.method.vector.mono;
 
+import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.operation.buffer.BufferOp;
 import com.vividsolutions.jts.operation.buffer.BufferParameters;
 import java.awt.Color;
 import java.util.ArrayList;
@@ -45,6 +47,8 @@ import org.thema.fracgis.sampling.DefaultSampling;
 public class DilationMethod extends MonoVectorMethod {
     
     private boolean stopOne;
+    
+    private BufferParameters bufParam = new BufferParameters();
     
     @ReflectObject.NoParam
     private TreeMap<Double, Double> clusters;
@@ -74,6 +78,14 @@ public class DilationMethod extends MonoVectorMethod {
     public DilationMethod() {
     }
 
+    public BufferParameters getBufParam() {
+        return bufParam;
+    }
+
+    public void setBufParam(BufferParameters bufParam) {
+        this.bufParam = bufParam;
+    }
+
     @Override
     public void execute(ProgressBar monitor, boolean parallel) {
         double radius = getSampling().getMinSize() / 2;
@@ -81,6 +93,7 @@ public class DilationMethod extends MonoVectorMethod {
         for(Feature f : getCoverage().getFeatures()) {
             geoms.add(f.getGeometry());
         }
+        Geometry refPoint = new GeometryFactory().createPoint(new Coordinate(0, 0));
         Geometry geom = new GeometryFactory().buildGeometry(geoms);
         Geometry bufGeom = geom;
         curve = new TreeMap<>();
@@ -99,11 +112,11 @@ public class DilationMethod extends MonoVectorMethod {
             }
             monitor.setNote("Distance : " + (radius*2));
             if(parallel) {
-                bufGeom = BufferForkJoinTask.threadedBuffer(geom, radius);
+                bufGeom = BufferForkJoinTask.threadedBuffer(geom, radius, bufParam);
             } else {
-                bufGeom = BufferForkJoinTask.buffer(geom, radius, BufferParameters.DEFAULT_QUADRANT_SEGMENTS);
+                bufGeom = BufferForkJoinTask.buffer(geom, radius, bufParam);
             }
-            double refArea = Math.PI*Math.pow(radius, 2);
+            double refArea = BufferOp.bufferOp(refPoint, radius, bufParam).getArea();
             curve.put(2*radius, bufGeom.getArea() / refArea);
             clusters.put(2*radius, (double)bufGeom.getNumGeometries());
             

@@ -23,6 +23,9 @@ import org.thema.fracgis.method.QMonoMethod;
 import org.thema.fracgis.method.MultiFracMethod;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Lineal;
+import com.vividsolutions.jts.geom.Puntal;
 import java.awt.image.DataBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,7 +52,8 @@ import org.thema.msca.operation.SimpleCoverageOperation;
 public class MultiFracBoxCountingVectorMethod extends VectorMethod implements MultiFracMethod {
     
     private HashMap<Double, List<SquareGrid>> grids;
-    private double totalArea;
+    private double total;
+    private int geomType; 
     
     private transient TreeMap<Double, TreeMap<Double, Double>> cacheCurves;
     
@@ -66,14 +70,31 @@ public class MultiFracBoxCountingVectorMethod extends VectorMethod implements Mu
 
     @Override
     public void execute(ProgressBar monitor, boolean parallel) {
-        totalArea = 0;
+        total = 0;
+        Geometry g = getCoverage().getFeatures().get(0).getGeometry();
+        if(g instanceof Puntal) {
+            geomType = 1;
+        } else if(g instanceof Lineal) {
+            geomType = 2;
+        } else {
+            geomType = 3;
+        }  
         for(Feature f : getCoverage().getFeatures()) {
-            totalArea += f.getGeometry().getArea();
+            switch(geomType) {
+                case 1:
+                    total += f.getGeometry().getNumGeometries();
+                    break;
+                case 2:
+                    total += f.getGeometry().getLength();
+                    break;
+                default:
+                    total += f.getGeometry().getArea();
+            }
         }
         SortedSet<Double> sizes = getSampling().getValues();
         grids = new HashMap<>();
         Envelope env = new Envelope(getDataEnvelope());
-        env.init(env.getMinX()-sizes.last()*1.01, env.getMaxX(), env.getMinY()-sizes.last()*1.01, env.getMaxY());
+        env.init(env.getMinX()-sizes.last()*1.001, env.getMaxX(), env.getMinY()-sizes.last()*1.001, env.getMaxY());
         for(double size : sizes) {
             List<SquareGrid> gridSize = new ArrayList<>();
             int nx = (int)Math.ceil(Math.ceil(env.getWidth() / (double)size) / 40000.0);
@@ -86,7 +107,7 @@ public class MultiFracBoxCountingVectorMethod extends VectorMethod implements Mu
                 SquareGrid grid = null;
                 for(int y = 0; y < ny; y++) {
                     grid = new SquareGrid(start, size, w, h);
-                    grid.addLayer("area", DataBuffer.TYPE_FLOAT, 0.0);
+                    grid.addLayer("sum", DataBuffer.TYPE_FLOAT, 0.0);
                     start.y = grid.getEnvelope().getMaxY();
                     gridSize.add(grid);
                 }
@@ -100,7 +121,18 @@ public class MultiFracBoxCountingVectorMethod extends VectorMethod implements Mu
         for(double size : sizes) {
             monitor.setNote("Resolution : " + size);
             for(SquareGrid grid : grids.get(size)) {     
-                SimpleCoverageOperation op = new SimpleCoverageOperation(SimpleCoverageOperation.AREA, "area", getCoverage());
+                SimpleCoverageOperation op;
+                switch(geomType) {
+                    case 1:
+                        op = new SimpleCoverageOperation(SimpleCoverageOperation.NBFEATURE, "sum", getCoverage());
+                        break;
+                    case 2:
+                        op = new SimpleCoverageOperation(SimpleCoverageOperation.LENGTH, "sum", getCoverage());
+                        break;
+                    default:
+                        op = new SimpleCoverageOperation(SimpleCoverageOperation.AREA, "sum", getCoverage());
+                }
+                
                 op.setMonitor(monitor.getSubProgress(100.0/(grids.get(size).size())));
                 if(parallel) {
                     grid.executeThreaded(op);
@@ -157,12 +189,12 @@ public class MultiFracBoxCountingVectorMethod extends VectorMethod implements Mu
         for(Double size : grids.keySet()) {
             double [] sum = new double[qList.size()];
             for(SquareGrid grid : grids.get(size)) {
-                DataBuffer buf = grid.getRaster("area").getDataBuffer();
+                DataBuffer buf = grid.getRaster("sum").getDataBuffer();
                 for(int j = 0; j < buf.getSize(); j++) {
                     float val = buf.getElemFloat(j);
                     if(val > 0) {
                         for(int k = 0; k < sum.length; k++) {
-                            sum[k] += Math.pow(val / totalArea, qList.get(k));
+                            sum[k] += Math.pow(val / total, qList.get(k));
                         }
                     }
                 }
