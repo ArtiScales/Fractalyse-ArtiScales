@@ -146,6 +146,11 @@
             <name>ThéMA libs Repository</name>
             <url>http://themalibs.sourceforge.net/repository/</url>
         </repository>
+        <repository>
+            <id>thema-dev</id>
+            <name>ThéMA libs Repository</name>
+            <url>http://dev.umrthema.univ-fcomte.fr/repository/</url>
+        </repository>
     </repositories>
     <organization>
         <name>Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté</name>
