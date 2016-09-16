@@ -59,7 +59,7 @@ public class LayerModel<T extends Layer> extends AbstractListModel implements Co
                 }
                 layers.add((T)l);
             } catch(ClassCastException ex) {
-                Logger.getLogger(LayerModel.class.getName()).fine("Layer " + l.getName() + " not added.");
+                Logger.getLogger(LayerModel.class.getName()).fine("Layer " + l.getName() + " not added : " + ex);
             }
             if(l instanceof GroupLayer) {
                 init((GroupLayer) l);

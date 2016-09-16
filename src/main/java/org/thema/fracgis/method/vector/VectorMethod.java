@@ -39,8 +39,8 @@ public abstract class VectorMethod extends AbstractMethod {
     /**
      * For parameter management only
      */
-    public VectorMethod() {
-        super("", new DefaultSampling(0, 0, 2));
+    public VectorMethod(DefaultSampling sampling) {
+        super("", sampling);
     }
     
     /**

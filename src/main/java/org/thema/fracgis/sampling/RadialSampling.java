@@ -51,6 +51,10 @@ public class RadialSampling extends DefaultSampling {
         this.centre = centre;
     }
 
+    public Coordinate getCentre() {
+        return centre;
+    }
+    
     @Override
     public double getDefaultMax(Envelope env) {
         if(centre == null) {
@@ -77,4 +81,5 @@ public class RadialSampling extends DefaultSampling {
     public static double getDefaultMax(Envelope env, Coordinate centre) {
         return 2*Math.min(Math.min(env.getMaxX() - centre.x, env.getMaxY() - centre.y), Math.min(centre.x - env.getMinX(), centre.y - env.getMinY())); 
     }
+
 }

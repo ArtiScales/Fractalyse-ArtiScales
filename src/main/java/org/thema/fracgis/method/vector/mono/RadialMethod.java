@@ -44,34 +44,23 @@ import org.thema.fracgis.sampling.RadialSampling;
  * @author Gilles Vuidel
  */
 public class RadialMethod extends MonoVectorMethod {
-
-    @ReflectObject.NoParam
-    private Coordinate centre = null;
     
     private int shape = BufferParameters.CAP_ROUND;    
-        
-    /**
-     * For parameter management only
-     */
-    public RadialMethod() {
-    }
     
     /**
      * Creates a new radial analysis for vector data.
      * @param inputName the input data layer name 
      * @param sampling the scale sampling
      * @param coverage the input vector data
-     * @param centre the starting point
      * @param cap specifies the buffer geometry that will be created. The styles provided are:
      *  - BufferOp.CAP_ROUND (default)
      *  - BufferOp.CAP_SQUARE
      */
-    public RadialMethod(String inputName, RadialSampling sampling, FeatureCoverage coverage, Coordinate centre, int cap) {
+    public RadialMethod(String inputName, RadialSampling sampling, FeatureCoverage coverage, int cap) {
         super(inputName, sampling, coverage);
-        if(!coverage.getEnvelope().contains(centre)) {
+        if(!coverage.getEnvelope().contains(sampling.getCentre())) {
             throw new IllegalArgumentException("Centre is outside !");
         }
-        this.centre = centre;
         this.shape = cap;
     }
     
@@ -79,7 +68,7 @@ public class RadialMethod extends MonoVectorMethod {
     public void execute(ProgressBar monitor, boolean parallel) {
         curve = new TreeMap<>();
         
-        final Point p = new GeometryFactory().createPoint(centre);
+        final Point p = new GeometryFactory().createPoint(getCentre());
         List<Double> sizes = new ArrayList<>(getSampling().getValues());
         SimpleParallelTask<Double> task = new SimpleParallelTask<Double>(sizes, monitor) {
             @Override
@@ -119,7 +108,7 @@ public class RadialMethod extends MonoVectorMethod {
     
     @Override
     public String getParamString() {
-        return String.format(Locale.US, "cx%g_cy%g_", centre!=null?centre.x:0.0, centre!=null?centre.y:0.0) + super.getParamString();
+        return String.format(Locale.US, "cx%g_cy%g_", getCentre()!=null?getCentre().x:0.0, getCentre()!=null?getCentre().y:0.0) + super.getParamString();
     }
     
     @Override
@@ -130,10 +119,14 @@ public class RadialMethod extends MonoVectorMethod {
     @Override
     public MethodLayers getGroupLayer() {
         MethodLayers groupLayer = super.getGroupLayer(); 
-        RectangularRangeShape rangeShape = new RectangularRangeShape(new Point2D.Double(centre.x, centre.y), 0, getSampling().getMaxSize());
+        RectangularRangeShape rangeShape = new RectangularRangeShape(new Point2D.Double(getCentre().x, getCentre().y), 0, getSampling().getMaxSize());
         rangeShape.setShape(new Ellipse2D.Double());
         groupLayer.setScaleRangeShape(rangeShape);
         return groupLayer;
+    }
+    
+    public Coordinate getCentre() {
+        return ((RadialSampling)getSampling()).getCentre();
     }
     
 }

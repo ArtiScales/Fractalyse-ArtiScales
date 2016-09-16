@@ -84,7 +84,7 @@ public abstract class AbstractEstimation implements Estimation {
         double precX = it.next();
         while(it.hasNext()) {
             double x = it.next();
-            serie.add((x+precX)/2, (Math.log(curve.get(x)) - Math.log(curve.get(precX)))
+            serie.add((x+precX)/2, method.getDimSign() * (Math.log(curve.get(x)) - Math.log(curve.get(precX)))
                     / (Math.log(x) - Math.log(precX)));
             precX = x;
         }

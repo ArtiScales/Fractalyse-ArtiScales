@@ -81,7 +81,10 @@ public class LocalNetworkMethod extends AbstractMethod implements MonoMethod {
 
             double end = start + DijkstraPathFinder.DIST_WEIGHTER.getWeight(edge);
             double i = Math.ceil(start/resolution)*resolution;
-            addVal(2*i, i-start);
+            if(i > 0) {
+                addVal(2*i, i-start);
+            }
+            i+=resolution;
             for(;i < end; i+=resolution) {
                 addVal(2*i, resolution);
             }

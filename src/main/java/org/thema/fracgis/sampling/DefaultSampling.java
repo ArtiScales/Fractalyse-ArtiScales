@@ -128,22 +128,22 @@ public class DefaultSampling implements Sampling {
         if(maxSize <= 0) {
             maxSize = getDefaultMax(env);
         }
+        if(maxSize <= minSize) {
+            maxSize = getNext(minSize);
+        }
     }
     
     /**
      * Update the min size and the max size (if maxsize == 0) based on the given raster data.
      * @param img the raster image
-     * @param env the envelope of the raster in world coordinate
+     * @param env the envelope of the raster in world coordinate or null
      */
     public void updateSampling(RenderedImage img, Envelope env) {
-        discrete = true;
-
-        resolution = env.getWidth() / img.getWidth();
-        if(minSize <= resolution) {
-            minSize = resolution;
+        if(env == null) {
+            updateSampling(1, new Envelope(0, img.getWidth(), 0, img.getHeight()));
+        } else {
+            updateSampling(env.getWidth() / img.getWidth(), env);
         }
-        
-        updateMaxSize(env);
     }
     
     /**
@@ -151,14 +151,19 @@ public class DefaultSampling implements Sampling {
      * @param grid the raster coverage
      */
     public void updateSampling(GridCoverage2D grid) {
+        updateSampling(grid.getEnvelope2D().getWidth() / grid.getGridGeometry().getGridRange2D().getWidth(),
+                JTS.rectToEnv(grid.getEnvelope2D()));
+    }
+    
+    private void updateSampling(double resolution, Envelope env) {
         discrete = true;
 
-        resolution = grid.getEnvelope2D().getWidth() / grid.getGridGeometry().getGridRange2D().getWidth();
+        this.resolution = resolution;
         if(minSize <= resolution) {
             minSize = resolution;
         }
         
-        updateMaxSize(JTS.rectToEnv(grid.getEnvelope2D()));
+        updateMaxSize(env);
     }
     
     /**
@@ -170,6 +175,9 @@ public class DefaultSampling implements Sampling {
         
         if(minSize <= 0) {
             minSize = getDefaultMin(cov.getFeatures());
+            if(maxSize > 0 && minSize >= maxSize) {
+                minSize = getPrevious(maxSize);
+            }
         }
         
         updateMaxSize(cov.getEnvelope());
@@ -293,7 +301,11 @@ public class DefaultSampling implements Sampling {
      * @return an estimation of the min size for this data
      */
     public double getDefaultMax(Envelope env) {
-        return Math.min(env.getWidth(), env.getHeight())/2;
+        double size = Math.min(env.getWidth(), env.getHeight())/2;
+        if(size == 0) {
+            size = 1;
+        }
+        return size;
     }
 
     /**
@@ -305,6 +317,14 @@ public class DefaultSampling implements Sampling {
             return val + coef;
         } else {
             return val * coef;
+        }
+    }
+
+    private double getPrevious(double val) {
+        if(seq == Sequence.ARITH) {
+            return val - coef;
+        } else {
+            return val / coef;
         }
     }
 

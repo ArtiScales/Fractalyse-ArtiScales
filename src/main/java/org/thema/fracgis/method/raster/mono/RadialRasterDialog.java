@@ -49,7 +49,7 @@ public class RadialRasterDialog extends javax.swing.JDialog implements PanelMap.
     /** the resulting sampling */
     public RadialSampling sampling;
     /** the starting point */
-    public Coordinate centre;
+    private  Coordinate centre;
     /** the selected layer */
     public BinRasterLayer layer;
     

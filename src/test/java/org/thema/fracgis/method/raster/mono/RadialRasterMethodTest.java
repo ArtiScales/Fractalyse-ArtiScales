@@ -52,15 +52,15 @@ public class RadialRasterMethodTest {
         System.out.println("execute");
         Coordinate centre = new Coordinate(7.5, 8.5);
         RadialSampling sampling = new RadialSampling(centre, 9);
-        RadialRasterMethod instance = new RadialRasterMethod("testPoint", sampling, Data.imgPoint, Data.env16, centre);
+        RadialRasterMethod instance = new RadialRasterMethod("testPoint", sampling, Data.imgPoint, Data.env16);
         instance.execute(new TaskMonitor.EmptyMonitor(), false);
         assertEquals(Arrays.asList(1.0, 1.0, 1.0, 1.0, 1.0), new ArrayList<>(instance.getCurve().values()));
         
-        instance = new RadialRasterMethod("testLine", sampling, Data.imgLine, Data.env16, centre);
+        instance = new RadialRasterMethod("testLine", sampling, Data.imgLine, Data.env16);
         instance.execute(new TaskMonitor.EmptyMonitor(), false);
         assertEquals(Arrays.asList(1.0, 3.0, 5.0, 7.0, 9.0), new ArrayList<>(instance.getCurve().values()));
         
-        instance = new RadialRasterMethod("testSquare", sampling, Data.imgSquare, Data.env16, centre);
+        instance = new RadialRasterMethod("testSquare", sampling, Data.imgSquare, Data.env16);
         instance.execute(new TaskMonitor.EmptyMonitor(), false);
         assertEquals(Arrays.asList(1.0, 9.0, 25.0, 49.0, 81.0), new ArrayList<>(instance.getCurve().values()));
         

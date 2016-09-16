@@ -41,6 +41,7 @@ public abstract class MonoVectorMethod extends VectorMethod implements MonoMetho
      * For parameter management only
      */
     public MonoVectorMethod() {
+        super(new DefaultSampling());
     }
 
     /**

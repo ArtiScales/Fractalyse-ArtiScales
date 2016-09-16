@@ -36,7 +36,7 @@ import org.thema.common.param.ReflectObject;
  */
 public abstract class AbstractMethod implements Method {
 
-    private DefaultSampling scaling;
+    private DefaultSampling sampling;
     
     @ReflectObject.NoParam
     protected String inputName;
@@ -47,16 +47,16 @@ public abstract class AbstractMethod implements Method {
     /**
      * Initializes a new method 
      * @param inputName the input layer name
-     * @param scaling the default scaling
+     * @param sampling the default scaling
      */
-    public AbstractMethod(String inputName, DefaultSampling scaling) {
+    public AbstractMethod(String inputName, DefaultSampling sampling) {
         this.inputName = inputName;
-        this.scaling = scaling;
+        this.sampling = sampling;
     }
 
     @Override
     public DefaultSampling getSampling() {
-        return scaling;
+        return sampling;
     }
 
     @Override
@@ -98,7 +98,7 @@ public abstract class AbstractMethod implements Method {
 
     @Override
     public String getParamString() {
-        return scaling.getParamString();
+        return sampling.getParamString();
     }
     
     /**

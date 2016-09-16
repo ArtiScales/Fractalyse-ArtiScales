@@ -16,7 +16,6 @@
  */
 package org.thema.fracgis.method.vector.mono;
 
-import org.thema.fracgis.method.raster.mono.*;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.operation.buffer.BufferParameters;
 import java.io.IOException;
@@ -28,7 +27,9 @@ import static org.junit.Assert.*;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.fracgis.Data;
+import org.thema.fracgis.sampling.DefaultSampling;
 import org.thema.fracgis.sampling.RadialSampling;
+import org.thema.fracgis.sampling.Sampling;
 import org.thema.parallel.ParallelExecutor;
 
 /**
@@ -52,19 +53,18 @@ public class RadialMethodTest {
     @Test
     public void testExecute() {
         System.out.println("execute");
-        Coordinate centre = new Coordinate(0, 0);
-        RadialSampling sampling = new RadialSampling(centre, 5);
-        RadialMethod instance = new RadialMethod("testPoint", sampling, Data.covPoint, centre, BufferParameters.CAP_SQUARE);
+        RadialSampling sampling = new RadialSampling(new Coordinate(0, 0), 5);
+        RadialMethod instance = new RadialMethod("testPoint", sampling, Data.covPoint, BufferParameters.CAP_SQUARE);
         instance.execute(new TaskMonitor.EmptyMonitor(), false);
         assertEquals(Arrays.asList(1.0, 1.0, 1.0, 1.0, 1.0), new ArrayList<>(instance.getCurve().values()));
         
-        centre = new Coordinate(0, 32);
-        instance = new RadialMethod("testLine", sampling, Data.covLine, centre, BufferParameters.CAP_SQUARE);
+        sampling = new RadialSampling(new Coordinate(0, 32), 5);
+        instance = new RadialMethod("testLine", sampling, Data.covLine, BufferParameters.CAP_SQUARE);
         instance.execute(new TaskMonitor.EmptyMonitor(), false);
         assertEquals(Arrays.asList(1.0, 2.0, 3.0, 4.0, 5.0), new ArrayList<>(instance.getCurve().values()));
         
-        centre = new Coordinate(32, 32);
-        instance = new RadialMethod("testSquare", sampling, Data.covSquare, centre, BufferParameters.CAP_SQUARE);
+        sampling = new RadialSampling(new DefaultSampling(1, 5, 1, Sampling.Sequence.ARITH), new Coordinate(32, 32));
+        instance = new RadialMethod("testSquare", sampling, Data.covSquare, BufferParameters.CAP_SQUARE);
         instance.execute(new TaskMonitor.EmptyMonitor(), false);
         assertEquals(Arrays.asList(1.0, 4.0, 9.0, 16.0, 25.0), new ArrayList<>(instance.getCurve().values()));
     }

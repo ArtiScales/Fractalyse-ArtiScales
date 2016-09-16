@@ -42,36 +42,22 @@ import org.thema.fracgis.sampling.RadialSampling;
  */
 public class RadialRasterMethod extends RasterMethod implements MonoMethod {
     
-    private Coordinate centre = null;
-    
     private TreeMap<Double, Double> curve;
-    
-    /**
-     * Constructor for data in pixel unit (no world envelope supplied)
-     * @param inputName the input layer name (must be a binary raster layer)
-     * @param img the input raster data
-     * @param centre the starting point in pixel unit
-     */
-    public RadialRasterMethod(String inputName, RadialSampling scaling, RenderedImage img, Coordinate centre) {
-        super(inputName, scaling, img, new Envelope(0, img.getWidth(), 0, img.getHeight()));
-        this.centre = centre;
-    }
     
     /**
      * Constructor for data with spatial unit (world envelope)
      * @param inputName the input layer name (must be a binary raster layer)
+     * @param sampling scale sampling
      * @param img the input raster data
-     * @param centre the starting point in world coordinate
-     * @param envelope envelope of the raster data in world coordinate
+     * @param envelope envelope of the raster data in world coordinate or null
      */
-    public RadialRasterMethod(String inputName, RadialSampling scaling, RenderedImage img, Envelope envelope, Coordinate centre) {
-        super(inputName, scaling, img, envelope);
-        this.centre = centre;
+    public RadialRasterMethod(String inputName, RadialSampling sampling, RenderedImage img, Envelope envelope) {
+        super(inputName, sampling, img, envelope);
     }
     
     @Override
     public void execute(ProgressBar monitor, boolean threaded) {
-        Coordinate c = getTransform().transform(centre, new Coordinate());
+        Coordinate c = getTransform().transform(getCentre(), new Coordinate());
         SortedSet<Integer> scales = getSampling().getDiscreteValues();
         int x = (int) c.x;
         int y = (int) c.y;
@@ -122,13 +108,17 @@ public class RadialRasterMethod extends RasterMethod implements MonoMethod {
 
     @Override
     public String getParamString() {
-        return String.format(Locale.US, "cx%g_cy%g_", centre!=null?centre.x:0.0, centre!=null?centre.y:0.0) + super.getParamString();
+        return String.format(Locale.US, "cx%g_cy%g_", getCentre()!=null?getCentre().x:0.0, getCentre()!=null?getCentre().y:0.0) + super.getParamString();
     }
 
     @Override
     public MethodLayers getGroupLayer() {
         MethodLayers groupLayer = super.getGroupLayer(); 
-        groupLayer.setScaleRangeShape(new RectangularRangeShape(new Point2D.Double(centre.x, centre.y), 0, getSampling().getRealMaxSize()));
+        groupLayer.setScaleRangeShape(new RectangularRangeShape(new Point2D.Double(getCentre().x, getCentre().y), 0, getSampling().getRealMaxSize()));
         return groupLayer;
+    }
+    
+    private Coordinate getCentre() {
+        return ((RadialSampling)getSampling()).getCentre();
     }
 }

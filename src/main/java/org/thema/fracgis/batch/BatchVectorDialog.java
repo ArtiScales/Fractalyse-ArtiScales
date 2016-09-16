@@ -352,7 +352,7 @@ public class BatchVectorDialog extends javax.swing.JDialog {
 
     private void layerComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_layerComboBoxActionPerformed
         methodComboBox.setModel(new DefaultComboBoxModel(new Object[]{
-            new BoxCountingMethod(), new DilationMethod(), new RadialMethod()
+            new BoxCountingMethod(), new DilationMethod()
         }));
         methodComboBoxActionPerformed(null);
         resolSpinnerStateChanged(null);

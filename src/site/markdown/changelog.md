@@ -1,5 +1,10 @@
 ## Changelog
 
+##### 0.6.2 (16/09/2016)
+- Multiradial : geometric sampling and log estimation
+- Local network : small correction on the calculation
+- Batch vector : remove radial method
+
 ##### 0.6.1 (15/09/2016)
 - Points and lines vector data wasn't supported for Radial and MultiFracBox methods
 - Dilation vector : better accuracy of the reference size

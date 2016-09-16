@@ -4,7 +4,7 @@
 
     <groupId>org.thema</groupId>
     <artifactId>fracgis</artifactId>
-    <version>0.6.1</version>
+    <version>0.6.2</version>
     <packaging>jar</packaging>
 
     <name>FracGIS</name>
@@ -137,7 +137,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.4</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
     <repositories>
@@ -145,11 +144,6 @@
             <id>thema-sf</id>
             <name>ThéMA libs Repository</name>
             <url>http://themalibs.sourceforge.net/repository/</url>
-        </repository>
-        <repository>
-            <id>thema-dev</id>
-            <name>ThéMA libs Repository</name>
-            <url>http://dev.umrthema.univ-fcomte.fr/repository/</url>
         </repository>
     </repositories>
     <organization>

@@ -16,14 +16,9 @@
  */
 package org.thema.fracgis.method.raster.mono;
 
-import com.vividsolutions.jts.geom.Envelope;
-import java.awt.image.BufferedImage;
-import java.awt.image.WritableRaster;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import javax.imageio.ImageIO;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;

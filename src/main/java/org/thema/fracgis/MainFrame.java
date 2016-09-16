@@ -609,7 +609,7 @@ public class MainFrame extends javax.swing.JFrame {
                     return;
                 }
                 RadialMethod radMethod = new RadialMethod(dlg.layer.getName(), dlg.sampling, new DefaultFeatureCoverage(dlg.layer.getFeatures()), 
-                        dlg.centre, BufferParameters.CAP_ROUND);
+                        BufferParameters.CAP_ROUND);
                 launchMethod(radMethod);
             }
         }).start();
@@ -676,7 +676,7 @@ public class MainFrame extends javax.swing.JFrame {
                     return;
                 }
                 RadialRasterMethod radMethod = new RadialRasterMethod(dlg.layer.getName(), dlg.sampling, dlg.layer.getImageShape().getImage(), 
-                        JTS.rectToEnv(dlg.layer.getBounds()), dlg.centre);
+                        JTS.rectToEnv(dlg.layer.getBounds()));
                 launchMethod(radMethod);
             }
         }).start();
@@ -694,7 +694,7 @@ public class MainFrame extends javax.swing.JFrame {
             public void run() {
                 ProgressBar monitor = Config.getProgressBar("Multi radial...");
                 MultiRadialRaster radMethod = new MultiRadialRaster(dlg.layer.getImageShape().getImage(), 
-                        dlg.layer.getBounds(), dlg.maxSize, dlg.autoThreshold, dlg.minThreshold, dlg.indModel, dlg.confidenceInterval);
+                        JTS.rectToEnv(dlg.layer.getBounds()), dlg.maxSize, dlg.autoThreshold, dlg.minThreshold, dlg.confidenceInterval);
                 radMethod.execute(monitor);
                 
                 RasterStyle dimStyle = new RasterStyle(ColorRamp.RAMP_TEMP, 0, 2);
@@ -706,11 +706,6 @@ public class MainFrame extends javax.swing.JFrame {
                 RasterStyle r2Style = new RasterStyle(ColorRamp.RAMP_GREEN, 0, 1);
                 l = new RasterLayer("R2#", 
                         new RasterShape(radMethod.getRasterR2(), dlg.layer.getBounds(), r2Style, true), dlg.layer.getCRS());
-                l.setVisible(false);
-                gl.addLayerLast(l);
-                RasterStyle aStyle = new RasterStyle(ColorRamp.RAMP_RED);
-                l = new RasterLayer("a#", 
-                        new RasterShape(radMethod.getRasterA(), dlg.layer.getBounds(), aStyle, true), dlg.layer.getCRS());
                 l.setVisible(false);
                 gl.addLayerLast(l);
                 if(dlg.autoThreshold) {
