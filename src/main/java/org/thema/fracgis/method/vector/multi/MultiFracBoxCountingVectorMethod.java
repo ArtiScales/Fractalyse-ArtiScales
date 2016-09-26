@@ -194,13 +194,23 @@ public class MultiFracBoxCountingVectorMethod extends VectorMethod implements Mu
                     float val = buf.getElemFloat(j);
                     if(val > 0) {
                         for(int k = 0; k < sum.length; k++) {
-                            sum[k] += Math.pow(val / total, qList.get(k));
+                            double q = qList.get(k);
+                            if(q == 1) { // information dimension D1
+                                sum[k] += val / total * Math.log(val / total);
+                            } else {
+                                sum[k] += Math.pow(val / total, q);
+                            }
                         }
                     }
                 }
             }
             for(int k = 0; k < sum.length; k++) {
-                cacheCurves.get(qList.get(k)).put(size, sum[k]);
+                double q = qList.get(k);
+                if(q == 1) { // information dimension D1
+                    cacheCurves.get(q).put(size, Math.exp(sum[k]));
+                } else {
+                    cacheCurves.get(q).put(size, sum[k]);
+                }
             }
         }  
     }

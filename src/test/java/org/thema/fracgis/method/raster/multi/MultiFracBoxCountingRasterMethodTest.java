@@ -65,7 +65,8 @@ public class MultiFracBoxCountingRasterMethodTest {
         instance.execute(new TaskMonitor.EmptyMonitor(), false);
         assertEquals(Arrays.asList(256.0, 64.0, 16.0, 4.0, 1.0), new ArrayList<>(instance.getCurve(-1).values()));
         assertEquals(Arrays.asList(16.0, 8.0, 4.0, 2.0, 1.0), new ArrayList<>(instance.getCurve(0).values()));
-        assertEquals(Arrays.asList(1.0, 1.0, 1.0, 1.0, 1.0), new ArrayList<>(instance.getCurve(1).values()));
+        assertArrayEquals(new double [] {1/16.0, 1/8.0, 1/4.0, 1/2.0, 1/1.0}, 
+                ArrayUtils.toPrimitive(instance.getCurve(1).values().toArray(new Double[0])), 1e-10);
         assertEquals(Arrays.asList(1/16.0, 1/8.0, 1/4.0, 1/2.0, 1/1.0), new ArrayList<>(instance.getCurve(2).values()));
         
         instance = new MultiFracBoxCountingRasterMethod("testSquare", sampling, Data.imgSquare, Data.env16);

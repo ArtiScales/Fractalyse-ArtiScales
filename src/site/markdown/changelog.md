@@ -1,5 +1,9 @@
 ## Changelog
 
+##### 0.6.3 
+- Add log window
+- Add correlation for vector data (point geometry only)
+
 ##### 0.6.2 (16/09/2016)
 - Multiradial : geometric sampling and log estimation
 - Local network : small correction on the calculation

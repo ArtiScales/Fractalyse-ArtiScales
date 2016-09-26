@@ -32,7 +32,6 @@ import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.ProgressBar;
 import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.swing.TaskMonitor;
-import org.thema.fracgis.estimation.DirectEstimation;
 import org.thema.fracgis.estimation.Estimation;
 import org.thema.fracgis.estimation.EstimationFactory;
 import org.thema.fracgis.estimation.LogEstimation;

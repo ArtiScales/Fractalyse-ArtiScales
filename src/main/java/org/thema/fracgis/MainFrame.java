@@ -32,7 +32,7 @@ import org.thema.fracgis.method.raster.RasterMethodDialog;
 import org.thema.fracgis.method.raster.mono.DilationRasterMethod;
 import org.thema.fracgis.method.raster.mono.RadialRasterDialog;
 import org.thema.fracgis.method.raster.mono.BoxCountingRasterMethod;
-import org.thema.fracgis.method.raster.mono.CorrelationMethod;
+import org.thema.fracgis.method.raster.mono.CorrelationRasterMethod;
 import org.thema.fracgis.method.raster.mono.RadialRasterMethod;
 import org.thema.fracgis.tools.RasterizeDialog;
 import org.thema.fracgis.tools.BinarizeDialog;
@@ -67,6 +67,7 @@ import org.thema.common.RasterImage;
 import org.thema.common.Util;
 import org.thema.data.IOImage;
 import org.thema.common.ProgressBar;
+import org.thema.common.swing.LoggingDialog;
 import org.thema.common.swing.PreferencesDialog;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.DefaultFeatureCoverage;
@@ -87,6 +88,7 @@ import org.thema.fracgis.method.raster.multi.MultiFracBoxCountingRasterMethod;
 import org.thema.fracgis.method.vector.multi.MultiFracBoxCountingVectorMethod;
 import org.thema.fracgis.estimation.MultiFracEstimationFrame;
 import org.thema.fracgis.method.raster.multi.MultiFracWaveletMethod;
+import org.thema.fracgis.method.vector.mono.CorrelationMethod;
 import org.thema.fracgis.sampling.MultiFracSampling;
 import org.thema.fracgis.sampling.RasterBoxSampling;
 import org.thema.fracgis.tools.RasterSelectionDialog;
@@ -102,6 +104,8 @@ import org.thema.process.Rasterizer;
 public class MainFrame extends javax.swing.JFrame {
 
     private DefaultGroupLayer groupLayer;
+    
+    private final LoggingDialog logFrame;
 
     /** Creates new form MainFrame */
     public MainFrame() {
@@ -114,6 +118,7 @@ public class MainFrame extends javax.swing.JFrame {
         mapViewer.disableInfoPanel();
         mapViewer.getMap().setMultipleSelection(true);
         Config.setProgressBar(mapViewer.getProgressBar());
+        logFrame = new LoggingDialog(this);
     }
 
     /** This method is called from within the constructor to
@@ -132,9 +137,11 @@ public class MainFrame extends javax.swing.JFrame {
         loadRasterMenuItem = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         prefMenuItem = new javax.swing.JMenuItem();
+        logMenuItem = new javax.swing.JMenuItem();
         vectorMenu = new javax.swing.JMenu();
         boxCountingMenuItem = new javax.swing.JMenuItem();
         dilationMenuItem = new javax.swing.JMenuItem();
+        correlationMenuItem = new javax.swing.JMenuItem();
         radialMenuItem = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         batchVectorMenuItem = new javax.swing.JMenuItem();
@@ -142,7 +149,7 @@ public class MainFrame extends javax.swing.JFrame {
         rasterMenu = new javax.swing.JMenu();
         boxCountingRasterMenuItem = new javax.swing.JMenuItem();
         dilRasterMenuItem = new javax.swing.JMenuItem();
-        correlationMenuItem = new javax.swing.JMenuItem();
+        corRasterMenuItem = new javax.swing.JMenuItem();
         radialRasterMenuItem = new javax.swing.JMenuItem();
         multiRadialRasterMenuItem = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
@@ -164,7 +171,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         fileMenu.setText("File");
 
-        loadVectorMenuItem.setText("Load vector data...");
+        loadVectorMenuItem.setText("Load vector data");
         loadVectorMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 loadVectorMenuItemActionPerformed(evt);
@@ -172,7 +179,7 @@ public class MainFrame extends javax.swing.JFrame {
         });
         fileMenu.add(loadVectorMenuItem);
 
-        loadRasterMenuItem.setText("Load raster data...");
+        loadRasterMenuItem.setText("Load raster data");
         loadRasterMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 loadRasterMenuItemActionPerformed(evt);
@@ -181,13 +188,21 @@ public class MainFrame extends javax.swing.JFrame {
         fileMenu.add(loadRasterMenuItem);
         fileMenu.add(jSeparator1);
 
-        prefMenuItem.setText("Preferences...");
+        prefMenuItem.setText("Preferences");
         prefMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 prefMenuItemActionPerformed(evt);
             }
         });
         fileMenu.add(prefMenuItem);
+
+        logMenuItem.setText("Log window");
+        logMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                logMenuItemActionPerformed(evt);
+            }
+        });
+        fileMenu.add(logMenuItem);
 
         jMenuBar1.add(fileMenu);
 
@@ -208,6 +223,14 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         vectorMenu.add(dilationMenuItem);
+
+        correlationMenuItem.setText("Correlation");
+        correlationMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                correlationMenuItemActionPerformed(evt);
+            }
+        });
+        vectorMenu.add(correlationMenuItem);
 
         radialMenuItem.setText("Radial");
         radialMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -254,13 +277,13 @@ public class MainFrame extends javax.swing.JFrame {
         });
         rasterMenu.add(dilRasterMenuItem);
 
-        correlationMenuItem.setText("Correlation");
-        correlationMenuItem.addActionListener(new java.awt.event.ActionListener() {
+        corRasterMenuItem.setText("Correlation");
+        corRasterMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                correlationMenuItemActionPerformed(evt);
+                corRasterMenuItemActionPerformed(evt);
             }
         });
-        rasterMenu.add(correlationMenuItem);
+        rasterMenu.add(corRasterMenuItem);
 
         radialRasterMenuItem.setText("Radial");
         radialRasterMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -458,7 +481,7 @@ public class MainFrame extends javax.swing.JFrame {
         dlg.setVisible(true);
     }//GEN-LAST:event_localNetMenuItemActionPerformed
 
-    private void correlationMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_correlationMenuItemActionPerformed
+    private void corRasterMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_corRasterMenuItemActionPerformed
         final RasterMethodDialog dlg = new RasterMethodDialog(this, "Correlation", 
                 new LayerModel(mapViewer.getLayers(), BinRasterLayer.class), new DefaultSampling());
         dlg.setVisible(true);
@@ -469,12 +492,12 @@ public class MainFrame extends javax.swing.JFrame {
         new Thread(new Runnable() {
             @Override
             public void run() { 
-                CorrelationMethod method = new CorrelationMethod(dlg.layer.getName(), dlg.sampling, 
+                CorrelationRasterMethod method = new CorrelationRasterMethod(dlg.layer.getName(), dlg.sampling, 
                         dlg.layer.getImageShape().getImage(), JTS.rectToEnv(dlg.layer.getBounds()));
                 launchMethod(method);
             }
         }).start();
-    }//GEN-LAST:event_correlationMenuItemActionPerformed
+    }//GEN-LAST:event_corRasterMenuItemActionPerformed
 
     private void loadRasterMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadRasterMenuItemActionPerformed
         File f = Util.getFile(".tif|.asc", "Image");
@@ -801,6 +824,27 @@ public class MainFrame extends javax.swing.JFrame {
         }).start();
     }//GEN-LAST:event_waveletMenuItemActionPerformed
 
+    private void logMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logMenuItemActionPerformed
+        logFrame.setVisible(true);
+    }//GEN-LAST:event_logMenuItemActionPerformed
+
+    private void correlationMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_correlationMenuItemActionPerformed
+        final BoxCountingDialog dlg = new BoxCountingDialog(this, new LayerModel(mapViewer.getLayers(), FeatureLayer.class),
+            new DefaultSampling());
+        dlg.setVisible(true);
+        if(!dlg.isOk) {
+            return;
+        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                CorrelationMethod corrMethod = new CorrelationMethod(dlg.layer.getName(), dlg.sampling, 
+                        new DefaultFeatureCoverage(dlg.layer.getFeatures()));
+                launchMethod(corrMethod);
+            }
+        }).start();      
+    }//GEN-LAST:event_correlationMenuItemActionPerformed
+
     private boolean isBinary(RenderedImage img) {
         RandomIter iter = RandomIterFactory.create(img, null);
         
@@ -857,6 +901,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem binarizeMenuItem;
     private javax.swing.JMenuItem boxCountingMenuItem;
     private javax.swing.JMenuItem boxCountingRasterMenuItem;
+    private javax.swing.JMenuItem corRasterMenuItem;
     private javax.swing.JMenuItem correlationMenuItem;
     private javax.swing.JMenuItem desserteMenuItem;
     private javax.swing.JMenuItem dilRasterMenuItem;
@@ -870,6 +915,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem loadRasterMenuItem;
     private javax.swing.JMenuItem loadVectorMenuItem;
     private javax.swing.JMenuItem localNetMenuItem;
+    private javax.swing.JMenuItem logMenuItem;
     private org.thema.drawshape.ui.MapViewer mapViewer;
     private javax.swing.JMenuItem multiFracBoxRasterMenuItem;
     private javax.swing.JMenuItem multiFracVectorMenuItem1;

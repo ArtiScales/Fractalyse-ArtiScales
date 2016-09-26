@@ -31,7 +31,6 @@ import java.util.concurrent.CancellationException;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.ProgressBar;
 import org.thema.common.parallel.SimpleParallelTask;
-import org.thema.common.param.ReflectObject;
 import org.thema.data.feature.Feature;
 import org.thema.data.feature.FeatureCoverage;
 import org.thema.fracgis.estimation.RectangularRangeShape;

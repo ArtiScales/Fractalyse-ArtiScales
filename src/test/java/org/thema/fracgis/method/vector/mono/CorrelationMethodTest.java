@@ -14,14 +14,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.thema.fracgis.method.raster.mono;
+package org.thema.fracgis.method.vector.mono;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import org.apache.commons.lang3.ArrayUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.fracgis.Data;
@@ -31,37 +34,50 @@ import org.thema.parallel.ParallelExecutor;
 
 /**
  *
- * @author Gilles Vuidel
+ * @author gvuidel
  */
 public class CorrelationMethodTest {
-
+    
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+    
     @BeforeClass
     public static void setUpClass() throws IOException {
         ParallelExecutor.setNbProc(4);
         ParallelFExecutor.setNbProc(4);
        
-        Data.loadRaster();
+        Data.loadVector(0);
     }
-    
+
 
     /**
-     * Test of execute method, of class CorrelationRasterMethod.
+     * Test of execute method, of class CorrelationnMethod.
      */
     @Test
     public void testExecute() {
         System.out.println("execute");
-        DefaultSampling sampling = new DefaultSampling(1, 9, 1, Sampling.Sequence.ARITH);
-        CorrelationRasterMethod instance = new CorrelationRasterMethod("testPoint", sampling, Data.imgPoint, Data.env16);
+        DefaultSampling sampling = new DefaultSampling(1, 64, 2, Sampling.Sequence.GEOM);
+        CorrelationMethod instance = new CorrelationMethod("testPoint", sampling, Data.covPoint);
         instance.execute(new TaskMonitor.EmptyMonitor(), false);
-        assertEquals(Arrays.asList(1.0, 1.0, 1.0, 1.0, 1.0), new ArrayList<>(instance.getCurve().values()));
+        assertEquals(Arrays.asList(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0), new ArrayList<>(instance.getCurve().values()));
+       
+        sampling = new DefaultSampling(1, 243, 3, Sampling.Sequence.GEOM);
+        instance = new CorrelationMethod("testFrac", sampling, Data.covFrac);
+        instance.execute(new TaskMonitor.EmptyMonitor(), true);
+        assertArrayEquals(new double [] {1.0, 3.0, 12.67, 56.64, 273.3, 1258.53}, 
+                ArrayUtils.toPrimitive(instance.getCurve().values().toArray(new Double[0])), 1e-2);
         
-        instance = new CorrelationRasterMethod("testLine", sampling, Data.imgLine, Data.env16);
+    }
+    
+    /**
+     * Test of execute method, of class CorrelationnMethod.
+     */
+    @Test
+    public void testExecuteException() {
+        System.out.println("execute");
+        CorrelationMethod instance = new CorrelationMethod("testLi", new DefaultSampling(), Data.covLine);
+        thrown.expect(IllegalArgumentException.class);
         instance.execute(new TaskMonitor.EmptyMonitor(), false);
-        assertEquals(Arrays.asList(1.0, 3.0-1/8.0, 5.0-(1+2)/8.0, 7.0-(1+2+3)/8.0, 9.0-(1+2+3+4)/8.0), new ArrayList<>(instance.getCurve().values()));
-        
-        instance = new CorrelationRasterMethod("testSquare", sampling, Data.imgSquare, Data.env16);
-        instance.execute(new TaskMonitor.EmptyMonitor(), false);
-        assertEquals(Arrays.asList(1.0, 9.0-47/64.0, 25.0-231/64.0, 49.0-636/64.0, 81.0-1340/64.0), new ArrayList<>(instance.getCurve().values()));
         
     }
     

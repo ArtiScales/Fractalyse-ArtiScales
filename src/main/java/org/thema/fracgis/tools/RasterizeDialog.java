@@ -90,6 +90,7 @@ public class RasterizeDialog extends javax.swing.JDialog {
         polyModeComboBox = new javax.swing.JComboBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Rasterize");
 
         okButton.setText("OK");
         okButton.addActionListener(new java.awt.event.ActionListener() {
@@ -160,10 +161,10 @@ public class RasterizeDialog extends javax.swing.JDialog {
                             .add(layout.createSequentialGroup()
                                 .add(jLabel2)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(resSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 68, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .add(resSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 103, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                             .add(layout.createSequentialGroup()
                                 .add(jLabel4)
-                                .add(18, 18, 18)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(polyModeComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 135, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                         .add(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())

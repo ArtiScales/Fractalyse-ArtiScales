@@ -30,8 +30,7 @@ import java.util.TreeMap;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import org.thema.common.ProgressBar;
-import org.thema.fracgis.method.MonoMethod;
-import org.thema.fracgis.method.raster.RasterMethod;
+import org.thema.fracgis.sampling.DefaultSampling;
 import org.thema.fracgis.sampling.RasterBoxSampling;
 
 /**
@@ -39,10 +38,15 @@ import org.thema.fracgis.sampling.RasterBoxSampling;
  * Box counting algorithm calculates the Minkowski–Bouligand dimension.
  * @author Gilles Vuidel
  */
-public class BoxCountingRasterMethod extends RasterMethod implements MonoMethod {
-    
-    private TreeMap<Double, Double> curve;
+public class BoxCountingRasterMethod extends MonoRasterMethod {
 
+    /**
+     * Default constructor for batch mode
+     */
+    public BoxCountingRasterMethod() {
+        setSampling(new RasterBoxSampling());
+    }
+    
     /**
      * Creates a new box counting method for the given data
      * @param inputName input layer name (must be a binary raster layer)
@@ -102,8 +106,8 @@ public class BoxCountingRasterMethod extends RasterMethod implements MonoMethod 
     }
 
     @Override
-    public TreeMap<Double, Double> getCurve() {
-        return curve;
+    public final void setSampling(DefaultSampling sampling) {
+        super.setSampling(new RasterBoxSampling(sampling));
     }
     
     @Override

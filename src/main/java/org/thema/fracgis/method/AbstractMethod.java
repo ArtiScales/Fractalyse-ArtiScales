@@ -45,9 +45,17 @@ public abstract class AbstractMethod implements Method {
     transient private MethodLayers glayers;
 
     /**
+     * Default constructor 
+     */
+    public AbstractMethod() {
+        inputName = "(none)";
+        sampling = new DefaultSampling();
+    }
+    
+    /**
      * Initializes a new method 
      * @param inputName the input layer name
-     * @param sampling the default scaling
+     * @param sampling the default sampling
      */
     public AbstractMethod(String inputName, DefaultSampling sampling) {
         this.inputName = inputName;
@@ -57,6 +65,11 @@ public abstract class AbstractMethod implements Method {
     @Override
     public DefaultSampling getSampling() {
         return sampling;
+    }
+
+    @Override
+    public void setSampling(DefaultSampling sampling) {
+        this.sampling = sampling;
     }
 
     @Override

@@ -30,9 +30,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.concurrent.CancellationException;
 import org.thema.common.ProgressBar;
-import org.thema.fracgis.method.MonoMethod;
 import org.thema.fracgis.sampling.DefaultSampling;
-import org.thema.fracgis.method.raster.RasterMethod;
 import org.thema.parallel.AbstractParallelTask;
 import org.thema.parallel.ExecutorService;
 
@@ -42,7 +40,7 @@ import org.thema.parallel.ExecutorService;
  * @author Gilles Vuidel
  */
 
-public class CorrelationMethod extends RasterMethod implements MonoMethod {
+public class CorrelationRasterMethod extends MonoRasterMethod {
     /**
      * Parallel task for computing correlation.
      * This task can be run in threaded mode or MPI.
@@ -198,8 +196,12 @@ public class CorrelationMethod extends RasterMethod implements MonoMethod {
         }
 
     }
-    
-    private TreeMap<Double, Double> curve;
+
+    /**
+     * Default constructor for batch mode
+     */
+    public CorrelationRasterMethod() {
+    }
 
     /**
      * Creates a new correlation method for the given data
@@ -208,7 +210,7 @@ public class CorrelationMethod extends RasterMethod implements MonoMethod {
      * @param img raster input data
      * @param env envelope of the raster in world coordinate
      */
-    public CorrelationMethod(String inputName, DefaultSampling scaling, RenderedImage img, Envelope env) {
+    public CorrelationRasterMethod(String inputName, DefaultSampling scaling, RenderedImage img, Envelope env) {
         super(inputName, scaling, img, env);
     }
 
@@ -225,11 +227,6 @@ public class CorrelationMethod extends RasterMethod implements MonoMethod {
             throw new CancellationException();
         }
         curve = task.getResult();
-    }
-
-    @Override
-    public TreeMap<Double, Double> getCurve() {
-        return curve;
     }
     
     @Override

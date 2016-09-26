@@ -115,6 +115,9 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
             Tq.put(q, estim.getDimension() + (isLWTMethod() ? 2 : 0));
             if(Math.abs(q-1) > 0.00001) {
                 Dq.put(q, Tq.get(q) / (1-q));
+            } else if(q == 1) {
+                Dq.put(q, -Tq.get(q));
+                Tq.put(q, 0.0);
             }
             if(qSet.first() != q) {
                 double q1 = qSet.lower(q);

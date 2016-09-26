@@ -81,6 +81,7 @@ public class BinarizeDialog extends javax.swing.JDialog {
         jLabel4 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Binarize");
 
         okButton.setText("OK");
         okButton.addActionListener(new java.awt.event.ActionListener() {

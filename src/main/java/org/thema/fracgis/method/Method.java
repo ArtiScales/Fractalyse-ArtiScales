@@ -79,4 +79,10 @@ public interface Method {
      * @return the default scale sampling for this method
      */
     DefaultSampling getSampling();
+    
+    /**
+     * Sets the sampling
+     * @param sampling the new sampling
+     */
+    void setSampling(DefaultSampling sampling);
 }

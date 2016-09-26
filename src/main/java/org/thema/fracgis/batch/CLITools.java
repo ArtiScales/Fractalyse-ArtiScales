@@ -23,7 +23,7 @@ import org.thema.fracgis.method.vector.mono.DilationMethod;
 import org.thema.fracgis.method.vector.mono.BoxCountingMethod;
 import org.thema.fracgis.method.raster.mono.DilationRasterMethod;
 import org.thema.fracgis.method.raster.mono.BoxCountingRasterMethod;
-import org.thema.fracgis.method.raster.mono.CorrelationMethod;
+import org.thema.fracgis.method.raster.mono.CorrelationRasterMethod;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
@@ -51,8 +51,11 @@ import org.thema.fracgis.tools.BinarizeDialog;
 import org.thema.fracgis.estimation.Estimation;
 import org.thema.fracgis.estimation.EstimationFactory;
 import org.thema.fracgis.estimation.EstimationFactory.Type;
+import org.thema.fracgis.method.MonoMethod;
+import org.thema.fracgis.method.raster.mono.MonoRasterMethod;
+import org.thema.fracgis.method.vector.mono.CorrelationMethod;
+import org.thema.fracgis.method.vector.mono.MonoVectorMethod;
 import org.thema.fracgis.sampling.DefaultSampling;
-import org.thema.fracgis.sampling.RasterBoxSampling;
 import org.thema.fracgis.sampling.Sampling.Sequence;
 import org.thema.parallel.ParallelExecutor;
 import org.thema.process.Rasterizer;
@@ -75,14 +78,18 @@ public class CLITools {
         List<String> args = new ArrayList<>(Arrays.asList(argTab));
         String arg0 = args.remove(0);
         if(arg0.equals("--help")) {
-            System.out.println("Usage :\njava -jar fracgis.jar [-mpi | -proc n]\n" 
-                    + "[--rasterize [-neg] res=val file_1.shp [... file_n.shp]]\n"
-                    + "[--binarize min=val max=val file_1.tif [... file_n.tif]]\n"
-                    + "[--boxcounting coef=val [min=val] [max=val] [seq=arith|geom] [gliding=val] [estim=log|direct] file_1.shp [... file_n.shp]]\n"
-                    + "[--rboxcounting coef=val [max=val] [seq=arith|geom] [estim=log|direct] file_1.tif [... file_n.tif]]\n"
-                    + "[--dilation coef=val min=val [max=val] [seq=arith|geom] [estim=log|direct] file_1.shp [... file_n.shp]]\n"
-                    + "[--rdilation coef=val [max=val] [seq=arith|geom] [estim=log|direct] file_1.tif [... file_n.tif]]\n"
-                    + "[--correlation coef=val [max=val] [seq=arith|geom] [estim=log|direct] file_1.tif [... file_n.tif]]");
+            System.out.println("Usage :\njava -jar fracgis.jar [-mpi | -proc n] COMMAND\n"
+                    + "COMMAND:" 
+                    + "\t--rasterize [neg] res=val file_1.shp [... file_n.shp]\n"
+                    + "\t--binarize min=val max=val file_1.tif [... file_n.tif]\n"
+                    + "\t--boxcounting [gliding=val] SAMPLING [estim=log|direct] file_1.shp [... file_n.shp]\n"
+                    + "\t--rboxcounting SAMPLING [estim=log|direct] file_1.tif [... file_n.tif]\n"
+                    + "\t--dilation SAMPLING [estim=log|direct] file_1.shp [... file_n.shp]\n"
+                    + "\t--rdilation SAMPLING [estim=log|direct] file_1.tif [... file_n.tif]\n"
+                    + "\t--correlation SAMPLING [estim=log|direct] file_1.shp [... file_n.shp]\n"
+                    + "\t--rcorrelation SAMPLING [estim=log|direct] file_1.tif [... file_n.tif]\n"
+                    + "SAMPLING:\n"
+                    + "\t[coef=val] [min=val] [max=val] [seq=arith|geom]");
             return;
         } 
         TaskMonitor.setHeadlessStream(new PrintStream(File.createTempFile("java", "monitor")));
@@ -96,7 +103,7 @@ public class CLITools {
         
         if(arg0.equals("--rasterize")) {
             boolean negative = false;
-            if(args.get(0).equals("-neg")) {
+            if(args.get(0).equals("neg")) {
                 negative = true;
                 args.remove(0);
             }
@@ -137,157 +144,100 @@ public class CLITools {
                 new GeoTiffWriter(new File(f.getParentFile(), f.getName().substring(0, f.getName().length()-4) + "_bin"+min+"-"+max+".tif")).write(binGrid, null);
             }
         } else if(arg0.equals("--boxcounting")) {
-            DefaultSampling samples = getSampling(args);
             int d = 1;
             if(args.get(0).startsWith("gliding=")) {
                 d = Integer.parseInt(args.remove(0).split("=")[1]);
             }
-            Type typeEstim = getEstim(args);
-            String suffix = String.format(Locale.US, "coef%g_min%g_max%g_seq%s_glid%d_estim%s", 
-                    samples.getCoef(), samples.getMinSize(), samples.getMaxSize(), samples.getSeq().toString().toLowerCase(),
-                    d, typeEstim.toString().toLowerCase());
-            try (BufferedWriter wres = new BufferedWriter(new FileWriter(new File("box_" + suffix + ".txt")))) {
-                wres.write("File\tCoef\tMin\tMax\tGliding\tModel\tDim.\tR2\tConfidence Interval min\tmax\tParams\n");
-                for(String arg : args) {
-                    File f = new File(arg);
-                    System.out.println(arg);
-                    DefaultFeatureCoverage cov = new DefaultFeatureCoverage(DefaultFeature.loadFeatures(f, true));
-                    BoxCountingMethod method = new BoxCountingMethod(f.getName(), samples, cov, d, false);
-                    method.execute(new TaskMonitor.EmptyMonitor(), true);
-                    Estimation estim = new EstimationFactory(method).getEstimation(typeEstim);
-                    try (FileWriter w = new FileWriter(new File(f.getParent(), f.getName().substring(0, f.getName().length()-4)+"_box_" + suffix + ".txt"))) {
-                        estim.saveToText(w);
-                    }
-                    double[] confidenceInterval = estim.getBootStrapConfidenceInterval();
-                    wres.write(f.getName() + "\t" + samples.getCoef() + "\t" + samples.getMinSize() + "\t" + samples.getRealMaxSize() + "\t" + d + "\t" +
-                            estim.getModel() + "\t" + estim.getDimension() + "\t" + estim.getR2() + "\t" +
-                            confidenceInterval[0] + "\t" + confidenceInterval[1] + "\t" + estim.getParamInfo() + "\n");
-                }
-            }
-        } else if(arg0.equals("--rboxcounting")) {
-            DefaultSampling samples = getSampling(args);
-            Type typeEstim = getEstim(args);
-            String suffix = String.format(Locale.US, "coef%g_estim%s", samples.getCoef(), typeEstim.toString().toLowerCase());
-            try (BufferedWriter wres = new BufferedWriter(new FileWriter(new File("rbox_" + suffix + ".txt")))) {
-                wres.write("File\tCoef\tMinSize\tMaxSize\tModel\tDim.\tR2\tConfidence Interval min\tmax\tParams\n");
-                for(String arg : args) {
-                    File f = new File(arg);
-                    System.out.println(arg);
-                    GridCoverage2D cov = IOImage.loadTiff(f);
-                    RasterBoxSampling boxSamples = new RasterBoxSampling(samples);
-                    BoxCountingRasterMethod method = new BoxCountingRasterMethod(f.getName(), boxSamples, cov.getRenderedImage(),
-                            JTS.rectToEnv(cov.getEnvelope2D()));
-                    method.execute(new TaskMonitor.EmptyMonitor(), true);
-                    Estimation estim = new EstimationFactory(method).getEstimation(typeEstim);
-                    try (FileWriter w = new FileWriter(new File(f.getParent(), f.getName().substring(0, f.getName().length()-4)+"_rbox_" + suffix + ".txt"))) {
-                        estim.saveToText(w);
-                    }
-                    double[] confidenceInterval = estim.getBootStrapConfidenceInterval();
-                    wres.write(f.getName() + "\t" + samples.getCoef() + "\t" + samples.getMinSize() + "\t" + samples.getRealMaxSize() + "\t" +
-                            estim.getModel() + "\t" + estim.getDimension() + "\t" + estim.getR2() + "\t" +
-                            confidenceInterval[0] + "\t" + confidenceInterval[1] + "\t" + estim.getParamInfo() + "\n");
-                }
-            }
+            String name = String.format(Locale.US, "box_glid%d", d);
+            executeMonoMethod(new BoxCountingMethod(d), name, args);
         } else if(arg0.equals("--dilation")) {
-            DefaultSampling samples = getSampling(args);
-            Type typeEstim = getEstim(args);
-            String suffix = String.format(Locale.US, "coef%g_min%g_max%g_estim%s", samples.getCoef(), samples.getMinSize(), samples.getMaxSize(), typeEstim.toString().toLowerCase());
-            try (BufferedWriter wres = new BufferedWriter(new FileWriter(new File("dil_" + suffix + ".txt")))) {
-                wres.write("File\tCoef\tMin\tMax\tModel\tDim.\tR2\tConfidence Interval min\tmax\tParams\n");
-                for(String arg : args) {
-                    File f = new File(arg);
-                    System.out.println(arg);
-                    DefaultFeatureCoverage cov = new DefaultFeatureCoverage(DefaultFeature.loadFeatures(f, true));
-                    DilationMethod method = new DilationMethod(f.getName(), samples, cov, false, false);
-                    method.execute(new TaskMonitor.EmptyMonitor(), true);
-                    Estimation estim = new EstimationFactory(method).getEstimation(typeEstim);
-                    try (FileWriter w = new FileWriter(new File(f.getParent(), f.getName().substring(0, f.getName().length()-4)+"_dil_" + suffix + ".txt"))) {
-                        estim.saveToText(w);
-                    }
-                    double[] confidenceInterval = estim.getBootStrapConfidenceInterval();
-                    wres.write(f.getName() + "\t" + samples.getCoef() + "\t" + samples.getMinSize() + "\t" + samples.getRealMaxSize() + "\t" +
-                            estim.getModel() + "\t" + estim.getDimension() + "\t" + estim.getR2() + "\t" +
-                            confidenceInterval[0] + "\t" + confidenceInterval[1] + "\t" + estim.getParamInfo() + "\n");
-                }
-            }
+            executeMonoMethod(new DilationMethod(), "dil", args);
         } else if(arg0.equals("--correlation")) {
-            DefaultSampling samples = getSampling(args);
-            Type typeEstim = getEstim(args);
-            String suffix = String.format(Locale.US, "max%g_estim%s", samples.getMaxSize(), typeEstim.toString().toLowerCase());
-            try (BufferedWriter wres = new BufferedWriter(new FileWriter(new File("corr_" + suffix + ".txt")))) {
-                wres.write("File\tmax\tModel\tDim.\tR2\tConfidence Interval min\tmax\tParams\n");
-                for(String arg : args) {
-                    File f = new File(arg);
-                    System.out.println(arg);
-                    GridCoverage2D cov = IOImage.loadTiff(f);
-                    CorrelationMethod method = new CorrelationMethod(f.getName(), samples, cov.getRenderedImage(),
-                            JTS.rectToEnv(cov.getEnvelope2D()));
-                    method.execute(new TaskMonitor.EmptyMonitor(), true);
-                    Estimation estim = new EstimationFactory(method).getEstimation(typeEstim);
-                    try (FileWriter w = new FileWriter(new File(f.getParent(), f.getName().substring(0, f.getName().length()-4)+"_corr_" + suffix + ".txt"))) {
-                        estim.saveToText(w);
-                    }
-                    double[] confidenceInterval = estim.getBootStrapConfidenceInterval();
-                    wres.write(f.getName() + "\t" + samples.getRealMaxSize() + "\t" +
-                            estim.getModel() + "\t" + estim.getDimension() + "\t" + estim.getR2() + "\t" +
-                            confidenceInterval[0] + "\t" + confidenceInterval[1] + "\t" + estim.getParamInfo() + "\n");
-                }
-            }
+            executeMonoMethod(new CorrelationMethod(), "cor", args);
+        } else if(arg0.equals("--rboxcounting")) {
+            executeMonoMethod(new BoxCountingRasterMethod(), "rbox", args);
+        } else if(arg0.equals("--rcorrelation")) {
+            executeMonoMethod(new CorrelationRasterMethod(), "rcor", args);
         } else if(arg0.equals("--rdilation")) {
-            DefaultSampling samples = getSampling(args);
-            Type typeEstim = getEstim(args);
-            String suffix = String.format(Locale.US, "coef%g_max%g_estim%s", samples.getCoef(), samples.getMaxSize(), typeEstim.toString().toLowerCase());
-            try (BufferedWriter wres = new BufferedWriter(new FileWriter(new File("rdil_" + suffix + ".txt")))) {
-                wres.write("File\tcoef\tmaxsize\tModel\tDim.\tR2\tConfidence Interval min\tmax\tParams\n");
-                for(String arg : args) {
-                    File f = new File(arg);
-                    System.out.println(arg);
-                    GridCoverage2D cov = IOImage.loadTiff(f);
-                    DilationRasterMethod method = new DilationRasterMethod(f.getName(), samples, cov.getRenderedImage(),
-                            JTS.rectToEnv(cov.getEnvelope2D()));
-                    method.execute(new TaskMonitor.EmptyMonitor(), true);
-                    Estimation estim = new EstimationFactory(method).getEstimation(typeEstim);
-                    try (FileWriter w = new FileWriter(new File(f.getParent(), f.getName().substring(0, f.getName().length()-4)+"_rdil_" + suffix + ".txt"))) {
-                        estim.saveToText(w);
-                    }
-                    double[] confidenceInterval = estim.getBootStrapConfidenceInterval();
-                    wres.write(f.getName() + "\t" + samples.getCoef() + "\t" + samples.getRealMaxSize() + "\t" +
-                            estim.getModel() + "\t" + estim.getDimension() + "\t" + estim.getR2() + "\t" +
-                            confidenceInterval[0] + "\t" + confidenceInterval[1] + "\t" + estim.getParamInfo() + "\n");
-                }
-            }
+            executeMonoMethod(new DilationRasterMethod(), "rdil", args);
         } else {
-            System.err.println("Unknown command " + arg0 + "\nTry --help" );
+            throw new IllegalArgumentException("Unknown command " + arg0 + "\nTry --help" );
         }
     }
     
+    private static void executeMonoMethod(MonoMethod method, String name, List<String> args) throws IOException {
+        DefaultSampling sampling = getSampling(args);
+        Type typeEstim = getEstim(args, sampling);
+        String suffix = String.format(Locale.US, "_coef%g_min%g_max%g_seq%s_estim%s", 
+                sampling.getCoef(), sampling.getMinSize(), sampling.getMaxSize(), sampling.getSeq().toString().toLowerCase(),
+                typeEstim.toString().toLowerCase());
+        try (BufferedWriter wres = new BufferedWriter(new FileWriter(new File(name + suffix + ".txt")))) {
+            wres.write("File\tCoef\tMin\tMax\tModel\tDim.\tR2\tConfidence Interval min\tmax\tParams\n");
+            for(String arg : args) {
+                File f = new File(arg);
+                System.out.println(arg);
+                if(method instanceof MonoVectorMethod) {
+                    DefaultFeatureCoverage cov = new DefaultFeatureCoverage(DefaultFeature.loadFeatures(f, true));
+                    ((MonoVectorMethod)method).setInputData(f.getName(), cov);
+                } else {
+                    GridCoverage2D cov = IOImage.loadTiff(f);
+                    ((MonoRasterMethod)method).setInputData(f.getName(), cov.getRenderedImage(), JTS.rectToEnv(cov.getEnvelope2D()));
+                }
+                method.setSampling(new DefaultSampling(sampling));
+                method.execute(new TaskMonitor.EmptyMonitor(), true);
+                Estimation estim = new EstimationFactory(method).getEstimation(typeEstim);
+                try (FileWriter w = new FileWriter(new File(f.getParent(), f.getName().substring(0, f.getName().length()-4)+ name + suffix + ".txt"))) {
+                    estim.saveToText(w);
+                }
+                DefaultSampling finalSamp = method.getSampling();
+                double[] confidenceInterval = estim.getBootStrapConfidenceInterval();
+                wres.write(f.getName() + "\t" + finalSamp.getCoef() + "\t" + finalSamp.getMinSize() + "\t" + finalSamp.getRealMaxSize() + "\t" +
+                        estim.getModel() + "\t" + estim.getDimension() + "\t" + estim.getR2() + "\t" +
+                        confidenceInterval[0] + "\t" + confidenceInterval[1] + "\t" + estim.getParamInfo() + "\n");
+            }
+        }
+    }
     
-    private static DefaultSampling getSampling(List<String> args) {
-        double coef = 0;
-        if(args.get(0).startsWith("coef=")) {
-            coef = Double.parseDouble(args.remove(0).split("=")[1]);
-        }
+    static DefaultSampling getSampling(List<String> args) {
+        double coef = 2;
         double min = 0;
-        if(args.get(0).startsWith("min=")) {
-            min = Double.parseDouble(args.remove(0).split("=")[1]);
-        }
         double max = 0;
-        if(args.get(0).startsWith("max=")) {
-            max = Double.parseDouble(args.remove(0).split("=")[1]);
-        }
         Sequence seq = Sequence.GEOM;
-        if(args.get(0).equals("seq=arith")) {
-            seq = Sequence.ARITH;
-        }
         
+        boolean found = true;
+        while(!args.isEmpty() && found) {
+            if(args.get(0).startsWith("coef=")) {
+                coef = Double.parseDouble(args.remove(0).split("=")[1]);
+            } else if(args.get(0).startsWith("min=")) {
+                min = Double.parseDouble(args.remove(0).split("=")[1]);
+            } else if(args.get(0).startsWith("max=")) {
+                max = Double.parseDouble(args.remove(0).split("=")[1]);
+            } else if(args.get(0).startsWith("seq=")) {
+                String arg = args.remove(0);
+                if(arg.equals("seq=arith")) {
+                    seq = Sequence.ARITH;
+                } else if(arg.equals("seq=geom")) {
+                    seq = Sequence.GEOM;
+                } else {
+                    throw new IllegalArgumentException("Unkown sequence : " + arg);
+                }
+            } else {
+                found = false;
+            }
+        }
         return new DefaultSampling(min, max, coef, seq);
     }
     
-    private static Type getEstim(List<String> args) {
-        Type typeEstim = Type.LOG;
-        if(args.get(0).startsWith("estim=")) {
-            if(args.remove(0).equals("estim=direct")) {
+    static Type getEstim(List<String> args, DefaultSampling sampling) {
+        Type typeEstim = sampling.getDefaultEstimType();
+        if(!args.isEmpty() && args.get(0).startsWith("estim=")) {
+            String arg = args.remove(0);
+            if(arg.equals("estim=direct")) {
                 typeEstim = Type.DIRECT;
+            } else if(arg.equals("estim=log")) {
+                typeEstim = Type.LOG;
+            } else {
+                throw new IllegalArgumentException("Unknown estimation method : " + arg);
             }
         }
         return typeEstim;

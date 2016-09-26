@@ -46,7 +46,7 @@ import org.thema.fracgis.sampling.DefaultSampling;
  */
 public class DilationMethod extends MonoVectorMethod {
     
-    private boolean stopOne;
+    private boolean stopOne = false;
     
     private BufferParameters bufParam = new BufferParameters();
     
@@ -73,7 +73,7 @@ public class DilationMethod extends MonoVectorMethod {
     }
 
     /**
-     * For parameter management only
+     * For parameter management and batch mode
      */
     public DilationMethod() {
     }

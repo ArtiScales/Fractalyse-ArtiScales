@@ -225,6 +225,17 @@ public class BoxCountingMethod extends MonoVectorMethod {
     }
     
     /**
+     * For batch mode
+     * @param d gliding grid optimization if d > 1
+     */
+    public BoxCountingMethod(int d) {
+        if(d < 1) {
+            d = 1;
+        }
+        this.d = d;
+    }
+    
+    /**
      * Creates a new box counting method for vector data.
      * @param inputName the input data layer name 
      * @param sampling the scale sampling

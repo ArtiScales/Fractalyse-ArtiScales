@@ -23,6 +23,7 @@ import com.vividsolutions.jts.geom.Envelope;
 import java.awt.image.RenderedImage;
 import java.util.Collection;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import org.geotools.coverage.grid.GridCoverage2D;
@@ -336,6 +337,37 @@ public class DefaultSampling implements Sampling {
     @Override
     public EstimationFactory.Type getDefaultEstimType() {
         return seq == Sequence.ARITH ? Type.DIRECT : Type.LOG;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DefaultSampling other = (DefaultSampling) obj;
+        if (Double.doubleToLongBits(this.minSize) != Double.doubleToLongBits(other.minSize)) {
+            return false;
+        }
+        if (Double.doubleToLongBits(this.maxSize) != Double.doubleToLongBits(other.maxSize)) {
+            return false;
+        }
+        if (Double.doubleToLongBits(this.coef) != Double.doubleToLongBits(other.coef)) {
+            return false;
+        }
+        return this.seq == other.seq;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 67 * hash + (int) (Double.doubleToLongBits(this.minSize) ^ (Double.doubleToLongBits(this.minSize) >>> 32));
+        hash = 67 * hash + (int) (Double.doubleToLongBits(this.maxSize) ^ (Double.doubleToLongBits(this.maxSize) >>> 32));
+        hash = 67 * hash + (int) (Double.doubleToLongBits(this.coef) ^ (Double.doubleToLongBits(this.coef) >>> 32));
+        hash = 67 * hash + Objects.hashCode(this.seq);
+        return hash;
     }
     
 }

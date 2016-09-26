@@ -29,18 +29,20 @@ import java.util.TreeMap;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import org.thema.common.ProgressBar;
-import org.thema.fracgis.method.MonoMethod;
 import org.thema.fracgis.sampling.DefaultSampling;
-import org.thema.fracgis.method.raster.RasterMethod;
 
 /**
  * Computes unifractal dimension by successive dilation.
  * 
  * @author Gilles Vuidel
  */
-public class DilationRasterMethod extends RasterMethod implements MonoMethod {
+public class DilationRasterMethod extends MonoRasterMethod {
 
-    private TreeMap<Double, Double> curve;
+    /**
+     * Default constructor for batch mode
+     */
+    public DilationRasterMethod() {
+    }
 
     /**
      * Creates a new dilation method for the given data
@@ -121,11 +123,6 @@ public class DilationRasterMethod extends RasterMethod implements MonoMethod {
             }
         }   
         
-    }
-
-    @Override
-    public TreeMap<Double, Double> getCurve() {
-        return curve;
     }
     
     @Override

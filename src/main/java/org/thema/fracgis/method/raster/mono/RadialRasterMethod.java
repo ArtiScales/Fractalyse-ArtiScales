@@ -31,8 +31,6 @@ import javax.media.jai.iterator.RandomIterFactory;
 import org.thema.common.ProgressBar;
 import org.thema.fracgis.estimation.RectangularRangeShape;
 import org.thema.fracgis.method.MethodLayers;
-import org.thema.fracgis.method.MonoMethod;
-import org.thema.fracgis.method.raster.RasterMethod;
 import org.thema.fracgis.sampling.RadialSampling;
 
 /**
@@ -40,10 +38,8 @@ import org.thema.fracgis.sampling.RadialSampling;
  * 
  * @author Gilles Vuidel
  */
-public class RadialRasterMethod extends RasterMethod implements MonoMethod {
-    
-    private TreeMap<Double, Double> curve;
-    
+public class RadialRasterMethod extends MonoRasterMethod {
+       
     /**
      * Constructor for data with spatial unit (world envelope)
      * @param inputName the input layer name (must be a binary raster layer)
@@ -89,11 +85,6 @@ public class RadialRasterMethod extends RasterMethod implements MonoMethod {
                 curve.put((2*i+1) * res, count[i] * res*res);
             }
         }
-    }
-
-    @Override
-    public TreeMap<Double, Double> getCurve() {
-        return curve;
     }
     
     @Override

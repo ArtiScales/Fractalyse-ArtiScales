@@ -37,14 +37,14 @@ public abstract class VectorMethod extends AbstractMethod {
     private FeatureCoverage<Feature> coverage;
     
     /**
-     * For parameter management only
+     * For batch mode
      */
-    public VectorMethod(DefaultSampling sampling) {
-        super("", sampling);
+    public VectorMethod() {
+        super();
     }
     
     /**
-     * Initializes a new vector method
+     * Initializes a new vector method with data
      * @param inputName the input layer name
      * @param sampling the scale sampling
      * @param coverage the vector data
@@ -52,7 +52,7 @@ public abstract class VectorMethod extends AbstractMethod {
     public VectorMethod(String inputName, DefaultSampling sampling, FeatureCoverage coverage) {
         super(inputName, sampling);
         this.coverage = coverage;
-        sampling.updateSampling(coverage);
+        getSampling().updateSampling(coverage);
     }
     
     @Override
@@ -70,6 +70,14 @@ public abstract class VectorMethod extends AbstractMethod {
         this.coverage = coverage;
         
         getSampling().updateSampling(coverage);
+    }
+
+    @Override
+    public void setSampling(DefaultSampling sampling) {
+        super.setSampling(sampling);
+        if(coverage != null) {
+            getSampling().updateSampling(coverage);
+        }
     }
 
     /**

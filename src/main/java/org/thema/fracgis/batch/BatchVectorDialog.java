@@ -34,6 +34,7 @@ import org.thema.fracgis.method.vector.mono.DilationMethod;
 import org.thema.fracgis.method.vector.mono.RadialMethod;
 import org.thema.fracgis.method.vector.mono.MonoVectorMethod;
 import org.thema.fracgis.method.vector.VectorMethod;
+import org.thema.fracgis.method.vector.mono.CorrelationMethod;
 
 /**
  * Dialog form for setting parameters for vector batch processing.
@@ -352,7 +353,7 @@ public class BatchVectorDialog extends javax.swing.JDialog {
 
     private void layerComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_layerComboBoxActionPerformed
         methodComboBox.setModel(new DefaultComboBoxModel(new Object[]{
-            new BoxCountingMethod(), new DilationMethod()
+            new BoxCountingMethod(), new DilationMethod(), new CorrelationMethod()
         }));
         methodComboBoxActionPerformed(null);
         resolSpinnerStateChanged(null);

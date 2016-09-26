@@ -36,6 +36,12 @@ public abstract class RasterMethod extends AbstractMethod {
     private Envelope envelope;
 
     /**
+     * Default constructor for batch mode
+     */
+    public RasterMethod() {    
+    }
+    
+    /**
      * Initializes a new raster method.
      * @param inputName input layer name (must be a raster layer)
      * @param sampling scales sampling
@@ -56,6 +62,28 @@ public abstract class RasterMethod extends AbstractMethod {
     @Override
     public Envelope getDataEnvelope() {
         return envelope;
+    }
+    
+    /**
+     * Sets the input data
+     * @param inputName the input layer name
+     * @param img the raster image
+     * @param envelope the image envelope in world coordinate, may be null
+     */
+    public void setInputData(String inputName, RenderedImage img, Envelope envelope) {
+        this.inputName = inputName;
+        this.img = img;
+        this.envelope = envelope;
+        
+        getSampling().updateSampling(img, envelope);
+    }
+
+    @Override
+    public void setSampling(DefaultSampling sampling) {
+        super.setSampling(sampling);
+        if(img != null) {
+            getSampling().updateSampling(img, envelope);
+        }
     }
     
     public double getResolution() {

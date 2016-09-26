@@ -55,7 +55,7 @@ public class MultiFracBoxCountingVectorMethodTest {
         instance.execute(new TaskMonitor.EmptyMonitor(), false);
         assertEquals(Arrays.asList(4.0, 4.0, 4.0, 4.0, 4.0), new ArrayList<>(instance.getCurve(-1).values()));
         assertEquals(Arrays.asList(2.0, 2.0, 2.0, 2.0, 2.0), new ArrayList<>(instance.getCurve(0).values()));
-        assertEquals(Arrays.asList(1.0, 1.0, 1.0, 1.0, 1.0), new ArrayList<>(instance.getCurve(1).values()));
+        assertEquals(Arrays.asList(0.5, 0.5, 0.5, 0.5, 0.5), new ArrayList<>(instance.getCurve(1).values()));
         assertEquals(Arrays.asList(0.5, 0.5, 0.5, 0.5, 0.5), new ArrayList<>(instance.getCurve(2).values()));
         
         instance = new MultiFracBoxCountingVectorMethod("testLine", sampling, Data.covLine);

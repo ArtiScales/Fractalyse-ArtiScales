@@ -11,7 +11,7 @@
           <SubComponents>
             <MenuItem class="javax.swing.JMenuItem" name="loadVectorMenuItem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Load vector data..."/>
+                <Property name="text" type="java.lang.String" value="Load vector data"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="loadVectorMenuItemActionPerformed"/>
@@ -19,7 +19,7 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="loadRasterMenuItem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Load raster data..."/>
+                <Property name="text" type="java.lang.String" value="Load raster data"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="loadRasterMenuItemActionPerformed"/>
@@ -29,10 +29,18 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="prefMenuItem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Preferences..."/>
+                <Property name="text" type="java.lang.String" value="Preferences"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="prefMenuItemActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="logMenuItem">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Log window"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="logMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>
@@ -56,6 +64,14 @@
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="dilationMenuItemActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="correlationMenuItem">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Correlation"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="correlationMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="radialMenuItem">
@@ -107,12 +123,12 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="dilRasterMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="correlationMenuItem">
+            <MenuItem class="javax.swing.JMenuItem" name="corRasterMenuItem">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Correlation"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="correlationMenuItemActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="corRasterMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="radialRasterMenuItem">
