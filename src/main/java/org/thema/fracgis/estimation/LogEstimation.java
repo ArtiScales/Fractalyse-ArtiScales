@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.math3.exception.OutOfRangeException;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.jfree.chart.axis.LogarithmicAxis;
@@ -82,7 +83,7 @@ public class LogEstimation extends AbstractEstimation {
     public double getConfidenceInterval() {
         try {
             return regression.getSlopeConfidenceInterval();
-        } catch (Exception ex) {
+        } catch (OutOfRangeException ex) {
             Logger.getLogger(LogEstimation.class.getName()).log(Level.SEVERE, null, ex);
             return Double.NaN;
         }
@@ -99,7 +100,9 @@ public class LogEstimation extends AbstractEstimation {
                 Entry<Double, Double> sample = init.get((int)(Math.random()*init.size()));
                 reg.addData(Math.log(sample.getKey()), Math.log(sample.getValue()));
             }
-            stat.addValue(method.getDimSign() * reg.getSlope());            
+            if(!Double.isNaN(reg.getSlope())) {
+                stat.addValue(method.getDimSign() * reg.getSlope());            
+            }
         }
         return new double[] {stat.getPercentile(2.5), stat.getPercentile(97.5)};
     }

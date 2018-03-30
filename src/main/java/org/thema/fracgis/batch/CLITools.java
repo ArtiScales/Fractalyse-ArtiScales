@@ -125,7 +125,7 @@ public class CLITools {
                 GridCoverage2D gridCov = new GridCoverageFactory().create(f.getName(),
                     raster, new Envelope2D(GlobalDataStore.getCRS(f), rasterizer.getEnvelope()));
 
-                new GeoTiffWriter(new File(f.getParentFile(), f.getName().substring(0, f.getName().length()-4) + (negative?"_neg":"") + ".tif")).write(gridCov, null);
+                IOImage.saveTiffCoverage(new File(f.getParentFile(), f.getName().substring(0, f.getName().length()-4) + (negative?"_neg":"") + ".tif"), gridCov);
             }
         } else if(arg0.equals("--binarize")) {
             double min = Double.parseDouble(args.remove(0).split("=")[1]);

@@ -1,14 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>org.thema</groupId>
     <artifactId>fracgis</artifactId>
     <version>0.7</version>
     <packaging>jar</packaging>
-
     <name>FracGIS</name>
-    <url>http://dev.umrthema.univ-fcomte.fr/${project.artifactId}/</url>
+    <description>Fractal analysis for GIS data</description>
+    <url>https://sourcesup.renater.fr/${project.artifactId}/maven</url>
     <build>
         <plugins>
             <plugin>
@@ -75,6 +74,11 @@
                 <version>3.4</version>
                 <dependencies>
                     <dependency>
+                        <groupId>org.apache.maven.wagon</groupId>
+                        <artifactId>wagon-webdav-jackrabbit</artifactId>
+                        <version>2.6</version>
+                    </dependency>
+                    <dependency>
                         <groupId>lt.velykis.maven.skins</groupId>
                         <artifactId>reflow-velocity-tools</artifactId>
                         <version>1.1.1</version>
@@ -140,9 +144,9 @@
     </dependencies>
     <repositories>
         <repository>
-            <id>thema-sf</id>
+            <id>thema-sourcesup</id>
             <name>ThéMA libs Repository</name>
-            <url>http://themalibs.sourceforge.net/repository/</url>
+            <url>http://sourcesup.renater.fr/nexus/content/repositories/themalibs-releases/</url>
         </repository>
     </repositories>
     <organization>
@@ -162,6 +166,17 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+    <distributionManagement>
+        <site>
+            <id>sourcesup</id>
+            <url>dav:https://sourcesup.renater.fr/${project.artifactId}/maven</url>
+        </site>
+    </distributionManagement>
+    <scm>
+        <connection>scm:git:https://git.renater.fr/${project.artifactId}.git</connection>
+        <developerConnection>scm:git:git+ssh://git@git.renater.fr:2222/${project.artifactId}.git</developerConnection>
+        <url>https://sourcesup.renater.fr/scm/browser.php?group_id=3415</url>
+    </scm>
     <reporting>
         <plugins>
             <plugin>

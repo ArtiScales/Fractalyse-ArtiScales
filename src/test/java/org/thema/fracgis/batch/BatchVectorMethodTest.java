@@ -61,10 +61,10 @@ public class BatchVectorMethodTest {
         List<Feature> results = batch.getResults();
         assertEquals(2, results.size());
         for(Feature f : results) {
-            assertEquals(0.0, (Double)f.getAttribute("Dim"), 1e-10);
-            assertEquals(0.0, (Double)f.getAttribute("CI_min"), 1e-10);
-            assertEquals(0.0, (Double)f.getAttribute("CI_max"), 1e-10);
-            assertEquals(0.0, (Double)f.getAttribute("CI_delta"), 1e-10);
+            assertEquals("Dim", 0.0, (Double)f.getAttribute("Dim"), 1e-10);
+            assertEquals("CI_min", 0.0, (Double)f.getAttribute("CI_min"), 1e-10);
+            assertEquals("CI_max", 0.0, (Double)f.getAttribute("CI_max"), 1e-10);
+            assertEquals("CI_delta", 0.0, (Double)f.getAttribute("CI_delta"), 1e-10);
         }
         
         batch = new BatchVectorMethod(new FeatureLayer("line", Data.covLine.getFeatures()), new BoxCountingMethod(), 16);
