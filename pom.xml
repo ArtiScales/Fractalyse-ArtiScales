@@ -169,12 +169,12 @@
     <distributionManagement>
         <site>
             <id>sourcesup</id>
-            <url>dav:https://sourcesup.renater.fr/${project.artifactId}/maven</url>
+            <url>dav:https://sourcesup.renater.fr/fractalyse/maven</url>
         </site>
     </distributionManagement>
     <scm>
-        <connection>scm:git:https://git.renater.fr/${project.artifactId}.git</connection>
-        <developerConnection>scm:git:git+ssh://git@git.renater.fr:2222/${project.artifactId}.git</developerConnection>
+        <connection>scm:git:https://git.renater.fr/fractalyse.git</connection>
+        <developerConnection>scm:git:git+ssh://git@git.renater.fr:2222/fractalyse.git</developerConnection>
         <url>https://sourcesup.renater.fr/scm/browser.php?group_id=3415</url>
     </scm>
     <reporting>
