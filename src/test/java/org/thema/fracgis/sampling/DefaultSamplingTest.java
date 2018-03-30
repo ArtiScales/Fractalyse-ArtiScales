@@ -272,4 +272,43 @@ public class DefaultSamplingTest {
         assertEquals(EstimationFactory.Type.DIRECT, instance.getDefaultEstimType());
     }
     
+    /**
+     * Test of getCeilingScaleIndex method, of class DefaultSampling.
+     */
+    @Test
+    public void testGetCeilingDistIndex() {
+        System.out.println("getCeilingDistIndex");
+        DefaultSampling instance = new DefaultSampling(1, 8, 2);
+        assertEquals(0, instance.getCeilingScaleIndex(0));
+        assertEquals(0, instance.getCeilingScaleIndex(1));
+        assertEquals(2, instance.getCeilingScaleIndex(4));
+        assertEquals(3, instance.getCeilingScaleIndex(5));
+        assertEquals(3, instance.getCeilingScaleIndex(8));
+
+        instance = new DefaultSampling(4, 10, 2, Sequence.ARITH);
+        assertEquals(0, instance.getCeilingScaleIndex(0));
+        assertEquals(0, instance.getCeilingScaleIndex(4));
+        assertEquals(1, instance.getCeilingScaleIndex(5));
+        assertEquals(2, instance.getCeilingScaleIndex(8));
+    }
+    
+    /**
+     * Test of getCeilingScale method, of class DefaultSampling.
+     */
+    @Test
+    public void testGetCeilingDistClass() {
+        System.out.println("getCeilingDistClass");
+        DefaultSampling instance = new DefaultSampling(1, 8, 2);
+        assertEquals(1, instance.getCeilingScale(0), 0);
+        assertEquals(1, instance.getCeilingScale(1), 0);
+        assertEquals(4, instance.getCeilingScale(4), 0);
+        assertEquals(8, instance.getCeilingScale(5), 0);
+        assertEquals(8, instance.getCeilingScale(8), 0);
+
+        instance = new DefaultSampling(4, 10, 2, Sequence.ARITH);
+        assertEquals(4, instance.getCeilingScale(1), 0);
+        assertEquals(4, instance.getCeilingScale(4), 0);
+        assertEquals(6, instance.getCeilingScale(5), 0);
+        assertEquals(8, instance.getCeilingScale(8), 0);
+    }
 }

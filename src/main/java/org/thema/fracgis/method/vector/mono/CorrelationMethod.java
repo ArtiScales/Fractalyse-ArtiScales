@@ -23,6 +23,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPoint;
 import com.vividsolutions.jts.geom.Point;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.TreeMap;
 import org.thema.common.ProgressBar;
@@ -62,50 +63,13 @@ public class CorrelationMethod extends MonoVectorMethod {
 
     @Override
     public void execute(ProgressBar monitor, boolean parallel) {
-        List<DefaultFeature> points = new ArrayList<>();
-        for(Feature f : getCoverage().getFeatures()) {
-            Geometry geom = f.getGeometry();
-            if(geom instanceof Point) {
-                points.add(new DefaultFeature(points.size(), geom));
-            } else if(geom instanceof MultiPoint) {
-                for(int i = 0; i < geom.getNumGeometries(); i++) {
-                    points.add(new DefaultFeature(points.size(), geom.getGeometryN(i)));
-                }
-            } else {
-                throw new IllegalArgumentException("Correlation method supports point geometry only");
-            }
-        }
-        
-        final DefaultFeatureCoverage<DefaultFeature> pointCov = new DefaultFeatureCoverage<>(points);
+        final DefaultFeatureCoverage<DefaultFeature> pointCov = flattenPoints(getCoverage().getFeatures());
         final int [] tot = new int[getSampling().getValues().size()]; 
         
-        SimpleParallelTask<DefaultFeature, int[]> task = new SimpleParallelTask<DefaultFeature, int[]>(points) {
+        SimpleParallelTask<DefaultFeature, int[]> task = new SimpleParallelTask<DefaultFeature, int[]>(pointCov.getFeatures(), monitor) {
             @Override
             protected int[] executeOne(DefaultFeature elem) {
-                int [] nb = new int[getSampling().getValues().size()];       
-
-                Geometry point = elem.getGeometry();
-                Envelope env = new Envelope(point.getCoordinate());
-                env.expandBy(getSampling().getRealMaxSize()/2);
-                for(Feature f2 : pointCov.getFeatures(env)) {
-                    double dist = 2*point.getCoordinate().distance(f2.getGeometry().getCoordinate());
-                    if(dist >= getSampling().getRealMaxSize()) {
-                        continue;
-                    }
-                    if(dist < getSampling().getMinSize()) {
-                        nb[0]++;
-                    } else {
-                        int ind;
-                        if(getSampling().getSeq() == Sampling.Sequence.GEOM) {
-                            ind = 1+(int)(Math.log(dist/getSampling().getMinSize()) / Math.log(getSampling().getCoef()));
-                        } else {
-                            ind = 1+(int)((dist-getSampling().getMinSize()) / getSampling().getCoef());
-                        }
-                        nb[ind]++;
-                    }
-                }
-                
-                return nb;
+                return calcOne(elem.getGeometry(), pointCov, getSampling());
             }
             
             @Override
@@ -130,7 +94,7 @@ public class CorrelationMethod extends MonoVectorMethod {
         }
         int i = 0;
         for(Double val : getSampling().getValues()) {
-            curve.put(val, tot[i++] / (double)points.size());
+            curve.put(val, tot[i++] / (double)pointCov.getFeatures().size());
         }
     }
 
@@ -144,5 +108,38 @@ public class CorrelationMethod extends MonoVectorMethod {
         return "Correlation";
     }
 
+    public static int[] calcOne(Geometry point, FeatureCoverage<? extends Feature> pointCov, DefaultSampling sampling) {
+        int [] nb = new int[sampling.getValues().size()];       
+
+        Envelope env = new Envelope(point.getCoordinate());
+        env.expandBy(sampling.getRealMaxSize()/2);
+        for(Feature f2 : pointCov.getFeatures(env)) {
+            double dist = 2*point.getCoordinate().distance(f2.getGeometry().getCoordinate());
+            if(dist >= sampling.getRealMaxSize()) {
+                continue;
+            }
+            int ind = sampling.getCeilingScaleIndex(dist);
+            nb[ind]++;
+        }
+
+        return nb;
+    }
     
+    public static DefaultFeatureCoverage<DefaultFeature> flattenPoints(Collection<Feature> pointFeatures) {
+        List<DefaultFeature> points = new ArrayList<>();
+        for(Feature f : pointFeatures) {
+            Geometry geom = f.getGeometry();
+            if(geom instanceof Point) {
+                points.add(new DefaultFeature(points.size(), geom));
+            } else if(geom instanceof MultiPoint) {
+                for(int i = 0; i < geom.getNumGeometries(); i++) {
+                    points.add(new DefaultFeature(points.size(), geom.getGeometryN(i)));
+                }
+            } else {
+                throw new IllegalArgumentException("Correlation method supports point geometry only");
+            }
+        }
+        
+        return new DefaultFeatureCoverage<>(points);
+    }
 }

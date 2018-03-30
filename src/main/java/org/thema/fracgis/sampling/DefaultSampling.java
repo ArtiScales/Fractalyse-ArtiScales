@@ -329,6 +329,41 @@ public class DefaultSampling implements Sampling {
         }
     }
 
+    /**
+     * Returns the index of the greatest sampling scale lower or equal to dist.
+     * Returns always zero for distances lower than minSize.
+     * The index can be greater than the number of scales. To avoid outofbounds exception, you must check the result
+     * @param dist a distance
+     * @return the index of the greatest sampling scale lower or equal to dist
+     */
+    public int getCeilingScaleIndex(double dist) {
+        int ind;
+        if(getSeq() == Sequence.GEOM) {
+            ind = (int)Math.ceil(Math.log(dist/getMinSize()) / Math.log(getCoef()));
+        } else {
+            ind = (int)Math.ceil((dist-getMinSize()) / getCoef());
+        }
+        if(ind < 0) {
+            ind = 0;
+        }
+        return ind;
+    }
+    
+    /**
+     * Returns the greatest sampling scale lower or equal to dist.
+     * Returns always minSize for distances lower than minSize.
+     * The returned scale can be greater than maxSize. To avoid outofbounds exception, you must check the result
+     * @param dist a distance
+     * @return the greatest sampling scale lower or equal to dist
+     */
+    public double getCeilingScale(double dist) {
+        if(getSeq() == Sequence.GEOM) {
+            return Math.pow(getCoef(), getCeilingScaleIndex(dist)) * getMinSize();
+        } else {
+            return getCoef() * getCeilingScaleIndex(dist) + getMinSize();
+        }
+    }
+    
     @Override
     public String toString() {
         return "{" + "min=" + minSize + ", max=" + maxSize + ", coef=" + coef + ", seq=" + seq + '}';

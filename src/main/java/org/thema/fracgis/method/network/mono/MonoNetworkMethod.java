@@ -21,14 +21,12 @@ import com.vividsolutions.jts.geom.Point;
 import java.util.TreeMap;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
-import org.thema.common.ProgressBar;
 import org.thema.common.param.ReflectObject;
 import org.thema.data.feature.DefaultFeatureCoverage;
 import org.thema.data.feature.Feature;
 import org.thema.fracgis.method.AbstractMethod;
 import org.thema.fracgis.method.MonoMethod;
 import org.thema.fracgis.sampling.DefaultSampling;
-import org.thema.fracgis.sampling.Sampling;
 import org.thema.graph.SpatialGraph;
 import org.thema.graph.Util;
 import org.thema.graph.pathfinder.DijkstraPathFinder;
@@ -100,45 +98,30 @@ public abstract class MonoNetworkMethod extends AbstractMethod implements MonoMe
                         finder.getCost(edge.getNodeB()));
                 double end = start + 2*d;
                 
-                if(start >= getSampling().getRealMaxSize()) {
+                if(start > getSampling().getRealMaxSize()) {
                     continue;
                 }
-                if(end < getSampling().getMinSize()) {
-                    mass[0] += m;
-                } else {
-                    
-                    int iStart, iEnd;
-                    if(getSampling().getSeq() == Sampling.Sequence.GEOM) {
-                        iStart = 1+(int)(Math.log(start/getSampling().getMinSize()) / Math.log(getSampling().getCoef()));
-                        iEnd = 1+(int)(Math.log(end/getSampling().getMinSize()) / Math.log(getSampling().getCoef()));
+                
+                int iStart = getSampling().getCeilingScaleIndex(start);
+                int iEnd = getSampling().getCeilingScaleIndex(end);
+
+                if(iEnd >= mass.length) {
+                    m -= m * (end - x[x.length-1]) / (end-start);
+                    iEnd = mass.length-1;
+                    end = x[x.length-1];
+                }
+                if(m > 0) {
+                    if(iStart == iEnd) {
+                        mass[iStart] += m;
                     } else {
-                        iStart = 1+(int)((start-getSampling().getMinSize()) / getSampling().getCoef());
-                        iEnd = 1+(int)((end-getSampling().getMinSize()) / getSampling().getCoef());
-                    }
-                    if(iStart < 0) {
-                        double m0 = m * (x[0] - start) / (end-start);
-                        mass[0] += m0;
-                        m -= m0;
-                        iStart = 0;
-                        start = x[0];
-                    }
-                    if(iEnd >= mass.length) {
-                        m -= m * (end - x[x.length-1]) / (end-start);
-                        iEnd = mass.length-1;
-                        end = x[x.length-1];
-                    }
-                    if(m > 0) {
-                        if(iStart == iEnd) {
-                            mass[iStart] += m;
-                        } else {
-                            mass[iStart] += m * (x[iStart]-start) / (end-start);
-                            for(int i = iStart+1; i < iEnd; i++) {
-                                mass[i] += m * (x[i]-x[i-1]) / (end-start);
-                            }
-                            mass[iEnd] += m * (end-x[iEnd-1]) / (end-start);
+                        mass[iStart] += m * (x[iStart]-start) / (end-start);
+                        for(int i = iStart+1; i < iEnd; i++) {
+                            mass[i] += m * (x[i]-x[i-1]) / (end-start);
                         }
+                        mass[iEnd] += m * (end-x[iEnd-1]) / (end-start);
                     }
                 }
+                
             }
         } else {
             for(Object n : network.getGraph().getNodes()) {
@@ -147,22 +130,12 @@ public abstract class MonoNetworkMethod extends AbstractMethod implements MonoMe
                     continue;
                 }
                 double dist = 2*finder.getCost(node);
-                if(dist >= getSampling().getRealMaxSize()) {
+                if(dist > getSampling().getRealMaxSize()) {
                     continue;
                 }
                 double m = ((Number)((Feature)node.getObject()).getAttribute(massField)).doubleValue();
-                if(dist < getSampling().getMinSize()) {
-                    mass[0] += m;
-                } else {
-                    int ind;
-                    if(getSampling().getSeq() == Sampling.Sequence.GEOM) {
-                        ind = 1+(int)(Math.log(dist/getSampling().getMinSize()) / Math.log(getSampling().getCoef()));
-                    } else {
-                        ind = 1+(int)((dist-getSampling().getMinSize()) / getSampling().getCoef());
-                    }
-
-                    mass[ind] += m;
-                }
+                int ind = getSampling().getCeilingScaleIndex(dist);
+                mass[ind] += m;
             }
         }
 

@@ -21,10 +21,6 @@ package org.thema.fracgis.method.vector.multi;
 
 import org.thema.fracgis.method.QMonoMethod;
 import org.thema.fracgis.method.MultiFracMethod;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.MultiPoint;
-import com.vividsolutions.jts.geom.Point;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,12 +30,13 @@ import java.util.TreeSet;
 import org.thema.common.ProgressBar;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.DefaultFeatureCoverage;
-import org.thema.data.feature.Feature;
 import org.thema.data.feature.FeatureCoverage;
 import org.thema.fracgis.method.MonoMethod;
 import org.thema.fracgis.method.vector.VectorMethod;
+import org.thema.fracgis.method.vector.mono.CorrelationMethod;
 import org.thema.fracgis.sampling.DefaultSampling;
-import org.thema.fracgis.sampling.Sampling;
+import org.thema.parallel.ExecutorService;
+import org.thema.parallel.SimpleParallelTask;
 
 /**
  * Multifractal analysis with correlation and vector data.
@@ -66,60 +63,33 @@ public class MultiFracCorrelationVectorMethod extends VectorMethod implements Mu
 
     @Override
     public void execute(ProgressBar monitor, boolean parallel) {
+        final DefaultFeatureCoverage<DefaultFeature> pointCov = CorrelationMethod.flattenPoints(getCoverage().getFeatures());
+        nbPoints = pointCov.getFeatures().size();
+        maxSize = Math.sqrt(Math.pow(getCoverage().getEnvelope().getWidth(), 2) + Math.pow(getCoverage().getEnvelope().getHeight(), 2));
         count = new ArrayList<>();
         
-        List<DefaultFeature> points = new ArrayList<>();
-        for(Feature f : getCoverage().getFeatures()) {
-            Geometry geom = f.getGeometry();
-            if(geom instanceof Point) {
-                points.add(new DefaultFeature(points.size(), geom));
-            } else if(geom instanceof MultiPoint) {
-                for(int i = 0; i < geom.getNumGeometries(); i++) {
-                    points.add(new DefaultFeature(points.size(), geom.getGeometryN(i)));
+        SimpleParallelTask<DefaultFeature, int[]> task = new SimpleParallelTask<DefaultFeature, int[]>(pointCov.getFeatures(), monitor) {
+            @Override
+            protected int[] executeOne(DefaultFeature elem) {
+                int [] nb = CorrelationMethod.calcOne(elem.getGeometry(), pointCov, getSampling());
+                for(int i = 1; i < nb.length; i++) {
+                    nb[i] += nb[i-1];
                 }
-            } else {
-                throw new IllegalArgumentException("Correlation method supports point geometry only");
+                return nb;
             }
-        }
-        
-        nbPoints = points.size();
-        maxSize = Math.sqrt(Math.pow(getCoverage().getEnvelope().getWidth(), 2) + Math.pow(getCoverage().getEnvelope().getHeight(), 2));
-        
-        DefaultFeatureCoverage<DefaultFeature> pointCov = new DefaultFeatureCoverage<>(points);
-        
-        monitor.setMaximum(nbPoints);
-        
-        for(DefaultFeature f1 : points) {
-            int [] nb = new int[getSampling().getValues().size()];
             
-            Geometry point = f1.getGeometry();
-            Envelope env = new Envelope(point.getCoordinate());
-            env.expandBy(getSampling().getRealMaxSize()/2);
-            for(Feature f2 : pointCov.getFeatures(env)) {
-                double dist = point.getCoordinate().distance(f2.getGeometry().getCoordinate());
-                if(dist >= getSampling().getRealMaxSize()) {
-                    continue;
-                }
-                if(dist < getSampling().getMinSize()) {
-                    nb[0]++;
-                } else {
-                    int ind;
-                    if(getSampling().getSeq() == Sampling.Sequence.GEOM) {
-                        ind = 1+(int)(Math.log(dist/getSampling().getMinSize()) / Math.log(getSampling().getCoef()));
-                    } else {
-                        ind = 1+(int)((dist-getSampling().getMinSize()) / getSampling().getCoef());
-                    }
-                    nb[ind]++;
-                }
+            @Override
+            public void gather(List<int[]> results) {
+                count.addAll(results);
             }
-            for(int i = 1; i < nb.length; i++) {
-                nb[i] += nb[i-1];
-            }
-            count.add(nb);
-            monitor.incProgress(1);
+        };
+
+        if(parallel) {
+            ExecutorService.execute(task);
+        } else {
+            ExecutorService.executeSequential(task);
         }
         
-
     }
 
     @Override
