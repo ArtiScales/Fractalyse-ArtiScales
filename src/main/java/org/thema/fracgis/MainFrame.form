@@ -25,6 +25,14 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="loadRasterMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="loadNetMenuItem">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Load network"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="loadNetMenuItemActionPerformed"/>
+              </Events>
+            </MenuItem>
             <MenuItem class="javax.swing.JSeparator" name="jSeparator1">
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="prefMenuItem">
@@ -92,14 +100,29 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="batchVectorMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="multiFracVectorMenuItem1">
+            <Menu class="javax.swing.JMenu" name="multiFracVectorMenu">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Multi-fractal"/>
               </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="multiFracVectorMenuItem1ActionPerformed"/>
-              </Events>
-            </MenuItem>
+              <SubComponents>
+                <MenuItem class="javax.swing.JMenuItem" name="multiFracBocCountingVectorMenuItem">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Box counting"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="multiFracBocCountingVectorMenuItemActionPerformed"/>
+                  </Events>
+                </MenuItem>
+                <MenuItem class="javax.swing.JMenuItem" name="multiFracCorrelationVectorMenuItem">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Correlation"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="multiFracCorrelationVectorMenuItemActionPerformed"/>
+                  </Events>
+                </MenuItem>
+              </SubComponents>
+            </Menu>
           </SubComponents>
         </Menu>
         <Menu class="javax.swing.JMenu" name="rasterMenu">
@@ -163,7 +186,6 @@
                 <MenuItem class="javax.swing.JMenuItem" name="waveletMenuItem">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Wavelet"/>
-                    <Property name="enabled" type="boolean" value="false"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="waveletMenuItemActionPerformed"/>
@@ -178,12 +200,20 @@
             <Property name="text" type="java.lang.String" value="Network"/>
           </Properties>
           <SubComponents>
-            <MenuItem class="javax.swing.JMenuItem" name="backBoneMenuItem">
+            <MenuItem class="javax.swing.JMenuItem" name="correlationNetMenuItem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Backbone..."/>
+                <Property name="text" type="java.lang.String" value="Correlation"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="backBoneMenuItemActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="correlationNetMenuItemActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="localNetMenuItem">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Radial..."/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="localNetMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="desserteMenuItem">
@@ -194,12 +224,12 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="desserteMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="localNetMenuItem">
+            <MenuItem class="javax.swing.JMenuItem" name="backBoneMenuItem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Radial..."/>
+                <Property name="text" type="java.lang.String" value="Backbone..."/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="localNetMenuItemActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="backBoneMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>
@@ -223,6 +253,14 @@
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="binarizeMenuItemActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="importPRAOMenuItem">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Convert PRAO data"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="importPRAOMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
             <Menu class="javax.swing.JMenu" name="jMenu1">

@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
 import org.thema.common.swing.TaskMonitor;
+import org.thema.data.feature.Feature;
 import org.thema.drawshape.PanelMap;
 import org.thema.drawshape.PanelMap.ShapeMouseListener;
 import org.thema.drawshape.SelectableShape;
@@ -204,7 +205,7 @@ public class DesserteDialog extends javax.swing.JDialog implements ShapeMouseLis
             @Override
             public void run() {
                 DesserteMethod method = new DesserteMethod(layer.getName(), graph, new GeometryFactory().createPoint(new Coordinate(cx, cy)),
-                        new ArrayList<>(((FeatureLayer)buildComboBox.getSelectedItem()).getFeatures()));
+                        new ArrayList<Feature>(((FeatureLayer)buildComboBox.getSelectedItem()).getFeatures()));
 
                 method.execute(new TaskMonitor(DesserteDialog.this, "Desserte network", "", 0, 100), true);
                 //new EstimationFrame(null, method.getEstimation()).setVisible(true);

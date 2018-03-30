@@ -19,7 +19,6 @@
 
 package org.thema.fracgis.method.vector;
 
-import java.util.Locale;
 import javax.swing.JOptionPane;
 import org.thema.data.feature.DefaultFeatureCoverage;
 import org.thema.drawshape.layer.FeatureLayer;
@@ -78,15 +77,10 @@ public class BoxCountingDialog extends javax.swing.JDialog {
         cancelButton = new javax.swing.JButton();
         layerComboBox = new javax.swing.JComboBox();
         jLabel1 = new javax.swing.JLabel();
-        minTextField = new javax.swing.JTextField();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
-        maxTextField = new javax.swing.JTextField();
-        coefSpinner = new javax.swing.JSpinner();
-        jLabel4 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
         dSpinner = new javax.swing.JSpinner();
         viewBoxCheckBox = new javax.swing.JCheckBox();
+        samplingPanel1 = new org.thema.fracgis.sampling.SamplingPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Box counting");
@@ -113,17 +107,9 @@ public class BoxCountingDialog extends javax.swing.JDialog {
 
         jLabel1.setText("Layer");
 
-        jLabel2.setText("Min size");
-
-        jLabel3.setText("Max size");
-
-        coefSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(2.0d), Double.valueOf(1.0d), null, Double.valueOf(1.0d)));
-
-        jLabel4.setText("Coef");
-
         jLabel5.setText("Gliding grid");
 
-        dSpinner.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(1), null, Integer.valueOf(1)));
+        dSpinner.setModel(new javax.swing.SpinnerNumberModel(1, 1, null, 1));
 
         viewBoxCheckBox.setText("View boxes");
 
@@ -134,14 +120,6 @@ public class BoxCountingDialog extends javax.swing.JDialog {
             .add(layout.createSequentialGroup()
                 .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(layout.createSequentialGroup()
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(jLabel2)
-                            .add(jLabel3))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(minTextField)
-                            .add(maxTextField)))
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                         .add(0, 0, Short.MAX_VALUE)
                         .add(okButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 67, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -149,23 +127,21 @@ public class BoxCountingDialog extends javax.swing.JDialog {
                         .add(cancelButton))
                     .add(layout.createSequentialGroup()
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(jLabel1)
-                            .add(jLabel4))
-                        .add(35, 35, 35)
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(layout.createSequentialGroup()
-                                .add(coefSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 51, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                .add(0, 151, Short.MAX_VALUE))
-                            .add(layerComboBox, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .add(layout.createSequentialGroup()
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(viewBoxCheckBox)
+                                .add(jLabel1)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .add(layerComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 250, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                             .add(layout.createSequentialGroup()
                                 .add(jLabel5)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(dSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 60, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                        .add(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                                .add(dSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 60, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .add(18, 18, 18)
+                                .add(viewBoxCheckBox)
+                                .add(0, 0, Short.MAX_VALUE)))
+                        .addContainerGap())))
+            .add(layout.createSequentialGroup()
+                .add(samplingPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(0, 0, Short.MAX_VALUE))
         );
 
         layout.linkSize(new java.awt.Component[] {cancelButton, okButton}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
@@ -178,24 +154,13 @@ public class BoxCountingDialog extends javax.swing.JDialog {
                     .add(layerComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jLabel1))
                 .add(18, 18, 18)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(jLabel2)
-                    .add(minTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(jLabel3)
-                    .add(maxTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(18, 18, 18)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(coefSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jLabel4))
+                .add(samplingPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 127, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(18, 18, 18)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel5)
-                    .add(dSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                .add(viewBoxCheckBox)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 24, Short.MAX_VALUE)
+                    .add(dSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(viewBoxCheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 30, Short.MAX_VALUE)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(cancelButton)
                     .add(okButton))
@@ -207,10 +172,7 @@ public class BoxCountingDialog extends javax.swing.JDialog {
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
         layer = (FeatureLayer) layerComboBox.getSelectedItem();
-        double minSize = Double.parseDouble(minTextField.getText());
-        double maxSize = Double.parseDouble(maxTextField.getText());
-        double coef = (Double)coefSpinner.getValue();
-        sampling = new DefaultSampling(minSize, maxSize, coef);
+        sampling = samplingPanel1.getSampling();
         d = (Integer)dSpinner.getValue();
         viewBoxes = viewBoxCheckBox.isSelected();
         
@@ -227,25 +189,19 @@ public class BoxCountingDialog extends javax.swing.JDialog {
     private void layerComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_layerComboBoxActionPerformed
         FeatureLayer l = (FeatureLayer) layerComboBox.getSelectedItem();
         DefaultFeatureCoverage cov = new DefaultFeatureCoverage(l.getFeatures());
-        maxTextField.setText(String.format(Locale.US, "%g", sampling.getDefaultMax(cov.getEnvelope())));
-        minTextField.setText(String.format(Locale.US, "%g", sampling.getDefaultMin(cov.getFeatures())));
+        samplingPanel1.setSizes(sampling.getDefaultMin(cov.getFeatures()), sampling.getDefaultMax(cov.getEnvelope()));
 
     }//GEN-LAST:event_layerComboBoxActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
-    private javax.swing.JSpinner coefSpinner;
     private javax.swing.JSpinner dSpinner;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JComboBox layerComboBox;
-    private javax.swing.JTextField maxTextField;
-    private javax.swing.JTextField minTextField;
     private javax.swing.JButton okButton;
+    private org.thema.fracgis.sampling.SamplingPanel samplingPanel1;
     private javax.swing.JCheckBox viewBoxCheckBox;
     // End of variables declaration//GEN-END:variables
 

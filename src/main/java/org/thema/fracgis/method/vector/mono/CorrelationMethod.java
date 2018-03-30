@@ -32,6 +32,8 @@ import org.thema.data.feature.Feature;
 import org.thema.data.feature.FeatureCoverage;
 import org.thema.fracgis.sampling.DefaultSampling;
 import org.thema.fracgis.sampling.Sampling;
+import org.thema.parallel.ExecutorService;
+import org.thema.parallel.SimpleParallelTask;
 
 /**
  * Calculates correlation dimension for vector point data.
@@ -73,39 +75,62 @@ public class CorrelationMethod extends MonoVectorMethod {
                 throw new IllegalArgumentException("Correlation method supports point geometry only");
             }
         }
-        DefaultFeatureCoverage<DefaultFeature> pointCov = new DefaultFeatureCoverage<>(points);
-                
-        int [] nb = new int[getSampling().getValues().size()];
-        for(DefaultFeature f1 : points) {
-            Geometry point = f1.getGeometry();
-            Envelope env = new Envelope(point.getCoordinate());
-            env.expandBy(getSampling().getRealMaxSize()/2);
-            for(Feature f2 : pointCov.getFeatures(env)) {
-                double dist = 2*point.getCoordinate().distance(f2.getGeometry().getCoordinate());
-                if(dist >= getSampling().getRealMaxSize()) {
-                    continue;
-                }
-                if(dist < getSampling().getMinSize()) {
-                    nb[0]++;
-                } else {
-                    int ind;
-                    if(getSampling().getSeq() == Sampling.Sequence.GEOM) {
-                        ind = 1+(int)(Math.log(dist/getSampling().getMinSize()) / Math.log(getSampling().getCoef()));
-                    } else {
-                        ind = 1+(int)((dist-getSampling().getMinSize()) / getSampling().getCoef());
+        
+        final DefaultFeatureCoverage<DefaultFeature> pointCov = new DefaultFeatureCoverage<>(points);
+        final int [] tot = new int[getSampling().getValues().size()]; 
+        
+        SimpleParallelTask<DefaultFeature, int[]> task = new SimpleParallelTask<DefaultFeature, int[]>(points) {
+            @Override
+            protected int[] executeOne(DefaultFeature elem) {
+                int [] nb = new int[getSampling().getValues().size()];       
+
+                Geometry point = elem.getGeometry();
+                Envelope env = new Envelope(point.getCoordinate());
+                env.expandBy(getSampling().getRealMaxSize()/2);
+                for(Feature f2 : pointCov.getFeatures(env)) {
+                    double dist = 2*point.getCoordinate().distance(f2.getGeometry().getCoordinate());
+                    if(dist >= getSampling().getRealMaxSize()) {
+                        continue;
                     }
-                    nb[ind]++;
+                    if(dist < getSampling().getMinSize()) {
+                        nb[0]++;
+                    } else {
+                        int ind;
+                        if(getSampling().getSeq() == Sampling.Sequence.GEOM) {
+                            ind = 1+(int)(Math.log(dist/getSampling().getMinSize()) / Math.log(getSampling().getCoef()));
+                        } else {
+                            ind = 1+(int)((dist-getSampling().getMinSize()) / getSampling().getCoef());
+                        }
+                        nb[ind]++;
+                    }
+                }
+                
+                return nb;
+            }
+            
+            @Override
+            public void gather(List<int[]> results) {
+                for(int [] m : results) {
+                    for(int i = 0; i < tot.length; i++) {
+                        tot[i] += m[i];
+                    }
                 }
             }
+        };
+        
+        if(parallel) {
+            ExecutorService.execute(task);
+        } else {
+            ExecutorService.executeSequential(task);
         }
         
         curve = new TreeMap<>();
-        for(int i = 1; i < nb.length; i++) {
-            nb[i] += nb[i-1];
+        for(int i = 1; i < tot.length; i++) {
+            tot[i] += tot[i-1];
         }
         int i = 0;
         for(Double val : getSampling().getValues()) {
-            curve.put(val, nb[i++] / (double)points.size());
+            curve.put(val, tot[i++] / (double)points.size());
         }
     }
 

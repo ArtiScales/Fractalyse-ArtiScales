@@ -19,6 +19,7 @@
 
 package org.thema.fracgis.method.network;
 
+import org.thema.fracgis.method.network.mono.LocalNetworkMethod;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Point;
 import java.awt.Color;
@@ -38,7 +39,10 @@ import org.thema.drawshape.style.PointStyle;
 import org.thema.fracgis.method.AbstractMethod;
 import org.thema.fracgis.method.MethodLayers;
 import org.thema.fracgis.method.MonoMethod;
+import static org.thema.fracgis.method.network.mono.LocalNetworkMethod.DIST_MASS;
+import static org.thema.fracgis.method.network.mono.LocalNetworkMethod.LENGTH_WEIGHT;
 import org.thema.fracgis.sampling.DefaultSampling;
+import org.thema.fracgis.sampling.Sampling;
 import org.thema.graph.SpatialGraph;
 import org.thema.graph.pathfinder.DijkstraPathFinder;
 
@@ -110,7 +114,9 @@ public class DesserteMethod extends AbstractMethod implements MonoMethod {
             curve.put(d, n);
         }
 
-        localNetworkMethod = new LocalNetworkMethod(getInputLayerName(), network, point, curve.lastKey() / 1000);
+        localNetworkMethod = new LocalNetworkMethod(getInputLayerName(), 
+                new DefaultSampling(curve.firstKey(), curve.lastKey(), curve.lastKey() / 1000, Sampling.Sequence.ARITH), 
+                network, point, LENGTH_WEIGHT);
         localNetworkMethod.execute(monitor, threaded);
 
         errLayer = new FeatureLayer("Not connected", errorFeatures, new FeatureStyle(Color.RED, Color.RED));

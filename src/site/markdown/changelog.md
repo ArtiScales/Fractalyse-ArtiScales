@@ -1,6 +1,18 @@
 ## Changelog
 
-##### 0.6.3 
+##### 0.7 (30/03/2018)
+- Network data : network can be loaded from node shapefile + link table in csv
+- Add correlation network method (or sandbox)
+- Network distance and mass can be choosen for correlation and local network methods
+- Sampling ui has been enhanced for all network and vector methods
+- Multifractal estimation : text export
+- Java 9 support
+
+##### 0.6.4 
+- Local network : bad result when step resolution is larger than edge length
+- Multi fractal raster box : error when the raster is not binary
+
+##### 0.6.3 (26/09/2016)
 - Add log window
 - Add correlation for vector data (point geometry only)
 

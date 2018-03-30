@@ -4,7 +4,7 @@
 
     <groupId>org.thema</groupId>
     <artifactId>fracgis</artifactId>
-    <version>0.6.3</version>
+    <version>0.7</version>
     <packaging>jar</packaging>
 
     <name>FracGIS</name>
@@ -66,7 +66,6 @@
                         <phase>site</phase>
                         <goals>
                             <goal>latex</goal>
-                            <goal>tex4ht</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -110,33 +109,33 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>data</artifactId>
-            <version>1.3.3</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>graph</artifactId>
-            <version>1.4.1</version>
+            <version>1.6.1</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>msca</artifactId>
-            <version>1.3.3</version>
+            <version>1.5</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>parallel</artifactId>
-            <version>1.3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>common</artifactId>
-            <version>1.4.1</version>
+            <version>1.5</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.4</version>
+        </dependency>
+        <dependency>
+            <groupId>de.sciss</groupId>
+            <artifactId>jwave</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.1</version>
         </dependency>
     </dependencies>
     <repositories>
@@ -168,20 +167,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>2.7</version>
+                <version>2.9</version>
                 <reportSets>
                     <reportSet>
                         <reports>
                             <report>summary</report>
                             <report>license</report>
+                            <report>scm</report>
+                            <report>project-team</report>
                         </reports>
                     </reportSet>
                 </reportSets>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10</version>
             </plugin>
         </plugins>
     </reporting>

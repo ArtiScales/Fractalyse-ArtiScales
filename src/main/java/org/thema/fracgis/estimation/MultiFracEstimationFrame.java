@@ -27,16 +27,20 @@ import java.awt.geom.Rectangle2D;
 import java.io.*;
 import java.util.Collections;
 import java.util.NavigableSet;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.SpinnerListModel;
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.collections4.functors.StringValueTransformer;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
@@ -48,10 +52,10 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.ui.ExtensionFileFilter;
+import org.thema.common.Util;
 import org.thema.drawshape.layer.RasterLayer;
-import org.thema.fracgis.method.AbstractMethod;
 import org.thema.fracgis.method.raster.multi.MultiFracWaveletMethod;
+import org.thema.fracgis.method.raster.multi.WTMMMethod;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 
@@ -112,9 +116,13 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
             LogEstimation estim = new LogEstimation(method.getSimpleMethod(q));
             estim.setRange((Double)leftSpinner.getValue(), (Double)rightSpinner.getValue());
             estims.put(q, estim);
-            Tq.put(q, estim.getDimension() + (isLWTMethod() ? 2 : 0));
+            Tq.put(q, (isWTMMMethod() ? -1 : 1) * estim.getDimension() + (isLWTMethod() ? 2 : 0));
             if(Math.abs(q-1) > 0.00001) {
-                Dq.put(q, Tq.get(q) / (1-q));
+                if(isWTMMMethod()) {
+                    Dq.put(q, (Tq.get(q)+2*q) / (q-1));
+                } else {
+                    Dq.put(q, Tq.get(q) / (1-q));
+                }
             } else if(q == 1) {
                 Dq.put(q, -Tq.get(q));
                 Tq.put(q, 0.0);
@@ -135,11 +143,15 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
             infoTextArea.setText(String.format("Dmin : %g\nD0 : %g\nDmax : %g", Collections.min(Dq.values()), d0, Collections.max(Dq.values())));
         }
         // TODO pas bien 
-        ((AbstractMethod)method).getGroupLayer().setRange((Double)leftSpinner.getValue(), (Double)rightSpinner.getValue());
+//        ((AbstractMethod)method).getGroupLayer().setRange((Double)leftSpinner.getValue(), (Double)rightSpinner.getValue());
     }
 
     private boolean isLWTMethod() {
         return method instanceof MultiFracWaveletMethod;
+    }
+    
+    private boolean isWTMMMethod() {
+        return method instanceof WTMMMethod;
     }
     
     @Override
@@ -229,7 +241,7 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
       
         ((NumberAxis)regPlot.getDomainAxis()).setAutoRangeIncludesZero(false);
         ((NumberAxis)regPlot.getRangeAxis()).setAutoRangeIncludesZero(false);
-        ((XYLineAndShapeRenderer)regPlot.getRenderer()).setBaseShapesVisible(showPointCheckBox.isSelected());
+        ((XYLineAndShapeRenderer)regPlot.getRenderer()).setDefaultShapesVisible(showPointCheckBox.isSelected());
         chart = new JFreeChart("", null, regPlot, false);
 
         chartPanel = new ChartPanel(chart);
@@ -514,23 +526,44 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
     }// </editor-fold>//GEN-END:initComponents
 
     private void exportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportButtonActionPerformed
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setAcceptAllFileFilterUsed(false);
-        ExtensionFileFilter filter = new ExtensionFileFilter(
-                "Image SVG", ".svg");
-        fileChooser.addChoosableFileFilter(filter);
-
-        int option = fileChooser.showSaveDialog(null);
-        if (option != JFileChooser.APPROVE_OPTION) {
+        File file = Util.getFileSave(".txt|.svg");
+        if(file == null) {
             return;
-        }
-            
-        String filename = fileChooser.getSelectedFile().getPath();
-        if(fileChooser.getFileFilter() == filter) {// SVG
-            if (!filename.endsWith(".svg")) {
-                filename = filename + ".svg";
+        } 
+        
+        if(file.getName().endsWith(".txt")) { //TXT
+            try (BufferedWriter w = new BufferedWriter(new FileWriter(file))) {
+                w.write("M\n");
+                w.write(IterableUtils.toString(M.firstEntry().getValue().keySet(), StringValueTransformer.stringValueTransformer(), 
+                        "\t", "q\\size\t", "\n"));
+                for(double q : M.keySet()) {
+                    w.write(IterableUtils.toString(M.get(q).values(), StringValueTransformer.stringValueTransformer(), 
+                            "\t", q+"\t", "\n"));
+                }
+                
+                w.write("\nRegressions");
+                for(double q : estims.keySet()) {
+                    w.write("\nq=" + q + "\n");
+                    LogEstimation estim = estims.get(q);
+                    estim.saveToText(w);
+                }
+                
+                w.write("\nTq\n");
+                writeCurve(Tq, w, "q", "Tau");
+                
+                w.write("Dq\n");
+                writeCurve(Dq, w, "q", "D");
+                
+                w.write("Alpha(q)\n");
+                writeCurve(alpha, w, "q", "alpha");
+                
+                w.write("f(q)\n");
+                writeCurve(f, w, "q", "f");
+                
+            } catch (IOException ex) {
+                Logger.getLogger(EstimationFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
-
+        } else {
             DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
             Document document = domImpl.createDocument(null, "svg", null);
 
@@ -541,7 +574,7 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
             chart.draw(svgGenerator, new Rectangle2D.Float(0, 0, 600, 400));
 
             // Write svg file
-            try (OutputStream outputStream = new FileOutputStream(filename)) {
+            try (OutputStream outputStream = new FileOutputStream(file)) {
                 Writer out = new OutputStreamWriter(outputStream, "UTF-8");
                 svgGenerator.stream(out, true /* use css */);
                 outputStream.flush();
@@ -589,6 +622,13 @@ public class MultiFracEstimationFrame extends javax.swing.JFrame implements Char
     }//GEN-LAST:event_viewqEstimButtonActionPerformed
 
 
+    private void writeCurve(SortedMap<Double, Double> curve, Writer w, String xLabel, String yLabel) throws IOException {
+        w.write(xLabel + "\t" + yLabel + "\n");
+        for(Double x : curve.keySet()) {
+            w.write(x + "\t" + curve.get(x) + "\n");
+        }
+        w.write("\n");
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox curveComboBox;

@@ -107,7 +107,7 @@ Ascii grid is a text format. The image is written as a matrix preceded by a head
 	1 0 0 0 1
 \end{Verbatim}
 
-TIFF is a binary format commonly used for raster image. It can contains an extension named GeoTIFF, which added spatial references to the image. Fractalyse can load TIFF image with or without GeoTIFF extension. Fractalyse does not support RVB color image.
+TIFF is a binary format commonly used for raster image. It can contains an extension named GeoTIFF, which added spatial references to the image. Fractalyse can load TIFF image with or without GeoTIFF extension. Fractalyse does not support RGB color image. You must convert your image in grayscale mode before using Fractalyse.
 
 \chapter{Fractal methods}
 This chapter explains the principles of the different fractal methods implemented in Fractalyse. 
@@ -176,11 +176,11 @@ When the shapefile is loaded with the menu "Load vector data", a new layer is cr
 \subsection{Load raster data}
 Fractalyse support 2 raster formats : TIFF and Ascii Grid.
 
-When the image file is loaded with the menu "Load raster data", a new layer is created and the image is displayed. If the image contains only 0 and 1 value, Fractalyse set the layer as binary layer and set white color for 0 and black color for 1. Otherwise, it sets a gray scale color ramp for the image.
+When the image file is loaded with the menu "Load raster data", a new layer is created and the image is displayed. If the image contains only 0 and 1 value, Fractalyse set the layer as binary layer and set white color for 0 and black color for 1. Otherwise, it sets a gray scale color ramp for the image. Color image (RGB) are not supported.
 
 
 \section{Data manipulation : Tools menu}
-For some analyses the vector data type is not supported (for example correlation) and for raster data type, most analyses need binary image. Fractalyse contains some functions in Tools menu to convert vector to raster data (Rasterize menu) and to convert grayscale raster to binary (Binarize menu).
+For some analyses the vector data type is not supported (for example correlation for lineal or polygonal geometry) and for raster data type, most analyses need binary image. Fractalyse contains some functions in Tools menu to convert vector to raster data (Rasterize menu) and to convert grayscale raster to binary (Binarize menu).
 
 \subsection{Rasterize menu : convert vector to raster}
 \begin{figure}[H]

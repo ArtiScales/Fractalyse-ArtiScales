@@ -19,6 +19,8 @@ package org.thema.fracgis;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.PrecisionModel;
+import com.vividsolutions.jts.precision.GeometryPrecisionReducer;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import java.io.File;
@@ -30,6 +32,7 @@ import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.DefaultFeatureCoverage;
 import org.thema.data.feature.FeatureCoverage;
+import org.thema.graph.SpatialGraph;
 import org.thema.parallel.ParallelExecutor;
 
 /**
@@ -43,6 +46,25 @@ public class Data {
 
     // vector data
     public static FeatureCoverage covPoint, covLine, covSquare, covFrac;
+    
+    // network vector data
+    public static SpatialGraph netCross64, netCross1064, netFrac;
+    
+    public static void loadNetVector() throws IOException {
+        netCross64 = new SpatialGraph(Arrays.asList(
+            new DefaultFeature(2, new GeometryFactory().createLineString(new Coordinate[] {new Coordinate(0, 64), new Coordinate(64, 64)})),
+            new DefaultFeature(3, new GeometryFactory().createLineString(new Coordinate[] {new Coordinate(64, 0), new Coordinate(64, 64)})),
+            new DefaultFeature(4, new GeometryFactory().createLineString(new Coordinate[] {new Coordinate(128, 64), new Coordinate(64, 64)})),
+            new DefaultFeature(5, new GeometryFactory().createLineString(new Coordinate[] {new Coordinate(64, 128), new Coordinate(64, 64)}))));
+        netCross1064 = new SpatialGraph(Arrays.asList(
+            new DefaultFeature(1, new GeometryFactory().createLineString(new Coordinate[] {new Coordinate(0, 64), new Coordinate(10, 64)})),
+            new DefaultFeature(2, new GeometryFactory().createLineString(new Coordinate[] {new Coordinate(10, 64), new Coordinate(64, 64)})),
+            new DefaultFeature(3, new GeometryFactory().createLineString(new Coordinate[] {new Coordinate(64, 0), new Coordinate(64, 64)})),
+            new DefaultFeature(4, new GeometryFactory().createLineString(new Coordinate[] {new Coordinate(128, 64), new Coordinate(64, 64)})),
+            new DefaultFeature(5, new GeometryFactory().createLineString(new Coordinate[] {new Coordinate(64, 128), new Coordinate(64, 64)}))));
+        netFrac = new SpatialGraph(DefaultFeature.loadFeatures(new File("target/test-classes/org/thema/fracgis/tapis_n5_cross_net.shp")),
+            new GeometryPrecisionReducer(new PrecisionModel(100)));
+    }
     
     public static void loadVector(double precision) throws IOException {
         covPoint = new DefaultFeatureCoverage(Arrays.asList(

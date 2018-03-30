@@ -21,6 +21,7 @@ package org.thema.fracgis.method.raster;
 
 import javax.swing.JOptionPane;
 import org.thema.common.JTS;
+import org.thema.drawshape.layer.Layer;
 import org.thema.drawshape.layer.RasterLayer;
 import org.thema.fracgis.BinRasterLayer;
 import org.thema.fracgis.LayerModel;
@@ -184,7 +185,7 @@ public class RasterMethodDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_cancelButtonActionPerformed
 
     private void layerComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_layerComboBoxActionPerformed
-        BinRasterLayer l = (BinRasterLayer) layerComboBox.getSelectedItem();
+        Layer l = (Layer) layerComboBox.getSelectedItem();
         dMaxSpinner.setValue(sampling.getDefaultMax(JTS.rectToEnv(l.getBounds())));
 }//GEN-LAST:event_layerComboBoxActionPerformed
 

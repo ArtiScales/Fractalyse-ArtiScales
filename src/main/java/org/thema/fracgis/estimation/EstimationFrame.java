@@ -30,7 +30,6 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.SpinnerListModel;
 import org.apache.batik.dom.GenericDOMImplementation;
@@ -49,7 +48,7 @@ import org.jfree.data.Range;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.ui.ExtensionFileFilter;
+import org.thema.common.Util;
 import org.thema.drawshape.layer.RasterLayer;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -462,26 +461,13 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
     }// </editor-fold>//GEN-END:initComponents
 
     private void exportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportButtonActionPerformed
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setAcceptAllFileFilterUsed(false);
-        ExtensionFileFilter filter = new ExtensionFileFilter(
-                "Image SVG", ".svg");
-        fileChooser.addChoosableFileFilter(filter);
-        filter = new ExtensionFileFilter(
-                "Texte", ".txt");
-        fileChooser.addChoosableFileFilter(filter);
-
-        int option = fileChooser.showSaveDialog(null);
-        if (option != JFileChooser.APPROVE_OPTION) {
+        File file = Util.getFileSave(".txt|.svg");
+        if(file == null) {
             return;
-        }
-            
-        String filename = fileChooser.getSelectedFile().getPath();
-        if(fileChooser.getFileFilter() == filter) { //TXT
-            if (!filename.endsWith(".txt")) {
-                filename = filename + ".txt";
-            }
-            try (BufferedWriter w = new BufferedWriter(new FileWriter(new File(filename)))) {
+        } 
+        
+        if(file.getName().endsWith(".txt")) { //TXT
+            try (BufferedWriter w = new BufferedWriter(new FileWriter(file))) {
                 estim.saveToText(w);
                 double smooth = (Double)smoothSpinner.getValue();
                 if(smooth > 0.0) {
@@ -504,10 +490,6 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
 
         } else { // SVG
         
-            if (!filename.endsWith(".svg")) {
-                filename = filename + ".svg";
-            }
-
             DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
             Document document = domImpl.createDocument(null, "svg", null);
 
@@ -518,7 +500,7 @@ public class EstimationFrame extends javax.swing.JFrame implements ChartMouseLis
             chart.draw(svgGenerator, new Rectangle2D.Float(0, 0, 600, 400));
 
             // Write svg file
-            try (OutputStream outputStream = new FileOutputStream(filename)) {
+            try (OutputStream outputStream = new FileOutputStream(file)) {
                 Writer out = new OutputStreamWriter(outputStream, "UTF-8");
                 svgGenerator.stream(out, true /* use css */);
             } catch (IOException ex) {

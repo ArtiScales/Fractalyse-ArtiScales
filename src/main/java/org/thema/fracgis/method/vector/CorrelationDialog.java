@@ -17,55 +17,37 @@
  */
 
 
-package org.thema.fracgis.method.vector.mono;
+package org.thema.fracgis.method.vector;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import java.awt.Color;
-import java.awt.event.MouseEvent;
-import java.awt.geom.Point2D;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
 import javax.swing.JOptionPane;
-import org.thema.common.JTS;
-import org.thema.drawshape.PanelMap;
-import org.thema.drawshape.PointShape;
-import org.thema.drawshape.SelectableShape;
+import org.thema.data.feature.DefaultFeatureCoverage;
 import org.thema.drawshape.layer.FeatureLayer;
-import org.thema.drawshape.style.PointStyle;
-import org.thema.drawshape.ui.MapViewer;
 import org.thema.fracgis.LayerModel;
 import org.thema.fracgis.sampling.DefaultSampling;
-import org.thema.fracgis.sampling.RadialSampling;
-import org.thema.fracgis.sampling.Sampling;
 
 /**
- * Dialog form for setting parameters of radial analysis.
- *
+ * Dialog form for vectorial box methods (uni and multifractal).
+ * 
  * @author Gilles Vuidel
  */
-public class RadialDialog extends javax.swing.JDialog implements PanelMap.ShapeMouseListener {
+public class CorrelationDialog extends javax.swing.JDialog {
 
     /** is user clicked OK ? */
     public boolean isOk = false;
-    /** the resulting sampling */
-    public RadialSampling sampling;
-    /** the selected layer */
+    /** the resulting scale sampling */
+    public DefaultSampling sampling;
+    /** the selected layer for input data */
     public FeatureLayer layer;
-    /** the starting point */
-    public Coordinate centre;
-    
-    private MapViewer mapViewer;
-    private PointShape centreShape;
-    
+
     /** 
-     * Creates new form RadialDialog 
-     * @param parent the parent frame 
-     * @param model list of vector layer
-     * @param mapViewer the map viewer for point selection
+     * Creates new form CorrelationDialog 
+     * @param parent the parent frame
+     * @param model list of vector layers
+     * @param sampling sampling used for calculating default min and max size
      */
-    public RadialDialog(java.awt.Frame parent, LayerModel<FeatureLayer> model, MapViewer mapViewer) {
-        super(parent, false);
+    public CorrelationDialog(java.awt.Frame parent, LayerModel<FeatureLayer> model, DefaultSampling sampling) {
+        super(parent, true);
+        this.sampling = sampling;
         initComponents();
         setLocationRelativeTo(parent);
         getRootPane().setDefaultButton(okButton);
@@ -75,14 +57,6 @@ public class RadialDialog extends javax.swing.JDialog implements PanelMap.ShapeM
         }
         layerComboBox.setModel(model);
         layerComboBoxActionPerformed(null);
-        
-        mapViewer.addMouseListener(this);
-        mapViewer.setCursorMode(PanelMap.INPUT_CURSOR_MODE);
-        this.mapViewer = mapViewer;
-        
-        centreShape = new PointShape(centre.x, centre.y);
-        centreShape.setStyle(new PointStyle(Color.BLACK, Color.RED));
-        mapViewer.getMap().addShape(centreShape);
     }
 
 
@@ -99,18 +73,10 @@ public class RadialDialog extends javax.swing.JDialog implements PanelMap.ShapeM
         cancelButton = new javax.swing.JButton();
         layerComboBox = new javax.swing.JComboBox();
         jLabel1 = new javax.swing.JLabel();
-        jLabel6 = new javax.swing.JLabel();
-        centreTextField = new javax.swing.JTextField();
         samplingPanel1 = new org.thema.fracgis.sampling.SamplingPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("Radial");
-        setAlwaysOnTop(true);
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosed(java.awt.event.WindowEvent evt) {
-                formWindowClosed(evt);
-            }
-        });
+        setTitle("Correlation");
 
         okButton.setText("OK");
         okButton.addActionListener(new java.awt.event.ActionListener() {
@@ -134,8 +100,6 @@ public class RadialDialog extends javax.swing.JDialog implements PanelMap.ShapeM
 
         jLabel1.setText("Layer");
 
-        jLabel6.setText("Centre");
-
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -149,15 +113,13 @@ public class RadialDialog extends javax.swing.JDialog implements PanelMap.ShapeM
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(cancelButton))
                     .add(layout.createSequentialGroup()
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(jLabel6)
-                            .add(jLabel1))
-                        .add(21, 21, 21)
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(layerComboBox, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(centreTextField))))
-                .addContainerGap())
-            .add(samplingPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .add(jLabel1)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .add(layerComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 250, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())))
+            .add(layout.createSequentialGroup()
+                .add(samplingPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(0, 0, Short.MAX_VALUE))
         );
 
         layout.linkSize(new java.awt.Component[] {cancelButton, okButton}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
@@ -169,10 +131,6 @@ public class RadialDialog extends javax.swing.JDialog implements PanelMap.ShapeM
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(layerComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jLabel1))
-                .add(18, 18, 18)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(jLabel6)
-                    .add(centreTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(18, 18, 18)
                 .add(samplingPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 127, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -187,9 +145,8 @@ public class RadialDialog extends javax.swing.JDialog implements PanelMap.ShapeM
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
         layer = (FeatureLayer) layerComboBox.getSelectedItem();
-        String[] coords = centreTextField.getText().split(",");
-        centre = new Coordinate(Double.parseDouble(coords[0]), Double.parseDouble(coords[1]));
-        sampling = new RadialSampling(samplingPanel1.getSampling(), centre);
+        sampling = samplingPanel1.getSampling();
+        
         isOk = true;
         setVisible(false);
         dispose();
@@ -202,38 +159,18 @@ public class RadialDialog extends javax.swing.JDialog implements PanelMap.ShapeM
 
     private void layerComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_layerComboBoxActionPerformed
         FeatureLayer l = (FeatureLayer) layerComboBox.getSelectedItem();
-        centre = RadialSampling.getDefaultCentre(JTS.rectToEnv(l.getBounds()));
-        centreTextField.setText(centre.x + "," + centre.y);
-        samplingPanel1.setSizes(0, RadialSampling.getDefaultMax(JTS.rectToEnv(l.getBounds()), centre));
-        if(centreShape != null) {
-            centreShape.setPoint2D(new Point2D.Double(centre.x, centre.y));
-        }
+        DefaultFeatureCoverage cov = new DefaultFeatureCoverage(l.getFeatures());
+        samplingPanel1.setSizes(sampling.getDefaultMin(cov.getFeatures()), sampling.getDefaultMax(cov.getEnvelope()));
+
     }//GEN-LAST:event_layerComboBoxActionPerformed
 
-    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
-        mapViewer.removeShapeMouseListener(this);
-        mapViewer.getMap().removeShapes(Arrays.asList(centreShape));
-    }//GEN-LAST:event_formWindowClosed
 
-    @Override
-    public void mouseClicked(Point2D p, List<SelectableShape> shapes, MouseEvent sourceEvent, int cursorMode) {
-        FeatureLayer l = (FeatureLayer) layerComboBox.getSelectedItem();
-        centreTextField.setText(p.getX() + "," + p.getY());
-        samplingPanel1.setSizes(0, RadialSampling.getDefaultMax(JTS.rectToEnv(l.getBounds()), new Coordinate(p.getX(), p.getY())));
-        centreShape.setPoint2D(p);
-        mapViewer.getMap().fullRepaint();
-    }
-    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
-    private javax.swing.JTextField centreTextField;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel6;
     private javax.swing.JComboBox layerComboBox;
     private javax.swing.JButton okButton;
     private org.thema.fracgis.sampling.SamplingPanel samplingPanel1;
     // End of variables declaration//GEN-END:variables
-
-
 
 }

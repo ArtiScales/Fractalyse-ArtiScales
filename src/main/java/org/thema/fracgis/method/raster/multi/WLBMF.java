@@ -47,10 +47,10 @@ public class WLBMF {
             this.ally = ally;
             this.allxy = allxy;
             
-            i1 = Collections.max(Arrays.asList(getMinRowNaN(allx), getMinRowNaN(ally), getMinRowNaN(allxy)));
-            j1 = Collections.max(Arrays.asList(getMinColNaN(allx), getMinColNaN(ally), getMinColNaN(allxy)));
-            i2 = Collections.min(Arrays.asList(getMaxRowNaN(allx), getMaxRowNaN(ally), getMaxRowNaN(allxy)));
-            j2 = Collections.min(Arrays.asList(getMaxColNaN(allx), getMaxColNaN(ally), getMaxColNaN(allxy)));
+            i1 = Collections.min(Arrays.asList(getMinRowNaN(allx), getMinRowNaN(ally), getMinRowNaN(allxy)));
+            j1 = Collections.min(Arrays.asList(getMinColNaN(allx), getMinColNaN(ally), getMinColNaN(allxy)));
+            i2 = Collections.max(Arrays.asList(getMaxRowNaN(allx), getMaxRowNaN(ally), getMaxRowNaN(allxy)));
+            j2 = Collections.max(Arrays.asList(getMaxColNaN(allx), getMaxColNaN(ally), getMaxColNaN(allxy)));
             W = 3 * (i2-i1+1) * (j2-j1+1);
             
         }
@@ -180,10 +180,10 @@ public class WLBMF {
             AHH.walkInOptimizedOrder(normL1);
             
             //-- max before fractional integration    
-            double supcoefnointx = max(ALH);
-            double supcoefnointy = max(AHL);
-            double supcoefnointxy = max(AHH);
-            double supcoefnoint = Collections.max(Arrays.asList(supcoefnointx, supcoefnointy, supcoefnointxy));
+//            double supcoefnointx = max(ALH);
+//            double supcoefnointy = max(AHL);
+//            double supcoefnointxy = max(AHH);
+//            double supcoefnoint = Collections.max(Arrays.asList(supcoefnointx, supcoefnointy, supcoefnointxy));
 
             //-- fractional integration by gamma
             double gamma = Math.pow(2, gamint*l);
@@ -191,10 +191,10 @@ public class WLBMF {
             AHL = AHL.scalarMultiply(gamma);
             AHH = AHH.scalarMultiply(gamma);
 
-            double supcoefx = max(ALH);
-            double supcoefy = max(AHL);
-            double supcoefxy = max(AHH);
-            double supcoef = Collections.max(Arrays.asList(supcoefx, supcoefy, supcoefxy));
+//            double supcoefx = max(ALH);
+//            double supcoefy = max(AHL);
+//            double supcoefxy = max(AHH);
+//            double supcoef = Collections.max(Arrays.asList(supcoefx, supcoefy, supcoefxy));
 
             coefs.add(new Struct(ALH, AHL, AHH));
             

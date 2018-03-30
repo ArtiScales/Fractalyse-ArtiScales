@@ -19,8 +19,9 @@
 
 package org.thema.fracgis;
 
+import com.vividsolutions.jts.geom.Coordinate;
 import org.thema.fracgis.sampling.DefaultSampling;
-import org.thema.fracgis.method.network.LocalNetworkDialog;
+import org.thema.fracgis.method.network.mono.LocalNetworkDialog;
 import org.thema.fracgis.method.network.DesserteDialog;
 import org.thema.fracgis.method.vector.mono.DilationMethod;
 import org.thema.fracgis.method.vector.mono.RadialMethod;
@@ -38,6 +39,7 @@ import org.thema.fracgis.tools.RasterizeDialog;
 import org.thema.fracgis.tools.BinarizeDialog;
 import org.thema.fracgis.batch.BatchVectorDialog;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Lineal;
 import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.operation.buffer.BufferParameters;
@@ -48,6 +50,8 @@ import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
@@ -58,6 +62,7 @@ import javax.media.jai.iterator.RandomIterFactory;
 import javax.swing.JOptionPane;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.data.DataSourceException;
+import org.geotools.feature.SchemaException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.thema.data.GlobalDataStore;
 import org.thema.common.Config;
@@ -67,8 +72,10 @@ import org.thema.common.RasterImage;
 import org.thema.common.Util;
 import org.thema.data.IOImage;
 import org.thema.common.ProgressBar;
+import org.thema.common.io.tab.CSVTabReader;
 import org.thema.common.swing.LoggingDialog;
 import org.thema.common.swing.PreferencesDialog;
+import org.thema.common.swing.TaskMonitor;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.DefaultFeatureCoverage;
 import org.thema.data.feature.Feature;
@@ -87,8 +94,11 @@ import org.thema.fracgis.method.*;
 import org.thema.fracgis.method.raster.multi.MultiFracBoxCountingRasterMethod;
 import org.thema.fracgis.method.vector.multi.MultiFracBoxCountingVectorMethod;
 import org.thema.fracgis.estimation.MultiFracEstimationFrame;
+import org.thema.fracgis.method.network.mono.CorrelationNetworkDialog;
 import org.thema.fracgis.method.raster.multi.MultiFracWaveletMethod;
+import org.thema.fracgis.method.vector.CorrelationDialog;
 import org.thema.fracgis.method.vector.mono.CorrelationMethod;
+import org.thema.fracgis.method.vector.multi.MultiFracCorrelationVectorMethod;
 import org.thema.fracgis.sampling.MultiFracSampling;
 import org.thema.fracgis.sampling.RasterBoxSampling;
 import org.thema.fracgis.tools.RasterSelectionDialog;
@@ -135,6 +145,7 @@ public class MainFrame extends javax.swing.JFrame {
         fileMenu = new javax.swing.JMenu();
         loadVectorMenuItem = new javax.swing.JMenuItem();
         loadRasterMenuItem = new javax.swing.JMenuItem();
+        loadNetMenuItem = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         prefMenuItem = new javax.swing.JMenuItem();
         logMenuItem = new javax.swing.JMenuItem();
@@ -145,7 +156,9 @@ public class MainFrame extends javax.swing.JFrame {
         radialMenuItem = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         batchVectorMenuItem = new javax.swing.JMenuItem();
-        multiFracVectorMenuItem1 = new javax.swing.JMenuItem();
+        multiFracVectorMenu = new javax.swing.JMenu();
+        multiFracBocCountingVectorMenuItem = new javax.swing.JMenuItem();
+        multiFracCorrelationVectorMenuItem = new javax.swing.JMenuItem();
         rasterMenu = new javax.swing.JMenu();
         boxCountingRasterMenuItem = new javax.swing.JMenuItem();
         dilRasterMenuItem = new javax.swing.JMenuItem();
@@ -156,12 +169,14 @@ public class MainFrame extends javax.swing.JFrame {
         multiFracBoxRasterMenuItem = new javax.swing.JMenuItem();
         waveletMenuItem = new javax.swing.JMenuItem();
         networkMenu = new javax.swing.JMenu();
-        backBoneMenuItem = new javax.swing.JMenuItem();
-        desserteMenuItem = new javax.swing.JMenuItem();
+        correlationNetMenuItem = new javax.swing.JMenuItem();
         localNetMenuItem = new javax.swing.JMenuItem();
+        desserteMenuItem = new javax.swing.JMenuItem();
+        backBoneMenuItem = new javax.swing.JMenuItem();
         toolsMenu = new javax.swing.JMenu();
         rasterizeMenuItem = new javax.swing.JMenuItem();
         binarizeMenuItem = new javax.swing.JMenuItem();
+        importPRAOMenuItem = new javax.swing.JMenuItem();
         jMenu1 = new javax.swing.JMenu();
         selVectorMenuItem = new javax.swing.JMenuItem();
         selRasterMenuItem = new javax.swing.JMenuItem();
@@ -186,6 +201,14 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         fileMenu.add(loadRasterMenuItem);
+
+        loadNetMenuItem.setText("Load network");
+        loadNetMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                loadNetMenuItemActionPerformed(evt);
+            }
+        });
+        fileMenu.add(loadNetMenuItem);
         fileMenu.add(jSeparator1);
 
         prefMenuItem.setText("Preferences");
@@ -249,13 +272,25 @@ public class MainFrame extends javax.swing.JFrame {
         });
         vectorMenu.add(batchVectorMenuItem);
 
-        multiFracVectorMenuItem1.setText("Multi-fractal");
-        multiFracVectorMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+        multiFracVectorMenu.setText("Multi-fractal");
+
+        multiFracBocCountingVectorMenuItem.setText("Box counting");
+        multiFracBocCountingVectorMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                multiFracVectorMenuItem1ActionPerformed(evt);
+                multiFracBocCountingVectorMenuItemActionPerformed(evt);
             }
         });
-        vectorMenu.add(multiFracVectorMenuItem1);
+        multiFracVectorMenu.add(multiFracBocCountingVectorMenuItem);
+
+        multiFracCorrelationVectorMenuItem.setText("Correlation");
+        multiFracCorrelationVectorMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                multiFracCorrelationVectorMenuItemActionPerformed(evt);
+            }
+        });
+        multiFracVectorMenu.add(multiFracCorrelationVectorMenuItem);
+
+        vectorMenu.add(multiFracVectorMenu);
 
         jMenuBar1.add(vectorMenu);
 
@@ -312,7 +347,6 @@ public class MainFrame extends javax.swing.JFrame {
         jMenu2.add(multiFracBoxRasterMenuItem);
 
         waveletMenuItem.setText("Wavelet");
-        waveletMenuItem.setEnabled(false);
         waveletMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 waveletMenuItemActionPerformed(evt);
@@ -326,13 +360,21 @@ public class MainFrame extends javax.swing.JFrame {
 
         networkMenu.setText("Network");
 
-        backBoneMenuItem.setText("Backbone...");
-        backBoneMenuItem.addActionListener(new java.awt.event.ActionListener() {
+        correlationNetMenuItem.setText("Correlation");
+        correlationNetMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                backBoneMenuItemActionPerformed(evt);
+                correlationNetMenuItemActionPerformed(evt);
             }
         });
-        networkMenu.add(backBoneMenuItem);
+        networkMenu.add(correlationNetMenuItem);
+
+        localNetMenuItem.setText("Radial...");
+        localNetMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                localNetMenuItemActionPerformed(evt);
+            }
+        });
+        networkMenu.add(localNetMenuItem);
 
         desserteMenuItem.setText("Desserte...");
         desserteMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -342,13 +384,13 @@ public class MainFrame extends javax.swing.JFrame {
         });
         networkMenu.add(desserteMenuItem);
 
-        localNetMenuItem.setText("Radial...");
-        localNetMenuItem.addActionListener(new java.awt.event.ActionListener() {
+        backBoneMenuItem.setText("Backbone...");
+        backBoneMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                localNetMenuItemActionPerformed(evt);
+                backBoneMenuItemActionPerformed(evt);
             }
         });
-        networkMenu.add(localNetMenuItem);
+        networkMenu.add(backBoneMenuItem);
 
         jMenuBar1.add(networkMenu);
 
@@ -369,6 +411,14 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         toolsMenu.add(binarizeMenuItem);
+
+        importPRAOMenuItem.setText("Convert PRAO data");
+        importPRAOMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                importPRAOMenuItemActionPerformed(evt);
+            }
+        });
+        toolsMenu.add(importPRAOMenuItem);
 
         jMenu1.setText("Selection");
 
@@ -788,7 +838,7 @@ public class MainFrame extends javax.swing.JFrame {
         }).start();
     }//GEN-LAST:event_multiFracBoxRasterMenuItemActionPerformed
 
-    private void multiFracVectorMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_multiFracVectorMenuItem1ActionPerformed
+    private void multiFracBocCountingVectorMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_multiFracBocCountingVectorMenuItemActionPerformed
         final BoxCountingDialog dlg = new BoxCountingDialog(this, new LayerModel(mapViewer.getLayers(), FeatureLayer.class),
             new MultiFracSampling());
         dlg.setVisible(true);
@@ -803,7 +853,7 @@ public class MainFrame extends javax.swing.JFrame {
                 launchMethod(method);
             }
         }).start();
-    }//GEN-LAST:event_multiFracVectorMenuItem1ActionPerformed
+    }//GEN-LAST:event_multiFracBocCountingVectorMenuItemActionPerformed
 
     private void waveletMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_waveletMenuItemActionPerformed
         final RasterMethodDialog dlg = new RasterMethodDialog(this, "Multi-fractal wavelet",
@@ -829,7 +879,7 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_logMenuItemActionPerformed
 
     private void correlationMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_correlationMenuItemActionPerformed
-        final BoxCountingDialog dlg = new BoxCountingDialog(this, new LayerModel(mapViewer.getLayers(), FeatureLayer.class),
+        final CorrelationDialog dlg = new CorrelationDialog(this, new LayerModel(mapViewer.getLayers(), FeatureLayer.class),
             new DefaultSampling());
         dlg.setVisible(true);
         if(!dlg.isOk) {
@@ -844,6 +894,109 @@ public class MainFrame extends javax.swing.JFrame {
             }
         }).start();      
     }//GEN-LAST:event_correlationMenuItemActionPerformed
+
+    private void importPRAOMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_importPRAOMenuItemActionPerformed
+        File f = Util.getFile(".txt", "PRAO text file");
+        if(f == null) {
+            return;
+        }
+        ImportPRAO prao;
+        try {
+            prao = new ImportPRAO(f);
+        } catch (IOException | SchemaException ex) {
+            throw new RuntimeException(ex);
+        }
+        
+        groupLayer.addLayerFirst(prao.getLayers());
+
+        mapViewer.setTreeLayerVisible(true);
+    }//GEN-LAST:event_importPRAOMenuItemActionPerformed
+
+    private void multiFracCorrelationVectorMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_multiFracCorrelationVectorMenuItemActionPerformed
+        final CorrelationDialog dlg = new CorrelationDialog(this, new LayerModel(mapViewer.getLayers(), FeatureLayer.class),
+            new MultiFracSampling());
+        dlg.setVisible(true);
+        if(!dlg.isOk) {
+            return;
+        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                MultiFracCorrelationVectorMethod method = new MultiFracCorrelationVectorMethod(dlg.layer.getName(),  
+                        dlg.sampling, new DefaultFeatureCoverage(dlg.layer.getFeatures()));
+                launchMethod(method);
+            }
+        }).start();
+    }//GEN-LAST:event_multiFracCorrelationVectorMenuItemActionPerformed
+
+    private void loadNetMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadNetMenuItemActionPerformed
+        LoadNetworkDialog dlg = new LoadNetworkDialog(this, true);
+        dlg.setVisible(true);
+        if(!dlg.isOk) {
+            return;
+        }
+        
+        try {
+            List<DefaultFeature> nodes = GlobalDataStore.getFeatures(dlg.nodeFile, dlg.nodeIdAttr, new TaskMonitor.EmptyMonitor());
+            DefaultFeatureCoverage nodeCov = new DefaultFeatureCoverage(nodes);
+            CSVTabReader r = new CSVTabReader(dlg.edgeFile);
+            r.read(null);
+            List<DefaultFeature> edges = new ArrayList<>();
+            GeometryFactory factory = new GeometryFactory();
+            int nbLost = 0;
+            for(Object lineId : r.getKeySet()) {
+                Object id1 = r.getValue(lineId, dlg.nodeId1Attr);
+                Object id2 = r.getValue(lineId, dlg.nodeId2Attr);
+                Feature node1 = nodeCov.getFeature(id1);
+                Feature node2 = nodeCov.getFeature(id2);
+                if(node1 == null || node2 == null) {
+                    nbLost++;
+                } else {
+                    DefaultFeature edge = new DefaultFeature(id1 + "-" + id2, 
+                        factory.createLineString(new Coordinate[]{node1.getGeometry().getCoordinate(), node2.getGeometry().getCoordinate()}), 
+                        r.getVarNames(), Arrays.asList(r.getValues(lineId)));
+                    edges.add(edge);
+                }
+            }
+            SpatialGraph graph = new SpatialGraph(nodes, edges, dlg.nodeId1Attr, dlg.nodeId2Attr);
+            String layer = dlg.nodeFile.getName().replace(".shp", "");
+            DefaultGroupLayer gl = new DefaultGroupLayer(layer + "-Network");
+            FeatureLayer fl = new FeatureLayer(layer + "-Nodes", nodes, null, GlobalDataStore.getCRS(dlg.nodeFile));
+            gl.addLayerFirst(fl);
+
+            SpatialGraphLayer graphlayer = new SpatialGraphLayer(layer + "-Graph", graph);
+            graphlayer.setVisible(false);
+            gl.addLayerFirst(graphlayer);
+            gl.setRemovable(true);
+            groupLayer.addLayerFirst(gl);
+                
+            if(nbLost > 0) {
+                JOptionPane.showMessageDialog(this, nbLost + " edges have been removed", "Network graph", JOptionPane.WARNING_MESSAGE);
+            }
+            r.dispose();
+        } catch (IOException ex) {
+            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }//GEN-LAST:event_loadNetMenuItemActionPerformed
+
+    private void correlationNetMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_correlationNetMenuItemActionPerformed
+        final CorrelationNetworkDialog dlg = new CorrelationNetworkDialog(this, 
+                new LayerModel<>(mapViewer.getLayers(), SpatialGraphLayer.class));
+        dlg.setVisible(true);
+        
+        if(!dlg.isOk) {
+            return;
+        }
+        
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                launchMethod(dlg.method);
+            }
+        }).start();
+
+    }//GEN-LAST:event_correlationNetMenuItemActionPerformed
 
     private boolean isBinary(RenderedImage img) {
         RandomIter iter = RandomIterFactory.create(img, null);
@@ -903,22 +1056,27 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem boxCountingRasterMenuItem;
     private javax.swing.JMenuItem corRasterMenuItem;
     private javax.swing.JMenuItem correlationMenuItem;
+    private javax.swing.JMenuItem correlationNetMenuItem;
     private javax.swing.JMenuItem desserteMenuItem;
     private javax.swing.JMenuItem dilRasterMenuItem;
     private javax.swing.JMenuItem dilationMenuItem;
     private javax.swing.JMenu fileMenu;
+    private javax.swing.JMenuItem importPRAOMenuItem;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
+    private javax.swing.JMenuItem loadNetMenuItem;
     private javax.swing.JMenuItem loadRasterMenuItem;
     private javax.swing.JMenuItem loadVectorMenuItem;
     private javax.swing.JMenuItem localNetMenuItem;
     private javax.swing.JMenuItem logMenuItem;
     private org.thema.drawshape.ui.MapViewer mapViewer;
+    private javax.swing.JMenuItem multiFracBocCountingVectorMenuItem;
     private javax.swing.JMenuItem multiFracBoxRasterMenuItem;
-    private javax.swing.JMenuItem multiFracVectorMenuItem1;
+    private javax.swing.JMenuItem multiFracCorrelationVectorMenuItem;
+    private javax.swing.JMenu multiFracVectorMenu;
     private javax.swing.JMenuItem multiRadialRasterMenuItem;
     private javax.swing.JMenu networkMenu;
     private javax.swing.JMenuItem prefMenuItem;
