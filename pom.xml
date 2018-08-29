@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.thema</groupId>
     <artifactId>fracgis</artifactId>
-    <version>0.7</version>
+    <version>0.7-ORIGINAL</version>
     <packaging>jar</packaging>
     <name>FracGIS</name>
     <description>Fractal analysis for GIS data</description>
@@ -52,6 +52,7 @@
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                             </transformers>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
                         </configuration>
                     </execution>
                 </executions>
@@ -120,6 +121,11 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>msca</artifactId>
             <version>1.5</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>data</artifactId>
+            <version>1.5.1</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
